@@ -28,7 +28,7 @@ class ChuckSession:
         # Capture ChucK VM time when shred was created
         try:
             chuck_time = self.chuck.now()
-        except:
+        except (RuntimeError, AttributeError):
             chuck_time = 0.0
 
         self.shreds[shred_id] = {

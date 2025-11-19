@@ -38,7 +38,7 @@ echo 'SinOsc s => dac; 440 => s.freq; while(true) { 1::samp => now; }' > ~/.pych
 
 # Load it in the REPL
 chuck> @sine
-✓ sporked snippet @sine -> shred 1
+[x] sporked snippet @sine -> shred 1
 ```
 
 **Features:**
@@ -289,7 +289,7 @@ ls -la ~/.pychuck/snippets/
 
 # Verify filename (must end in .ck)
 chuck> @mysound
-✗ snippet 'mysound' not found
+ snippet 'mysound' not found
 # Should be: ~/.pychuck/snippets/mysound.ck
 ```
 

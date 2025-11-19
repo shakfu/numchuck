@@ -55,7 +55,7 @@ test:
 	@uv run pytest
 
 repl:
-	@uv run python -m pychuck repl
+	@uv run pychuck repl
 
 snap:
 	@git add --all . && git commit -m 'snap' && git push

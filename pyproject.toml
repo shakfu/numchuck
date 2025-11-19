@@ -5,7 +5,7 @@ description = "Python bindings for ChucK audio programming language"
 readme = "README.md"
 requires-python = ">=3.8"
 authors = [
-    { name = "shakfu", email = "me@me.org" },
+    { name = "shakfu", email = "shakfu@example.org" },
 ]
 keywords = ["chuck", "audio", "music", "synthesis", "live-coding"]
 classifiers = [
@@ -35,6 +35,9 @@ dev = [
 
 [project.urls]
 Homepage = "https://github.com/shakfu/pychuck"
+
+[project.scripts]
+pychuck = "pychuck.cli.main:main"
 
 [build-system]
 requires = ["scikit-build-core >=0.10", "nanobind >=1.3.2"]

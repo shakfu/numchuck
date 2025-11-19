@@ -511,7 +511,7 @@ Versioning: file.ck → file-1.ck (spork) → file-1-1.ck (replace)
                 from .. import stop_audio, shutdown_audio
                 stop_audio()
                 shutdown_audio(500)
-            except:
+            except (RuntimeError, ImportError):
                 pass
 
         # Clean up app state (ChucK instance and session)

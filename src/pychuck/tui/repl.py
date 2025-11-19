@@ -85,7 +85,7 @@ class ChuckREPL:
                             sid_str = str(sid)
                             if sid_str.startswith(prefix):
                                 yield Completion(sid_str, start_position=-len(prefix))
-                    except:
+                    except (AttributeError, RuntimeError):
                         pass
 
                 # After '~', suggest shred IDs
@@ -97,7 +97,7 @@ class ChuckREPL:
                                 sid_str = str(sid)
                                 if sid_str.startswith(parts):
                                     yield Completion(sid_str, start_position=-len(parts))
-                        except:
+                        except (AttributeError, RuntimeError):
                             pass
 
                 # After '? ', suggest shred IDs
@@ -108,7 +108,7 @@ class ChuckREPL:
                             sid_str = str(sid)
                             if sid_str.startswith(prefix):
                                 yield Completion(sid_str, start_position=-len(prefix))
-                    except:
+                    except (AttributeError, RuntimeError):
                         pass
 
                 # After '<name>?' or '<name>::', suggest known globals
@@ -119,7 +119,7 @@ class ChuckREPL:
                         for typ, name in globals_list:
                             if name.startswith(prefix):
                                 yield Completion(name + '?', start_position=-len(text))
-                    except:
+                    except (AttributeError, RuntimeError):
                         pass
 
                 elif '::' in text:
@@ -129,7 +129,7 @@ class ChuckREPL:
                         for typ, name in globals_list:
                             if name.startswith(prefix):
                                 yield Completion(name + '::', start_position=-len(text))
-                    except:
+                    except (AttributeError, RuntimeError):
                         pass
 
                 # After ': ', suggest .ck files (compile mode)
@@ -253,7 +253,7 @@ OTHER COMMANDS                          KEYBOARD SHORTCUTS
             # Get current VM time for elapsed calculation
             try:
                 current_time = self.chuck.now()
-            except:
+            except (RuntimeError, AttributeError):
                 current_time = 0.0
 
             for shred_id, info in sorted(self.session.shreds.items()):
@@ -267,7 +267,7 @@ OTHER COMMANDS                          KEYBOARD SHORTCUTS
                         name = f"{path.parent.name}/{path.name}"
                     else:
                         name = path.name
-                except:
+                except (ValueError, TypeError):
                     name = full_name
                 name = name[:56]  # Wider column for better readability
 
@@ -277,7 +277,7 @@ OTHER COMMANDS                          KEYBOARD SHORTCUTS
                 # Get sample rate from ChucK (default 44100)
                 try:
                     sample_rate = self.chuck.get_param_int(PARAM_SAMPLE_RATE)
-                except:
+                except (RuntimeError, AttributeError, ValueError):
                     sample_rate = 44100
                 elapsed_sec = elapsed_samples / sample_rate if sample_rate > 0 else 0.0
 
@@ -317,7 +317,7 @@ OTHER COMMANDS                          KEYBOARD SHORTCUTS
                 now = self.chuck.now()
                 shred_count = len(self.session.shreds)
                 return f"Audio: {audio_status} | Now: {now:.2f} | Shreds: {shred_count}"
-            except:
+            except (RuntimeError, AttributeError):
                 return "Audio: -- | Now: -- | Shreds: --"
 
         # Custom style for syntax highlighting and prompt

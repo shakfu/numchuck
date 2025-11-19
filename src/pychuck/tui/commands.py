@@ -23,7 +23,7 @@ class CommandExecutor:
         # Read file content for project versioning
         try:
             content = Path(path).read_text()
-        except:
+        except (OSError, UnicodeDecodeError):
             content = None
 
         success, shred_ids = self.chuck.compile_file(args['path'])
@@ -196,13 +196,13 @@ class CommandExecutor:
 
         try:
             self.chuck.get_global_int(name, handle_int)
-        except:
+        except RuntimeError:
             try:
                 self.chuck.get_global_float(name, handle_float)
-            except:
+            except RuntimeError:
                 try:
                     self.chuck.get_global_string(name, handle_string)
-                except Exception as e:
+                except RuntimeError:
                     pass
 
         if not found[0]:
@@ -360,7 +360,7 @@ class CommandExecutor:
             # Clean up temp file
             try:
                 os.unlink(temp_path)
-            except:
+            except OSError:
                 pass
 
     def _cmd_watch(self, args):
@@ -412,7 +412,7 @@ class CommandExecutor:
         # Read snippet content for project versioning
         try:
             content = snippet_path.read_text()
-        except:
+        except (OSError, UnicodeDecodeError):
             content = None
 
         success, shred_ids = self.chuck.compile_file(str(snippet_path))

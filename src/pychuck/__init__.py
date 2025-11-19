@@ -20,6 +20,8 @@ Examples:
     ...     print(f"Compiled successfully: {shred_ids}")
 """
 
+from ._version import __version__, __version_info__
+
 from ._pychuck import (
     ChucK,
     version,

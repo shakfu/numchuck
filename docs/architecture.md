@@ -672,7 +672,7 @@ if (array.dtype() != nb::dtype<SAMPLE>()) {
 
 **Current State:**
 
-- Validation errors throw Python exceptions ✓
+- Validation errors throw Python exceptions [x]
 - ChucK compilation errors return bool (success/failure)
 - ChucK VM errors printed to stderr
 - No access to detailed error messages from ChucK

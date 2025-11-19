@@ -93,7 +93,7 @@ class ChuckApplication:
             # Get current VM time for elapsed calculation
             try:
                 current_time = self.chuck.now()
-            except:
+            except (RuntimeError, AttributeError):
                 current_time = 0.0
 
             for sid, info in sorted(self.session.shreds.items()):
@@ -107,7 +107,7 @@ class ChuckApplication:
                         name = f"{path.parent.name}/{path.name}"
                     else:
                         name = path.name
-                except:
+                except (ValueError, TypeError):
                     name = full_name
                 name = name[:56]  # Wider column for better readability
 
@@ -117,7 +117,7 @@ class ChuckApplication:
                 # Get sample rate from ChucK (default 44100)
                 try:
                     srate = self.chuck.get_param('SAMPLE_RATE')
-                except:
+                except (RuntimeError, AttributeError, ValueError):
                     srate = 44100
                 elapsed_sec = elapsed_samples / srate if srate > 0 else 0.0
 
@@ -171,7 +171,7 @@ class ChuckApplication:
         """Cleanup ChucK resources."""
         try:
             self.chuck.remove_all_shreds()
-        except:
+        except (RuntimeError, AttributeError):
             pass
 
         # Break circular references to allow proper garbage collection
