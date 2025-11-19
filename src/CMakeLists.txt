@@ -53,7 +53,48 @@ target_link_libraries(_pychuck
     "$<$<PLATFORM_ID:Darwin>:-F/System/Library/PrivateFrameworks>"
     "$<$<PLATFORM_ID:Darwin>:-weak_framework MultitouchSupport>"
     chuck_lib
+    # # $<$<BOOL:${CM_STATIC_CHUGINS}>:AbletonLink>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:ABSaturator>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:AmbPan>
+    # # $<$<BOOL:${CM_STATIC_CHUGINS}>:AudioUnit>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Binaural>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Bitcrusher>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:ConvRev>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Elliptic>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:ExpDelay>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:ExpEnv>
+    # # $<$<BOOL:${CM_STATIC_CHUGINS}>:Fauck>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:FIR>
+    # # $<$<BOOL:${CM_STATIC_CHUGINS}>:FluidSynth>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:FoldbackSaturator>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:GVerb>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:KasFilter>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Ladspa>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Line>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:MagicSine>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Mesh2D>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:MIAP>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Multicomb>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:NHHall>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Overdrive>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:PanN>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Patch>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Perlin>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:PitchTrack>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:PowerADSR>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Random>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Range>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:RegEx>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Sigmund>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Spectacle>
+    # # $<$<BOOL:${CM_STATIC_CHUGINS}>:WarpBuf>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Wavetable>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:WinFuncEnv>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:WPDiodeLadder>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:WPKorg35>
+    # $<$<BOOL:${CM_STATIC_CHUGINS}>:XML>
 )
+
 
 set_target_properties(_pychuck PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/src/pychuck"

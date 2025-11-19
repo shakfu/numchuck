@@ -82,7 +82,7 @@ User Data (~/.pychuck/):
 ┌─────────────────────────────────────────────────────────────┐
 │                    CLI Entry Point                          │
 │  - pychuck.cli.main: Command dispatcher                     │
-│  - Subcommands: edit, repl, exec, version, info             │
+│  - Subcommands: edit, repl, run, version, info              │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -145,7 +145,7 @@ User Data (~/.pychuck/):
 
 - `edit`: Launch multi-tab editor with optional files and project versioning
 - `repl`: Launch interactive REPL with smart Enter, sidebar, project support
-- `exec`: Execute ChucK files headlessly with configurable audio parameters
+- `run`: Execute ChucK files headlessly with configurable audio parameters
 - `version`: Display pychuck and ChucK versions
 - `info`: Display ChucK VM information
 - `tui`: Backward compatibility alias for `repl`
@@ -418,19 +418,19 @@ python -m pychuck repl --start-audio --no-smart-enter --no-sidebar
 
 ```bash
 # Execute files
-python -m pychuck exec file1.ck file2.ck
+python -m pychuck run file1.ck file2.ck
 
 # Custom audio configuration
-python -m pychuck exec --srate 48000 --channels 1 file.ck
+python -m pychuck run --srate 48000 --channels 1 file.ck
 
 # Silent execution (testing)
-python -m pychuck exec --silent --duration 10 file.ck
+python -m pychuck run --silent --duration 10 file.ck
 ```
 
 **User Flow:**
 
-1. User runs `python -m pychuck exec`
-2. CLI dispatcher invokes `cmd_exec(args)`
+1. User runs `python -m pychuck run`
+2. CLI dispatcher invokes `cmd_run(args)`
 3. `cli.executor.execute_files()` creates ChucK instance
 4. Files compiled sequentially
 5. Audio runs for specified duration or until Ctrl+C

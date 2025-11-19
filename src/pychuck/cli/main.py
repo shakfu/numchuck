@@ -5,7 +5,7 @@ pychuck command-line interface
 Provides subcommands for different pychuck modes:
     edit    - Launch multi-tab editor for livecoding
     repl    - Launch interactive REPL
-    exec    - Execute ChucK files from command line
+    run     - Execute ChucK files from command line
     version - Show version information
     info    - Show ChucK and pychuck info
 """
@@ -75,34 +75,34 @@ def create_parser():
         help='Project name for versioned file storage'
     )
 
-    # exec subcommand
-    exec_parser = subparsers.add_parser(
-        'exec',
+    # run subcommand
+    run_parser = subparsers.add_parser(
+        'run',
         help='Execute ChucK files from command line'
     )
-    exec_parser.add_argument(
+    run_parser.add_argument(
         'files',
         nargs='+',
         help='ChucK files to execute'
     )
-    exec_parser.add_argument(
+    run_parser.add_argument(
         '--srate',
         type=int,
         default=44100,
         help='Sample rate (default: 44100)'
     )
-    exec_parser.add_argument(
+    run_parser.add_argument(
         '--channels',
         type=int,
         default=2,
         help='Number of audio channels (default: 2)'
     )
-    exec_parser.add_argument(
+    run_parser.add_argument(
         '--silent',
         action='store_true',
         help='Run without audio output (useful for testing)'
     )
-    exec_parser.add_argument(
+    run_parser.add_argument(
         '--duration',
         type=float,
         help='Run for specified duration in seconds, then exit'
@@ -171,7 +171,7 @@ def cmd_repl(args):
     )
 
 
-def cmd_exec(args):
+def cmd_run(args):
     """Execute ChucK files from command line."""
     from .executor import execute_files
 
@@ -210,7 +210,7 @@ def main():
         'edit': cmd_edit,
         'repl': cmd_repl,
         'tui': cmd_repl,  # Backward compatibility
-        'exec': cmd_exec,
+        'run': cmd_run,
         'version': cmd_version,
         'info': cmd_info,
     }

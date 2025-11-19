@@ -1,4 +1,8 @@
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR})
+
 function(add_chugin)
     unset(CMAKE_OSX_DEPLOYMENT_TARGET)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "requires >= 10.15" FORCE)
@@ -82,14 +86,23 @@ function(add_chugin)
         )
     endif()
 
-    add_library( 
-        ${CHUGIN_NAME} 
-        MODULE
-        ${CHUGIN_SOURCES}
-        ${CHUGIN_OTHER_SOURCES}
-    )
+    if (CM_STATIC_CHUGINS)
+        add_library( 
+            ${CHUGIN_NAME} 
+            STATIC
+            ${CHUGIN_SOURCES}
+            ${CHUGIN_OTHER_SOURCES}
+        )
+    else()
+        add_library( 
+            ${CHUGIN_NAME} 
+            MODULE
+            ${CHUGIN_SOURCES}
+            ${CHUGIN_OTHER_SOURCES}
+        )
+    endif()
 
-    if(CMAKE_HOST_APPLE AND CM_SKIP_WARNINGS)
+    if (CMAKE_HOST_APPLE AND CM_SKIP_WARNINGS)
         set_source_files_properties(
             ${CHUGIN_SOURCES}
             ${CHUGIN_OTHER_SOURCES}
@@ -98,12 +111,19 @@ function(add_chugin)
         )
     endif()
 
-    set_target_properties(${CHUGIN_NAME}
-        PROPERTIES
-        PREFIX ""
-        SUFFIX ".chug"
-        POSITION_INDEPENDENT_CODE ON
-    )
+    if (CM_STATIC_CHUGINS)
+        set_target_properties(${CHUGIN_NAME}
+            PROPERTIES
+            POSITION_INDEPENDENT_CODE ON
+        )
+    else()
+        set_target_properties(${CHUGIN_NAME}
+            PROPERTIES
+            PREFIX ""
+            SUFFIX ".chug"
+            POSITION_INDEPENDENT_CODE ON
+        )
+    endif()
 
     target_include_directories(
         ${CHUGIN_NAME}
@@ -149,15 +169,17 @@ function(add_chugin)
         ${CHUGIN_LINK_LIBS}
     )
 
-install(
-    TARGETS ${CHUGIN_NAME}
-    LIBRARY DESTINATION ${CHUGINS_PREFIX}
-)
-
-if(CMAKE_HOST_APPLE AND CHUGIN_CODESIGN)
+if (NOT CM_STATIC_CHUGINS)
     install(
-        CODE "execute_process (COMMAND codesign -vf -s - ${CHUGINS_DIR}/${CHUGIN_NAME}.chug)" 
+        TARGETS ${CHUGIN_NAME}
+        LIBRARY DESTINATION ${CHUGINS_PREFIX}
     )
+
+    if(CMAKE_HOST_APPLE AND CHUGIN_CODESIGN)
+        install(
+            CODE "execute_process (COMMAND codesign -vf -s - ${CHUGINS_DIR}/${CHUGIN_NAME}.chug)" 
+        )
+    endif()
 endif()
 
 endfunction()

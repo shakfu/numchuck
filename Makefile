@@ -34,7 +34,7 @@ DMG = $(DIST_NAME).dmg
 ZIP = $(DIST_NAME).zip
 
 
-.PHONY: all build clean test snap
+.PHONY: all build clean test install repl snap
 
 all: build
 
@@ -45,14 +45,17 @@ build:
 		cmake --build . --config '$(CONFIG)' && \
 		cmake --install . --config '$(CONFIG)'
 
+install:
+	@uv sync --reinstall-package pychuck
+
 clean:
 	rm -rf build
 
 test:
-	PYTHONPATH=$(ROOT)/src pytest tests/ -v
+	@uv run pytest
 
 repl:
-	@uv run python -m pychuck tui
+	@uv run python -m pychuck repl
 
 snap:
 	@git add --all . && git commit -m 'snap' && git push

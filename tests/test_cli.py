@@ -86,27 +86,27 @@ def test_repl_command_parsing():
     assert args.project == 'myproject'
 
 
-def test_exec_command_parsing():
-    """Test exec command argument parsing."""
+def test_run_command_parsing():
+    """Test run command argument parsing."""
     from pychuck.cli.main import create_parser
 
     parser = create_parser()
 
-    # Basic exec
-    args = parser.parse_args(['exec', 'file.ck'])
-    assert args.command == 'exec'
+    # Basic run
+    args = parser.parse_args(['run', 'file.ck'])
+    assert args.command == 'run'
     assert args.files == ['file.ck']
     assert args.srate == 44100
     assert args.channels == 2
     assert args.silent is False
 
-    # Exec with multiple files
-    args = parser.parse_args(['exec', 'file1.ck', 'file2.ck'])
+    # Run with multiple files
+    args = parser.parse_args(['run', 'file1.ck', 'file2.ck'])
     assert args.files == ['file1.ck', 'file2.ck']
 
-    # Exec with options
+    # Run with options
     args = parser.parse_args([
-        'exec', 'file.ck',
+        'run', 'file.ck',
         '--srate', '48000',
         '--channels', '1',
         '--silent',
@@ -159,7 +159,7 @@ def test_command_handlers_exist():
 
     assert hasattr(main, 'cmd_edit')
     assert hasattr(main, 'cmd_repl')
-    assert hasattr(main, 'cmd_exec')
+    assert hasattr(main, 'cmd_run')
     assert hasattr(main, 'cmd_version')
     assert hasattr(main, 'cmd_info')
 

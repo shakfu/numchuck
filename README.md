@@ -120,19 +120,19 @@ python -m pychuck repl --no-sidebar
 
 ```bash
 # Execute ChucK files from command line
-python -m pychuck exec myfile.ck
+python -m pychuck run myfile.ck
 
 # Run multiple files
-python -m pychuck exec bass.ck melody.ck
+python -m pychuck run bass.ck melody.ck
 
 # Run for 10 seconds then exit
-python -m pychuck exec myfile.ck --duration 10
+python -m pychuck run myfile.ck --duration 10
 
 # Silent mode (no audio)
-python -m pychuck exec myfile.ck --silent
+python -m pychuck run myfile.ck --silent
 
 # Custom sample rate
-python -m pychuck exec myfile.ck --srate 48000
+python -m pychuck run myfile.ck --srate 48000
 ```
 
 #### 4. Version and Info

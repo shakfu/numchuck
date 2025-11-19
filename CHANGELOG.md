@@ -48,7 +48,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Centralized ChucK instance and session management
   - Proper cleanup with circular reference breaking (no memory leaks)
 
-- **Command-Line Execution Mode** (`pychuck exec`):
+- **Command-Line Execution Mode** (`pychuck run`):
   - Non-interactive file execution from command line
   - Multiple file support
   - Duration parameter: `--duration N` runs for N seconds then exits
@@ -61,7 +61,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - **Subcommand-Based CLI** (`cli/main.py`):
   - `pychuck edit [files...] [--project name] [--start-audio]` - Launch editor
   - `pychuck repl [files...] [--project name] [--start-audio]` - Launch REPL
-  - `pychuck exec <files...> [options]` - Execute files
+  - `pychuck run <files...> [options]` - Execute files
   - `pychuck version` - Show version information
   - `pychuck info` - Show ChucK and pychuck info
   - `pychuck tui` - Backward compatibility alias for repl

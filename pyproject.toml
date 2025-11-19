@@ -65,3 +65,10 @@ test-skip="cp38-macosx_*:arm64"
 [tool.cibuildwheel.macos.environment]
 MACOSX_DEPLOYMENT_TARGET = "10.14"
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = ["thirdparty", "build", "dist", ".git", ".venv", "venv", "__pycache__"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
