@@ -78,3 +78,123 @@ def test_event_nonexistent():
     except RuntimeError:
         # It's also valid to raise an error
         pass
+
+
+def test_listen_for_event():
+    """Test listening for global events with callback."""
+    chuck = pychuck.ChucK()
+    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck.init()
+    chuck.start()
+
+    # Create global event
+    code = "global Event testEvent;"
+    success, shred_ids = chuck.compile_code(code)
+    assert success
+    run_audio_cycles(chuck)
+
+    # Track callback invocations
+    callback_count = [0]
+
+    def on_event():
+        callback_count[0] += 1
+
+    # Listen for event (should return listener ID)
+    listener_id = chuck.listen_for_global_event("testEvent", on_event, listen_forever=False)
+    assert isinstance(listener_id, int)
+    assert listener_id > 0
+
+    # Signal the event
+    chuck.signal_global_event("testEvent")
+    run_audio_cycles(chuck, cycles=10)
+
+    # Callback should have been invoked
+    assert callback_count[0] == 1
+
+
+def test_stop_listening_for_event():
+    """Test stopping event listener to prevent memory leaks."""
+    chuck = pychuck.ChucK()
+    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck.init()
+    chuck.start()
+
+    # Create global event
+    code = "global Event cleanupEvent;"
+    success, shred_ids = chuck.compile_code(code)
+    assert success
+    run_audio_cycles(chuck)
+
+    # Track callback invocations
+    callback_count = [0]
+
+    def on_event():
+        callback_count[0] += 1
+
+    # Listen for event
+    listener_id = chuck.listen_for_global_event("cleanupEvent", on_event, listen_forever=True)
+    assert listener_id > 0
+
+    # Signal once - should trigger
+    chuck.signal_global_event("cleanupEvent")
+    run_audio_cycles(chuck, cycles=10)
+    assert callback_count[0] == 1
+
+    # Stop listening
+    chuck.stop_listening_for_global_event("cleanupEvent", listener_id)
+    run_audio_cycles(chuck, cycles=5)
+
+    # Signal again - should NOT trigger (listener removed)
+    chuck.signal_global_event("cleanupEvent")
+    run_audio_cycles(chuck, cycles=10)
+
+    # Count should still be 1 (not incremented)
+    assert callback_count[0] == 1
+
+
+def test_multiple_event_listeners():
+    """Test that listener cleanup API exists and works."""
+    chuck = pychuck.ChucK()
+    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck.init()
+    chuck.start()
+
+    # Create global event
+    code = "global Event multiEvent;"
+    success, shred_ids = chuck.compile_code(code)
+    assert success
+    run_audio_cycles(chuck)
+
+    # Track callback invocations
+    callback_count = [0]
+
+    def on_event():
+        callback_count[0] += 1
+
+    # Register listener
+    listener_id = chuck.listen_for_global_event("multiEvent", on_event, listen_forever=True)
+    assert listener_id > 0
+
+    # Broadcast - should trigger
+    chuck.broadcast_global_event("multiEvent")
+    run_audio_cycles(chuck, cycles=10)
+    assert callback_count[0] >= 1  # At least one invocation
+
+    initial_count = callback_count[0]
+
+    # Clean up listener
+    chuck.stop_listening_for_global_event("multiEvent", listener_id)
+    run_audio_cycles(chuck, cycles=5)
+
+    # Broadcast again - should not trigger additional callbacks
+    chuck.broadcast_global_event("multiEvent")
+    run_audio_cycles(chuck, cycles=10)
+
+    # Count should not increase (listener was removed)
+    assert callback_count[0] == initial_count

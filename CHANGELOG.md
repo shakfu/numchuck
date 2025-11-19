@@ -15,7 +15,83 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [Unreleased]
 
+**Summary:** This release focuses on critical bug fixes, comprehensive documentation, and developer experience improvements. All critical issues identified in the code review have been resolved.
+
+**Key Highlights:**
+- ✅ Fixed segmentation fault on test exit (exit code 139 → 0)
+- ✅ Standardized error handling with comprehensive documentation
+- ✅ Documented event listener cleanup to prevent memory leaks
+- ✅ Renamed `exec` → `run` CLI subcommand for consistency
+- ✅ Updated build system to use `uv` throughout
+- ✅ Increased test coverage (96 → 99 tests, all passing)
+
 ### Added
+
+- **Comprehensive Error Handling Documentation** (`docs/ERROR_HANDLING.md`):
+  - Complete guide to exception-based error handling in pychuck
+  - Examples for all API patterns (initialization, compilation, events, etc.)
+  - Best practices for error handling and resource cleanup
+  - Input validation rules and error message formats
+  - Debugging tips and common patterns
+  - ~400 lines of detailed documentation
+
+- **Event Listener Cleanup Tests** (`tests/test_global_events.py`):
+  - `test_listen_for_event()` - Verifies listener registration and callback invocation
+  - `test_stop_listening_for_event()` - Verifies cleanup prevents memory leaks
+  - `test_multiple_event_listeners()` - Verifies cleanup API functionality
+  - Total event tests increased from 3 to 6
+  - Documents proper usage of `stop_listening_for_global_event()` API
+
+### Fixed
+
+- **Segmentation Fault on Test Exit** (Critical):
+  - Fixed exit code 139 (SIGSEGV) that occurred after all tests passed
+  - Root cause: Global callback map held Python objects that outlived interpreter
+  - Solution: Added `atexit` cleanup to destroy Python objects before shutdown
+  - Implemented `_cleanup_callbacks()` function registered with Python's `atexit`
+  - All tests now exit cleanly with exit code 0
+  - See `SEGFAULT_FIX.md` for detailed technical analysis
+
+- **Error Handling Consistency** (Critical):
+  - Standardized all error handling to use exceptions consistently
+  - `ValueError` for invalid input parameters (empty strings, zero/negative values)
+  - `RuntimeError` for operational failures (not initialized, operation failed)
+  - Compilation errors return `(False, [])` tuple (syntax errors are expected)
+  - Added comprehensive module docstring documenting error strategy
+  - See `docs/ERROR_HANDLING.md` for complete guide
+
+- **Event Listener Memory Leak Documentation** (Critical):
+  - Documented that `listen_for_global_event()` returns listener ID for cleanup
+  - Added examples showing proper use of `stop_listening_for_global_event()`
+  - Memory leak prevention pattern now clearly documented and tested
+  - No API changes needed (cleanup already existed but was undocumented)
+
+- **CLI Subcommand Renamed**: `exec` → `run`:
+  - `pychuck run` replaces `pychuck exec` for consistency with common CLI conventions
+  - Updated all documentation (README, CLAUDE.md, CHANGELOG.md, architecture.md)
+  - Updated tests and Makefile
+  - Backward compatibility can be added if needed
+
+- **Build System Updates**:
+  - Makefile now uses `uv` for all Python operations
+  - `make install` → `uv sync --reinstall-package pychuck`
+  - `make test` → `uv run pytest` (uses pyproject.toml config)
+  - `make repl` → `uv run python -m pychuck repl`
+  - pytest configuration in pyproject.toml to skip thirdparty/
+
+- **Module Documentation**:
+  - Added comprehensive docstring to `src/pychuck/__init__.py`
+  - Documents exception types and when they're raised
+  - Includes usage examples
+  - Clear error handling contract
+
+### Changed
+
+- **Test Suite Improvements**:
+  - Total tests increased from 96 to 99
+  - Added 3 new event listener cleanup tests
+  - All tests pass with clean exit (exit code 0)
+  - pytest config excludes thirdparty/ and other non-test directories
 
 - **Multi-Tab Editor** (`pychuck edit`):
   - Full-screen ChucK editor with syntax highlighting

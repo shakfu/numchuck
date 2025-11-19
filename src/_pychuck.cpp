@@ -880,4 +880,16 @@ NB_MODULE(_pychuck, m) {
             return info;
         },
         "Get current audio system info");
+
+    // Cleanup function to be called during module teardown
+    m.def("_cleanup_callbacks",
+        []() {
+            std::lock_guard<std::mutex> lock(g_callback_mutex);
+            g_callbacks.clear();
+        },
+        "Internal cleanup function for callbacks (called during module unload)");
+
+    // Register cleanup to be called at module unload
+    // This prevents segfault when Python objects are destroyed after Python shutdown
+    nb::module_::import_("atexit").attr("register")(m.attr("_cleanup_callbacks"));
 }

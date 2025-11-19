@@ -1,3 +1,25 @@
+"""
+pychuck: Python bindings for ChucK audio programming language
+
+This module provides comprehensive Python bindings for the ChucK audio
+programming language, enabling real-time audio synthesis, live coding,
+and programmatic control of ChucK from Python.
+
+Error Handling:
+    All ChucK operations that can fail will raise exceptions:
+    - ValueError: Invalid input parameters (empty strings, zero/negative values)
+    - RuntimeError: ChucK not initialized or operation failed
+    - TypeError: Incorrect type passed to function
+
+Examples:
+    >>> import pychuck
+    >>> chuck = pychuck.ChucK()
+    >>> chuck.init(44100, 2)  # Returns True on success, raises on error
+    >>> result, shred_ids = chuck.compile_code("SinOsc s => dac;")
+    >>> if result:
+    ...     print(f"Compiled successfully: {shred_ids}")
+"""
+
 from ._pychuck import (
     ChucK,
     version,
