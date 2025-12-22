@@ -24,12 +24,23 @@ nanobind_add_module(
   ${CMAKE_SOURCE_DIR}/thirdparty/chuck/host/RtAudio/RtAudio.cpp
 )
 
+target_compile_options(_pychuck
+    PUBLIC
+    $<$<PLATFORM_ID:Linux>:-fno-strict-aliasing>
+    $<$<PLATFORM_ID:Linux>:-fPIC>
+)
+
 # Define platform-specific RtAudio macros
 target_compile_definitions(_pychuck
     PRIVATE
     $<$<PLATFORM_ID:Darwin>:__MACOSX_CORE__>
     $<$<PLATFORM_ID:Windows>:__PLATFORM_WIN32__>
     $<$<PLATFORM_ID:Windows>:__WINDOWS_DS__>
+    $<$<PLATFORM_ID:Linux>:__LINUX_ALSA__> # default to __ALSA__
+    $<$<AND:$<PLATFORM_ID:Linux>,$<BOOL:${LINUX_ALSA}>>:__LINUX_ALSA__>
+    $<$<AND:$<PLATFORM_ID:Linux>,$<BOOL:${LINUX_PULSE}>>:__LINUX_PULSE__>
+    $<$<AND:$<PLATFORM_ID:Linux>,$<BOOL:${LINUX_JACK}>>:__UNIX_JACK__>
+    $<$<PLATFORM_ID:Linux>:__CK_SNDFILE_NATIVE__>
     HAVE_CONFIG_H
 )
 
@@ -52,6 +63,15 @@ target_link_libraries(_pychuck
     "$<$<PLATFORM_ID:Darwin>:-framework Foundation>"
     "$<$<PLATFORM_ID:Darwin>:-F/System/Library/PrivateFrameworks>"
     "$<$<PLATFORM_ID:Darwin>:-weak_framework MultitouchSupport>"
+    $<$<PLATFORM_ID:Linux>:-lasound>
+    $<$<PLATFORM_ID:Linux>:-lstdc++>
+    $<$<PLATFORM_ID:Linux>:-ldl>
+    $<$<PLATFORM_ID:Linux>:-lm>
+    $<$<PLATFORM_ID:Linux>:-lsndfile>
+    $<$<PLATFORM_ID:Linux>:-lpthread>
+    $<$<AND:$<PLATFORM_ID:Linux>,$<BOOL:${LINUX_JACK}>>:-ljack>
+    $<$<AND:$<PLATFORM_ID:Linux>,$<BOOL:${LINUX_PULSE}>>:-lpulse-simple>
+    $<$<AND:$<PLATFORM_ID:Linux>,$<BOOL:${LINUX_PULSE}>>:-lpulse>
     chuck_lib
     # # $<$<BOOL:${CM_STATIC_CHUGINS}>:AbletonLink>
     # $<$<BOOL:${CM_STATIC_CHUGINS}>:ABSaturator>
