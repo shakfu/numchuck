@@ -124,6 +124,6 @@ set_target_properties(_pychuck PROPERTIES
 
 
 # Install directive for scikit-build-core
-# install(TARGETS _pychuck LIBRARY DESTINATION .)
+install(TARGETS _pychuck LIBRARY DESTINATION pychuck)
 
 
