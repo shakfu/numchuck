@@ -116,6 +116,7 @@ except RuntimeError as e:
 pychuck validates all inputs before calling ChucK APIs:
 
 ### Strings
+
 - **Empty strings not allowed** for code, file paths, variable names
 - Raises `ValueError`
 
@@ -128,6 +129,7 @@ chuck.compile_code("SinOsc s => dac;")
 ```
 
 ### Numeric Values
+
 - **Counts must be >= 1**
 - **Frames must be > 0**
 - **Sample rates, channels must be > 0**
@@ -144,6 +146,7 @@ chuck.run(input, output, 512)
 ```
 
 ### Initialization State
+
 - **Most operations require ChucK to be initialized**
 - Raises `RuntimeError` if not initialized
 

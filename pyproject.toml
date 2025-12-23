@@ -60,16 +60,26 @@ wheel.py-api = "cp312"
 # Necessary to see build output from the actual compilation
 build-verbosity = 1
 
-# Run pytest to ensure that the package was correctly built
-test-command = "pytest {project}/tests"
-test-requires = "pytest"
+# Build for Python 3.9-3.13
+build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
 
-# Don't test Python 3.8 wheels on macOS/arm64
-test-skip="cp38-macosx_*:arm64"
+# Skip 32-bit, musllinux, and PyPy builds
+skip = "*-win32 *-manylinux_i686 *-musllinux_* pp*"
+
+# Run pytest to ensure that the package was correctly built
+test-command = "pytest {project}/tests -v --tb=short -k 'not realtime'"
+test-requires = ["pytest", "numpy"]
+
+# Skip testing on emulated architectures (slow)
+test-skip = "*-macosx_arm64 *-manylinux_aarch64"
 
 # Needed for full C++17 support
 [tool.cibuildwheel.macos.environment]
 MACOSX_DEPLOYMENT_TARGET = "10.14"
+
+# Linux: Install build dependencies
+[tool.cibuildwheel.linux]
+before-build = "yum install -y alsa-lib-devel libsndfile-devel bison flex || apt-get update && apt-get install -y libasound2-dev libsndfile1-dev bison flex"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

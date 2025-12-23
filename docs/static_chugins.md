@@ -97,6 +97,3 @@ The following changes were made and subsequently removed:
 - `scripts/cmake/fn_add_chugin.cmake`: `__CK_DLL_STATIC__` define
 - `pyproject.toml`: `cmake.args = ["-DCM_STATIC_CHUGINS=ON"]`
 
-## Date
-
-December 2024

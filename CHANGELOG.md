@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 **Summary:** This release introduces a high-level Pythonic API, improved type checking, and build system enhancements. The new `Chuck` class provides properties and simplified methods while the low-level API remains available for fine-grained control.
 
 **Key Highlights:**
+
 - New high-level `Chuck` class with Pythonic properties and methods
 - Full `mypy` type checking support with proper stubs
 - Dynamic chugins now output to `examples/chugins/` (not bundled in wheel)
@@ -89,6 +90,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 **Summary:** This release focuses on critical bug fixes, comprehensive documentation, developer experience improvements, and productivity enhancements. All critical and high-priority issues identified in the code review have been resolved, along with low-priority code quality improvements.
 
 **Key Highlights:**
+
 - Fixed segmentation fault on test exit (exit code 139 -> 0)
 - Standardized error handling with comprehensive documentation
 - Documented event listener cleanup to prevent memory leaks

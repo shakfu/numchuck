@@ -18,6 +18,7 @@ The segfault occurred **after** all tests completed successfully, during Python 
 ## Root Cause Analysis
 
 ### The Issue
+
 The C++ extension stored Python callback objects in a global static map:
 
 ```cpp
@@ -26,6 +27,7 @@ static std::unordered_map<int, nb::callable> g_callbacks;
 ```
 
 ### The Problem
+
 This is a **classic Python C extension cleanup ordering problem**:
 
 1. Tests run and add callbacks to `g_callbacks`
@@ -38,6 +40,7 @@ This is a **classic Python C extension cleanup ordering problem**:
 8. But Python is already gone → **SIGSEGV**
 
 ### Why This Happens
+
 Static C++ objects are destroyed in reverse order of construction, which happens **after** `main()` returns and Python has shut down. When `g_callbacks` is destroyed, it tries to decrement reference counts on Python objects that no longer exist.
 
 ---
@@ -79,6 +82,7 @@ nb::module_::import_("atexit").attr("register")(m.attr("_cleanup_callbacks"));
 ## Verification
 
 ### Before Fix
+
 ```bash
 % make test
 ============================== 99 passed in 0.95s ===============================
@@ -86,6 +90,7 @@ make: *** [test] Error 139    ← SEGFAULT
 ```
 
 ### After Fix
+
 ```bash
 % make test
 ============================== 99 passed in 1.07s ===============================
@@ -97,7 +102,9 @@ Exit code: 0                   ← CLEAN EXIT [x]
 ## Technical Details
 
 ### Why `atexit` Works
+
 Python's `atexit` module guarantees that registered functions are called:
+
 - **After** normal program execution
 - **Before** the interpreter shuts down
 - **Before** Python objects become invalid
@@ -105,7 +112,9 @@ Python's `atexit` module guarantees that registered functions are called:
 This is the correct place to release Python references held by C++ code.
 
 ### Thread Safety
+
 The cleanup function uses the existing mutex to ensure thread-safe clearing:
+
 ```cpp
 std::lock_guard<std::mutex> lock(g_callback_mutex);
 g_callbacks.clear();
@@ -133,15 +142,19 @@ g_callbacks.clear();
 ## Impact
 
 ### Files Changed
+
 - **`src/_pychuck.cpp`** - Added 9 lines of cleanup code
 
 ### Test Results
+
 - **Tests passing:** 99/99 [x]
 - **Exit code:** 0 (was 139) [x]
 - **No regressions:** All existing tests still pass
 
 ### Related Issues
+
 This fix also addresses:
+
 - Memory leak concerns with global callback storage
 - Potential crashes in long-running applications
 - Cleanup ordering in multi-threaded contexts
@@ -151,6 +164,7 @@ This fix also addresses:
 ## Lessons Learned
 
 ### Python C Extension Best Practice
+
 **Always use `atexit` to clean up Python objects stored in C++ globals:**
 
 ```cpp
@@ -166,7 +180,9 @@ nb::module_::import_("atexit").attr("register")(m.attr("_cleanup"));
 ```
 
 ### General Rule
+
 **Python objects must be released before the interpreter shuts down:**
+
 - Use `atexit` for module-level cleanup
 - Clear containers holding Python objects
 - Don't rely on C++ static destructor ordering
