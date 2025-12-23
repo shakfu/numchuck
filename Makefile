@@ -34,7 +34,8 @@ DMG = $(DIST_NAME).dmg
 ZIP = $(DIST_NAME).zip
 
 
-.PHONY: all build clean test install repl snap typecheck lint format
+.PHONY: all build clean test install repl snap typecheck lint format \
+		check publish publish-test
 
 all: build
 
@@ -69,4 +70,11 @@ lint:
 format:
 	@uv run ruff format src/
 
+check:
+	@uv run twine check dist/*.whl
 
+publish-test: check
+	@uv run twine upload -r testpypi dist/*
+
+publish: check
+	@uv run twine upload dist/*
