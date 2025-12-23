@@ -34,9 +34,21 @@ The numchuck library provides interactive control over ChucK, enabling live codi
 
 ## Installation
 
+### Install from pypi
+
+```sh
+pip install numchuck
+```
+
+or
+
+```sh
+uv add numchuck
+```
+
 ### Build from source
 
-```bash
+```sh
 # Clone the repository
 git clone <repository-url>
 cd numchuck
@@ -56,7 +68,7 @@ numchuck provides three modes of operation:
 
 #### 1. Multi-Tab Editor (for livecoding)
 
-```bash
+```sh
 # Launch the editor
 python -m numchuck edit
 
@@ -86,7 +98,7 @@ python -m numchuck edit --start-audio --project mymusic
 
 #### 2. Interactive REPL
 
-```bash
+```sh
 # Launch the REPL
 python -m numchuck repl
 
@@ -118,7 +130,7 @@ python -m numchuck repl --no-sidebar
 
 #### 3. Command-Line Execution
 
-```bash
+```sh
 # Execute ChucK files from command line
 python -m numchuck run myfile.ck
 
@@ -137,7 +149,7 @@ python -m numchuck run myfile.ck --srate 48000
 
 #### 4. Version and Info
 
-```bash
+```sh
 # Show version
 python -m numchuck version
 
@@ -1023,7 +1035,7 @@ print("ChucK output:", output_log)
 
 ## Development
 
-```bash
+```sh
 # Build
 make build
 
