@@ -45,12 +45,20 @@ def test_audio_without_init_fails():
     chuck = numchuck.ChucK()
 
     # Try to start audio without initializing ChucK
-    # This should fail
+    # Expected: either returns False or raises RuntimeError/OSError
+    audio_started = False
+    error_raised = False
     try:
         audio_started = numchuck.start_audio(chuck)
-        # If it somehow starts, stop it
+        # If it somehow starts, clean up
         if audio_started:
             numchuck.stop_audio()
             numchuck.shutdown_audio()
-    except:
-        pass  # Expected to fail
+    except (RuntimeError, OSError):
+        error_raised = True
+
+    # Test passes if audio failed to start OR an error was raised
+    # (both indicate proper failure handling)
+    assert not audio_started or error_raised, (
+        "Expected audio to fail without init, but it started successfully"
+    )

@@ -15,7 +15,99 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [Unreleased]
 
+## [0.1.5]
+
+### Added
+
+- **Thread Safety Documentation**:
+  - Added prominent warning block in `docs/architecture.md` listing unsafe operations during real-time audio playback
+  - Documented safe operations (global variable access, event signaling, read-only queries)
+  - Added recommended patterns for stopping audio before modifications
+  - Added Thread Safety section to `src/numchuck/api.py` module docstring
+  - Added Warning sections to `compile()`, `compile_file()`, `remove_shred()`, and `clear()` method docstrings
+
+- **Comprehensive Code Review** (`CODE_REVIEW.md`):
+  - Architecture analysis and code quality assessment
+  - Identified issues with recommendations
+  - Code quality metrics and ratings
+
+- **Install Test Workflow** (`.github/workflows/install-test.yml`):
+  - Tests `pip install numchuck` from PyPI on all platforms
+  - Verifies extension imports correctly on Linux, macOS, and Windows
+  - Tests Python 3.9-3.12 in virtualenv environments
+
+- **TUI Component Tests**:
+  - `tests/test_command_parser.py` - 44 tests for REPL command parsing
+    - Shred management commands (add, remove, replace)
+    - Status and info commands
+    - Global variable get/set
+    - Event signaling
+    - Audio and VM control
+    - File operations and snippets
+  - `tests/test_tui_common.py` - 15 tests for shared TUI utilities
+    - `format_elapsed_time()` edge cases
+    - `format_shred_name()` path handling and truncation
+    - `generate_shreds_table()` with mock ChucK
+
+- **Expanded test_api.py Coverage**:
+  - Added `TestEventCallbacks` class with 5 tests for event signaling and callbacks
+  - Added `TestAdvanceMethod` class with 2 tests for advance() behavior
+  - Added `TestBufferReuseModes` class with 4 tests for buffer management modes
+  - Total test count increased from 143 to 213
+
+### Fixed
+
+- **Broken `numchuck run` command** (`cli/executor.py`):
+  - Fixed call to non-existent `ChucK.create()` method
+  - Now uses proper initialization sequence: `ChucK()` + `set_param()` + `init()`
+
+- **Hardcoded version strings** (`cli/main.py`):
+  - `cmd_version()` and `cmd_info()` now import `__version__` from `_version.py`
+  - Previously hardcoded "0.1.1" instead of current version
+
+- **Per-instance callback storage** (`src/_numchuck.cpp`):
+  - `set_chout_callback()` and `set_cherr_callback()` now use per-instance storage
+  - Previously used static variables shared across all ChucK instances
+  - Added thread-local `g_current_chuck` to track active instance during calls
+  - Added `ChuckContextGuard` RAII wrapper for compile/run methods
+  - Multiple ChucK instances can now have independent output callbacks
+
+- **Memory leak in `replace_shred`** (`src/_numchuck.cpp`):
+  - Used `std::unique_ptr` for exception safety during `Chuck_Msg` construction
+  - Previously, if argument parsing threw, both `msg` and `msg->args` would leak
+
+- **Improved error propagation for sync getters** (`src/numchuck/api.py`):
+  - `get_int()`, `get_float()`, `get_string()` now provide specific error messages
+  - Error message explains that callback wasn't invoked and suggests increasing `run_frames`
+  - Previously raised generic "Failed to get global X" without actionable guidance
+
+- **Inconsistent error handling in REPL cleanup** (`src/numchuck/tui/repl.py`):
+  - Now catches `RuntimeError` specifically for ChucK operations
+  - Catches `(RuntimeError, OSError)` for audio operations
+  - Previously broad `Exception` catch masked specific errors
+
+- **Flaky test patterns** (multiple test files):
+  - `test_global_events.py`: Replaced `try/except pass` with explicit outcome tracking
+  - `test_realtime_audio.py`: Fixed bare `except:` to catch specific exceptions with assertions
+  - `test_error_handling.py`: dtype tests now explicitly document both valid outcomes
+
 ### Changed
+
+- **Documented thread safety in editor** (`src/numchuck/tui/editor.py`):
+  - Added docstring explaining prompt_toolkit's single-threaded model
+  - Clarifies that `current_tab_index` access is safe (no race condition)
+
+- **Consolidated shreds table rendering** (`tui/common.py`, `tui/repl.py`):
+  - Created shared utility functions: `format_elapsed_time()`, `format_shred_name()`, `generate_shreds_table()`
+  - Eliminated ~60 lines of duplicated code between REPL and editor
+  - Fixed bug in `common.py` using wrong method (`get_param()` instead of `get_param_int()`)
+  - Unified time formatting: seconds, minutes+seconds, or hours+minutes
+
+- **Moved imports to module level** in TUI components for better performance:
+  - `tui/parser.py`: `ast`
+  - `tui/commands.py`: `os`, `sys`, `tempfile`, `time`, `pathlib.Path`, snippet utilities
+  - `tui/common.py`: `ChucK`, `ChuckSession`
+  - `tui/session.py`: `Project`, `get_projects_dir`
 
 ## [0.1.4]
 

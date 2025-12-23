@@ -16,6 +16,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <memory>
+#include <cstdint>
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -23,12 +24,18 @@ using namespace nb::literals;
 // Mutex for audio state protection
 static std::mutex g_audio_mutex;
 
+// Thread-local storage for current ChucK instance (used by chout/cherr callbacks)
+static thread_local ChucK* g_current_chuck = nullptr;
+
 // Audio callback function - uses userData to get ChucK instance
 static void audio_callback_func(SAMPLE* input, SAMPLE* output, t_CKUINT numFrames,
                                 t_CKUINT numInChans, t_CKUINT numOutChans, void* userData) {
     ChucK* chuck = static_cast<ChucK*>(userData);
     if (chuck) {
+        // Set current ChucK instance for output callbacks
+        g_current_chuck = chuck;
         chuck->run(input, output, numFrames);
+        g_current_chuck = nullptr;
     }
 }
 
@@ -108,6 +115,12 @@ static std::unique_ptr<AudioContext> g_audio_context;
 static std::unordered_map<int, nb::callable> g_callbacks;
 static std::mutex g_callback_mutex;
 static int g_next_callback_id = 1;
+
+// Per-instance callback storage for chout/cherr
+// Maps ChucK instance pointer to callback ID
+static std::unordered_map<std::uintptr_t, int> g_chout_callbacks;
+static std::unordered_map<std::uintptr_t, int> g_cherr_callbacks;
+static std::mutex g_output_callback_mutex;
 
 // Helper: Store Python callable and return ID
 static int store_callback(nb::callable callback) {
@@ -190,6 +203,66 @@ static void cb_event_wrapper(t_CKINT callback_id) {
     }
     // Note: Don't remove callback for events - they're persistent
 }
+
+// Chout callback wrapper - looks up callback by current ChucK instance
+static void cb_chout_wrapper(const char* msg) {
+    if (!g_current_chuck) return;
+
+    std::uintptr_t key = reinterpret_cast<std::uintptr_t>(g_current_chuck);
+    int callback_id = 0;
+    {
+        std::lock_guard<std::mutex> lock(g_output_callback_mutex);
+        auto it = g_chout_callbacks.find(key);
+        if (it != g_chout_callbacks.end()) {
+            callback_id = it->second;
+        }
+    }
+
+    if (callback_id > 0) {
+        nb::callable callback = get_callback(callback_id);
+        if (callback.is_valid()) {
+            nb::gil_scoped_acquire acquire;
+            callback(msg);
+        }
+    }
+}
+
+// Cherr callback wrapper - looks up callback by current ChucK instance
+static void cb_cherr_wrapper(const char* msg) {
+    if (!g_current_chuck) return;
+
+    std::uintptr_t key = reinterpret_cast<std::uintptr_t>(g_current_chuck);
+    int callback_id = 0;
+    {
+        std::lock_guard<std::mutex> lock(g_output_callback_mutex);
+        auto it = g_cherr_callbacks.find(key);
+        if (it != g_cherr_callbacks.end()) {
+            callback_id = it->second;
+        }
+    }
+
+    if (callback_id > 0) {
+        nb::callable callback = get_callback(callback_id);
+        if (callback.is_valid()) {
+            nb::gil_scoped_acquire acquire;
+            callback(msg);
+        }
+    }
+}
+
+// RAII helper to set current ChucK instance for output callbacks
+class ChuckContextGuard {
+    ChucK* m_previous;
+public:
+    explicit ChuckContextGuard(ChucK* chuck) : m_previous(g_current_chuck) {
+        g_current_chuck = chuck;
+    }
+    ~ChuckContextGuard() {
+        g_current_chuck = m_previous;
+    }
+    ChuckContextGuard(const ChuckContextGuard&) = delete;
+    ChuckContextGuard& operator=(const ChuckContextGuard&) = delete;
+};
 
 // Helper function to validate numpy array for audio processing
 template<typename T>
@@ -313,6 +386,7 @@ NB_MODULE(_numchuck, m) {
                     throw std::runtime_error("ChucK instance not initialized. Call init() first.");
                 }
 
+                ChuckContextGuard guard(&self);
                 std::vector<t_CKUINT> shred_ids;
                 t_CKBOOL result = self.compileFile(path, args, count, immediate, &shred_ids);
                 return std::make_pair(result != 0, shred_ids);
@@ -332,6 +406,7 @@ NB_MODULE(_numchuck, m) {
                     throw std::runtime_error("ChucK instance not initialized. Call init() first.");
                 }
 
+                ChuckContextGuard guard(&self);
                 std::vector<t_CKUINT> shred_ids;
                 t_CKBOOL result = self.compileCode(code, args, count, immediate, &shred_ids, filepath);
                 return std::make_pair(result != 0, shred_ids);
@@ -362,6 +437,7 @@ NB_MODULE(_numchuck, m) {
                 validate_audio_buffer(input, "input", expected_input_size);
                 validate_audio_buffer(output, "output", expected_output_size);
 
+                ChuckContextGuard guard(&self);
                 self.run(input.data(), output.data(), num_frames);
             },
             "input"_a, "output"_a, "num_frames"_a,
@@ -394,29 +470,41 @@ NB_MODULE(_numchuck, m) {
             &ChucK::probeChugins,
             "Probe and print info on all chugins")
 
-        // Callback methods
+        // Callback methods (per-instance storage)
         .def("set_chout_callback",
             [](ChucK& self, nb::callable callback) {
-                static nb::callable stored_callback;
-                stored_callback = callback;
-                return self.setChoutCallback([](const char* msg) {
-                    nb::gil_scoped_acquire acquire;
-                    stored_callback(msg);
-                });
+                std::uintptr_t key = reinterpret_cast<std::uintptr_t>(&self);
+                int callback_id = store_callback(callback);
+                {
+                    std::lock_guard<std::mutex> lock(g_output_callback_mutex);
+                    // Remove old callback if exists
+                    auto it = g_chout_callbacks.find(key);
+                    if (it != g_chout_callbacks.end()) {
+                        remove_callback(it->second);
+                    }
+                    g_chout_callbacks[key] = callback_id;
+                }
+                return self.setChoutCallback(cb_chout_wrapper);
             },
             "callback"_a,
-            "Set callback for chout output")
+            "Set callback for chout output (per-instance)")
         .def("set_cherr_callback",
             [](ChucK& self, nb::callable callback) {
-                static nb::callable stored_callback;
-                stored_callback = callback;
-                return self.setCherrCallback([](const char* msg) {
-                    nb::gil_scoped_acquire acquire;
-                    stored_callback(msg);
-                });
+                std::uintptr_t key = reinterpret_cast<std::uintptr_t>(&self);
+                int callback_id = store_callback(callback);
+                {
+                    std::lock_guard<std::mutex> lock(g_output_callback_mutex);
+                    // Remove old callback if exists
+                    auto it = g_cherr_callbacks.find(key);
+                    if (it != g_cherr_callbacks.end()) {
+                        remove_callback(it->second);
+                    }
+                    g_cherr_callbacks[key] = callback_id;
+                }
+                return self.setCherrCallback(cb_cherr_wrapper);
             },
             "callback"_a,
-            "Set callback for cherr output")
+            "Set callback for cherr output (per-instance)")
 
         // Global variable management - primitives
         .def("set_global_int",
@@ -729,22 +817,27 @@ NB_MODULE(_numchuck, m) {
                     throw std::runtime_error("Failed to compile replacement code");
                 }
 
-                // Create replace message
-                Chuck_Msg* msg = new Chuck_Msg();
-                msg->type = CK_MSG_REPLACE;
-                msg->param = shred_id;
-                msg->code = self.vm()->carrier()->compiler->output();
-                msg->args = new std::vector<std::string>();
+                // Use unique_ptr for exception safety during construction
+                auto msg_guard = std::make_unique<Chuck_Msg>();
+                auto msg_args = std::make_unique<std::vector<std::string>>();
 
-                // Parse args if provided
+                // Parse args if provided (may throw, but unique_ptrs handle cleanup)
                 if (!args.empty()) {
                     std::istringstream iss(args);
                     std::string token;
                     while (std::getline(iss, token, ':')) {
-                        msg->args->push_back(token);
+                        msg_args->push_back(token);
                     }
                 }
 
+                // Set up message fields
+                msg_guard->type = CK_MSG_REPLACE;
+                msg_guard->param = shred_id;
+                msg_guard->code = self.vm()->carrier()->compiler->output();
+                msg_guard->args = msg_args.release();  // Transfer ownership to msg
+
+                // process_msg takes a reference to pointer and takes ownership
+                Chuck_Msg* msg = msg_guard.release();
                 t_CKUINT new_id = self.vm()->process_msg(msg);
                 return new_id;
             },
@@ -884,8 +977,15 @@ NB_MODULE(_numchuck, m) {
     // Cleanup function to be called during module teardown
     m.def("_cleanup_callbacks",
         []() {
-            std::lock_guard<std::mutex> lock(g_callback_mutex);
-            g_callbacks.clear();
+            {
+                std::lock_guard<std::mutex> lock(g_callback_mutex);
+                g_callbacks.clear();
+            }
+            {
+                std::lock_guard<std::mutex> lock(g_output_callback_mutex);
+                g_chout_callbacks.clear();
+                g_cherr_callbacks.clear();
+            }
         },
         "Internal cleanup function for callbacks (called during module unload)");
 

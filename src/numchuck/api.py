@@ -11,6 +11,21 @@ Example:
     48000
     >>> chuck.compile("SinOsc s => dac;")
     (True, [1])
+
+Thread Safety:
+    When real-time audio is active (after calling start_audio()), the following
+    operations are NOT thread-safe and should be avoided:
+
+    - compile() / compile_file() - Stop audio first
+    - remove_shred() / clear() - Stop audio first
+    - Deleting the Chuck instance - Call stop_audio() first
+
+    Safe operations during real-time audio:
+    - Global variable getters/setters (set_int, get_int, etc.)
+    - Event signaling (signal_event, broadcast_event)
+    - Read-only queries (shreds property, shred_info)
+
+    See docs/architecture.md for detailed thread safety documentation.
 """
 
 from __future__ import annotations
@@ -83,7 +98,9 @@ class Chuck:
             )
         self._chuck.set_param(_numchuck.PARAM_CHUGIN_ENABLE, int(chugin_enable))
         if user_chugins:
-            self._chuck.set_param_string_list(_numchuck.PARAM_USER_CHUGINS, user_chugins)
+            self._chuck.set_param_string_list(
+                _numchuck.PARAM_USER_CHUGINS, user_chugins
+            )
         self._chuck.set_param(_numchuck.PARAM_VM_ADAPTIVE, int(vm_adaptive))
         self._chuck.set_param(_numchuck.PARAM_VM_HALT, int(vm_halt))
         self._chuck.set_param(_numchuck.PARAM_AUTO_DEPEND, int(auto_depend))
@@ -127,6 +144,10 @@ class Chuck:
 
         Returns:
             Tuple of (success, list of shred IDs)
+
+        Warning:
+            Not thread-safe during real-time audio playback.
+            Call stop_audio() before compiling new code.
         """
         return self._chuck.compile_code(code, args, count, immediate)
 
@@ -147,6 +168,10 @@ class Chuck:
 
         Returns:
             Tuple of (success, list of shred IDs)
+
+        Warning:
+            Not thread-safe during real-time audio playback.
+            Call stop_audio() before compiling new code.
         """
         return self._chuck.compile_file(path, args, count, immediate)
 
@@ -344,7 +369,12 @@ class Chuck:
         return self._chuck.get_all_shred_ids()
 
     def remove_shred(self, shred_id: int) -> None:
-        """Remove a shred by ID."""
+        """Remove a shred by ID.
+
+        Warning:
+            Not thread-safe during real-time audio playback.
+            Call stop_audio() before removing shreds.
+        """
         self._chuck.remove_shred(shred_id)
 
     def replace_shred(self, shred_id: int, code: str, args: str = "") -> int:
@@ -369,7 +399,12 @@ class Chuck:
         return self._chuck.get_shred_info(shred_id)
 
     def clear(self) -> None:
-        """Remove all shreds from the VM."""
+        """Remove all shreds from the VM.
+
+        Warning:
+            Not thread-safe during real-time audio playback.
+            Call stop_audio() before clearing the VM.
+        """
         self._chuck.clear_vm()
 
     def reset_id(self) -> None:
@@ -398,7 +433,10 @@ class Chuck:
         self._chuck.get_global_int(name, lambda v: result.append(v))
         self.run(run_frames)
         if not result:
-            raise RuntimeError(f"Failed to get global int '{name}'")
+            raise RuntimeError(
+                f"Failed to get global int '{name}' - callback not invoked. "
+                f"Try increasing run_frames (currently {run_frames})."
+            )
         return result[0]
 
     def set_float(self, name: str, value: float) -> None:
@@ -419,7 +457,10 @@ class Chuck:
         self._chuck.get_global_float(name, lambda v: result.append(v))
         self.run(run_frames)
         if not result:
-            raise RuntimeError(f"Failed to get global float '{name}'")
+            raise RuntimeError(
+                f"Failed to get global float '{name}' - callback not invoked. "
+                f"Try increasing run_frames (currently {run_frames})."
+            )
         return result[0]
 
     def set_string(self, name: str, value: str) -> None:
@@ -440,7 +481,10 @@ class Chuck:
         self._chuck.get_global_string(name, lambda v: result.append(v))
         self.run(run_frames)
         if not result:
-            raise RuntimeError(f"Failed to get global string '{name}'")
+            raise RuntimeError(
+                f"Failed to get global string '{name}' - callback not invoked. "
+                f"Try increasing run_frames (currently {run_frames})."
+            )
         return result[0]
 
     def get_int_async(self, name: str, callback: Callable[[int], None]) -> None:

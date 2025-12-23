@@ -1,5 +1,17 @@
+import os
 import subprocess
+import sys
+import tempfile
+import time
+from pathlib import Path
+
 from .._numchuck import start_audio, stop_audio, shutdown_audio, audio_info
+from .paths import (
+    get_snippet_path,
+    get_snippets_dir,
+    ensure_numchuck_directories,
+    list_snippets,
+)
 
 
 class CommandExecutor:
@@ -16,9 +28,6 @@ class CommandExecutor:
             return f"Unknown command type: {cmd.type}"
 
     def _cmd_spork_file(self, args):
-        import os
-        from pathlib import Path
-
         # Convert relative path to absolute path
         path = os.path.abspath(args["path"])
 
@@ -89,8 +98,6 @@ class CommandExecutor:
     def _cmd_replace_shred_file(self, args):
         """Replace shred with code from file"""
         try:
-            from pathlib import Path
-
             filepath = args["path"]
             code = Path(filepath).read_text()
 
@@ -256,8 +263,6 @@ class CommandExecutor:
         print("shred ID reset")
 
     def _cmd_clear_screen(self, args):
-        import sys
-
         sys.stdout.write("\033[2J\033[H")  # Clear screen and move cursor to home
         sys.stdout.flush()
 
@@ -280,9 +285,6 @@ class CommandExecutor:
 
     def _cmd_edit_shred(self, args):
         """Edit and replace a shred by ID"""
-        import tempfile
-        import os
-
         shred_id = args["id"]
 
         if shred_id not in self.session.shreds:
@@ -333,9 +335,6 @@ class CommandExecutor:
         subprocess.run(args["cmd"], shell=True)
 
     def _cmd_open_editor(self, args):
-        import tempfile
-        import os
-
         # Get editor from environment or use default
         editor = os.environ.get("EDITOR", "nano")
 
@@ -376,8 +375,6 @@ class CommandExecutor:
 
     def _cmd_watch(self, args):
         """Monitor VM state continuously"""
-        import time
-
         print("Watching VM state (Ctrl+C to stop)...")
         print()
         try:
@@ -396,13 +393,6 @@ class CommandExecutor:
 
     def _cmd_load_snippet(self, args):
         """Load and spork a code snippet from ~/.numchuck/snippets/"""
-        from .paths import (
-            get_snippet_path,
-            get_snippets_dir,
-            ensure_numchuck_directories,
-            list_snippets,
-        )
-
         name = args["name"]
         snippet_path = get_snippet_path(name)
 

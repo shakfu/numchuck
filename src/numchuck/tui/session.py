@@ -1,5 +1,8 @@
 from typing import Dict, Optional
 
+from .paths import get_projects_dir
+from .project import Project
+
 
 class ChuckSession:
     """Session managing ChucK instance state with optional project support."""
@@ -12,9 +15,6 @@ class ChuckSession:
 
         # Initialize project if name provided
         if project_name:
-            from .project import Project
-            from .paths import get_projects_dir
-
             projects_dir = get_projects_dir()
             self.project = Project(project_name, projects_dir)
 

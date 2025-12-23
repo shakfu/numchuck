@@ -151,16 +151,18 @@ def cmd_run(args):
 def cmd_version(args):
     """Show version information."""
     from .._numchuck import version
+    from .._version import __version__
 
-    print("numchuck version: 0.1.1")
+    print(f"numchuck version: {__version__}")
     print(f"ChucK version: {version()}")
 
 
 def cmd_info(args):
     """Show ChucK and numchuck info."""
     from .._numchuck import ChucK, version
+    from .._version import __version__
 
-    print("numchuck: 0.1.1")
+    print(f"numchuck: {__version__}")
     print(f"ChucK: {version()}")
     print(f"ChucK int size: {ChucK.int_size()} bits")
     print(f"Active VMs: {ChucK.num_vms()}")

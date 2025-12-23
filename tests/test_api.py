@@ -255,6 +255,200 @@ class TestGlobalVariables:
         assert value == "hello"
 
 
+class TestEventCallbacks:
+    """Test event signaling and callbacks."""
+
+    def test_signal_event(self):
+        """Test signaling a global event."""
+        chuck = Chuck()
+        chuck.compile("global Event myEvent; myEvent => now; 1::second => now;")
+        chuck.run(100)  # Let shred start waiting
+
+        # Signal should wake the shred
+        chuck.signal_event("myEvent")
+        chuck.run(100)
+        # Test passes if no crash occurs
+
+    def test_broadcast_event(self):
+        """Test broadcasting a global event."""
+        chuck = Chuck()
+        # Create two shreds waiting on same event
+        chuck.compile("global Event myEvent; myEvent => now; 1::second => now;", count=2)
+        chuck.run(100)
+
+        # Broadcast should wake all shreds
+        chuck.broadcast_event("myEvent")
+        chuck.run(100)
+        # Test passes if no crash occurs
+
+    def test_on_event_callback(self):
+        """Test registering an event callback."""
+        chuck = Chuck()
+        chuck.compile("global Event testEvent;")
+        chuck.run(100)
+
+        callback_count = [0]
+
+        def on_event():
+            callback_count[0] += 1
+
+        callback_id = chuck.on_event("testEvent", on_event, listen_forever=True)
+        assert callback_id >= 0
+
+        # Signal the event and run to trigger callback
+        chuck.signal_event("testEvent")
+        chuck.run(256)
+
+        assert callback_count[0] >= 1
+
+    def test_on_event_single_shot(self):
+        """Test event callback with listen_forever=False."""
+        chuck = Chuck()
+        chuck.compile("global Event testEvent;")
+        chuck.run(100)
+
+        callback_count = [0]
+
+        def on_event():
+            callback_count[0] += 1
+
+        chuck.on_event("testEvent", on_event, listen_forever=False)
+
+        # Signal twice
+        chuck.signal_event("testEvent")
+        chuck.run(256)
+        chuck.signal_event("testEvent")
+        chuck.run(256)
+
+        # With listen_forever=False, callback should only fire once
+        assert callback_count[0] == 1
+
+    def test_stop_listening_for_event(self):
+        """Test stopping event listener."""
+        chuck = Chuck()
+        chuck.compile("global Event testEvent;")
+        chuck.run(100)
+
+        callback_count = [0]
+
+        def on_event():
+            callback_count[0] += 1
+
+        callback_id = chuck.on_event("testEvent", on_event, listen_forever=True)
+
+        # Signal once
+        chuck.signal_event("testEvent")
+        chuck.run(256)
+        first_count = callback_count[0]
+        assert first_count >= 1
+
+        # Stop listening
+        chuck.stop_listening_for_event("testEvent", callback_id)
+
+        # Signal again - should not trigger callback
+        chuck.signal_event("testEvent")
+        chuck.run(256)
+        assert callback_count[0] == first_count
+
+
+class TestAdvanceMethod:
+    """Test advance() method behavior."""
+
+    def test_advance_triggers_callbacks(self):
+        """Test that advance() triggers global variable callbacks."""
+        chuck = Chuck()
+        chuck.compile("global int counter; 42 => counter;")
+        chuck.run(100)
+
+        result = [None]
+
+        def callback(value):
+            result[0] = value
+
+        chuck.get_int_async("counter", callback)
+        chuck.advance(256)
+
+        assert result[0] == 42
+
+    def test_advance_advances_vm_time(self):
+        """Test that advance() advances VM time."""
+        chuck = Chuck()
+        chuck.compile("global int counter; 0 => counter;")
+
+        # Get initial time via a shred that writes VM time
+        chuck.compile("""
+            global float vmTime;
+            now/samp => vmTime;
+        """)
+        chuck.advance(1000)
+        time1 = chuck.get_float("vmTime")
+
+        # Advance more
+        chuck.advance(1000)
+        chuck.compile("""
+            global float vmTime;
+            now/samp => vmTime;
+        """)
+        chuck.advance(256)
+        time2 = chuck.get_float("vmTime")
+
+        assert time2 > time1
+
+
+class TestBufferReuseModes:
+    """Test different buffer management modes in run()."""
+
+    def test_fresh_allocation_each_call(self):
+        """Test that default mode allocates fresh buffer each call."""
+        chuck = Chuck(output_channels=1)
+        chuck.compile("SinOsc s => dac; 440 => s.freq; 1::second => now;")
+
+        audio1 = chuck.run(512)
+        audio2 = chuck.run(512)
+
+        # Each call should return a new buffer object
+        assert audio1 is not audio2
+
+    def test_user_buffer_not_reallocated(self):
+        """Test that user-provided buffer is used as-is."""
+        chuck = Chuck(output_channels=1)
+        chuck.compile("SinOsc s => dac; 440 => s.freq; 1::second => now;")
+
+        user_buf = np.zeros(512, dtype=np.float32)
+        result = chuck.run(512, output=user_buf)
+
+        assert result is user_buf
+
+    def test_reuse_mode_consistency(self):
+        """Test that reuse=True returns same buffer across multiple calls."""
+        chuck = Chuck(output_channels=1)
+        chuck.compile("SinOsc s => dac; 440 => s.freq; 1::second => now;")
+
+        buffers = [chuck.run(512, reuse=True) for _ in range(5)]
+
+        # All should be the same buffer object
+        for buf in buffers[1:]:
+            assert buf is buffers[0]
+
+    def test_mixed_modes_independence(self):
+        """Test that reuse mode doesn't affect fresh allocation mode."""
+        chuck = Chuck(output_channels=1)
+        chuck.compile("SinOsc s => dac; 440 => s.freq; 1::second => now;")
+
+        # Use reuse mode
+        reuse_buf = chuck.run(512, reuse=True)
+
+        # Use fresh allocation mode
+        fresh_buf = chuck.run(512)
+
+        # They should be different buffers
+        assert reuse_buf is not fresh_buf
+
+        # Reuse should still return same buffer
+        reuse_buf2 = chuck.run(512, reuse=True)
+        assert reuse_buf2 is reuse_buf
+
+
 class TestRawAccess:
     """Test access to raw low-level API."""
 

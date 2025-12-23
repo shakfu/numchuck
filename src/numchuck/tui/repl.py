@@ -13,6 +13,7 @@ from .parser import CommandParser
 from .session import REPLSession
 from .commands import CommandExecutor
 from .paths import get_history_file, ensure_numchuck_directories
+from .common import generate_shreds_table
 
 
 class ChuckREPL:
@@ -265,62 +266,9 @@ OTHER COMMANDS                          KEYBOARD SHORTCUTS
         # Create shreds table function
         def get_shreds_table():
             """Generate formatted table of active shreds"""
-            if not self.session.shreds:
-                return "No active shreds"
-
-            lines = []
-            lines.append(
-                "ID    Name                                                    Elapsed"
+            return generate_shreds_table(
+                self.session.shreds, self.chuck, use_pipes=False
             )
-            lines.append("─" * 78)
-
-            # Get current VM time for elapsed calculation
-            try:
-                current_time = self.chuck.now()
-            except (RuntimeError, AttributeError):
-                current_time = 0.0
-
-            for shred_id, info in sorted(self.session.shreds.items()):
-                # Extract parent folder + filename from path
-                from pathlib import Path
-
-                full_name = info["name"]
-                try:
-                    path = Path(full_name)
-                    # Show parent/filename if it's a path, otherwise just the name
-                    if path.parent.name:
-                        name = f"{path.parent.name}/{path.name}"
-                    else:
-                        name = path.name
-                except (ValueError, TypeError):
-                    name = full_name
-                name = name[:56]  # Wider column for better readability
-
-                # Calculate elapsed time in seconds
-                spork_time = info.get("time", 0.0)
-                elapsed_samples = current_time - spork_time
-                # Get sample rate from ChucK (default 44100)
-                try:
-                    sample_rate = self.chuck.get_param_int(PARAM_SAMPLE_RATE)
-                except (RuntimeError, AttributeError, ValueError):
-                    sample_rate = 44100
-                elapsed_sec = elapsed_samples / sample_rate if sample_rate > 0 else 0.0
-
-                # Format time display
-                if elapsed_sec < 60:
-                    time_str = f"{elapsed_sec:.1f}s"
-                elif elapsed_sec < 3600:
-                    mins = int(elapsed_sec / 60)
-                    secs = elapsed_sec % 60
-                    time_str = f"{mins}m{secs:04.1f}s"
-                else:
-                    hours = int(elapsed_sec / 3600)
-                    mins = int((elapsed_sec % 3600) / 60)
-                    time_str = f"{hours}h{mins:02d}m"
-
-                lines.append(f"{shred_id:<5} {name:<56} {time_str}")
-
-            return "\n".join(lines)
 
         # Store the shreds table generator function
         self.get_shreds_table = get_shreds_table
@@ -708,19 +656,19 @@ OTHER COMMANDS                          KEYBOARD SHORTCUTS
         # Remove all shreds first
         try:
             self.chuck.remove_all_shreds()
-        except Exception as e:
+        except RuntimeError as e:
             print(f"Warning: Error removing shreds: {e}", file=sys.stderr)
 
         # Stop audio properly if running
         if hasattr(self, "session") and self.session.audio_running:
             try:
                 stop_audio()  # Stop audio stream first
-            except Exception as e:
+            except (RuntimeError, OSError) as e:
                 print(f"Warning: Error stopping audio: {e}", file=sys.stderr)
 
             try:
                 shutdown_audio(500)  # Then clean up audio resources
-            except Exception as e:
+            except (RuntimeError, OSError) as e:
                 print(f"Warning: Error shutting down audio: {e}", file=sys.stderr)
 
         # Break circular references to allow proper garbage collection

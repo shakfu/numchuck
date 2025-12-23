@@ -81,28 +81,28 @@ User Data (~/.numchuck/):
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                    CLI Entry Point                          │
-│  - numchuck.cli.main: Command dispatcher                     │
+│  - numchuck.cli.main: Command dispatcher                    │
 │  - Subcommands: edit, repl, run, version, info              │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
 │              Terminal User Interfaces (TUI)                 │
-│  - numchuck.tui.editor: Multi-tab editor (prompt_toolkit)    │
-│  - numchuck.tui.repl: Interactive REPL (prompt_toolkit)      │
-│  - numchuck.tui.session: Shred tracking & project versioning │
-│  - numchuck.tui.commands: REPL commands (@snippet, :help)    │
-│  - numchuck.tui.project: File versioning system              │
-│  - numchuck.tui.chuck_lexer: Syntax highlighting (Pygments)  │
+│  - numchuck.tui.editor: Multi-tab editor (prompt_toolkit    │
+│  - numchuck.tui.repl: Interactive REPL (prompt_toolkit)     │
+│  - numchuck.tui.session: Shred tracking & proj. versioning  │
+│  - numchuck.tui.commands: REPL commands (@snippet, :help)   │
+│  - numchuck.tui.project: File versioning system             │
+│  - numchuck.tui.chuck_lexer: Syntax highlighting (Pygments) │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│              numchuck Package (Python)                       │
-│  - __init__.py: Public API, imports from _numchuck           │
-│  - _numchuck.pyi: Type stubs for IDE/type checkers           │
+│              numchuck Package (Python)                      │
+│  - __init__.py: Public API, imports from _numchuck          │
+│  - _numchuck.pyi: Type stubs for IDE/type checkers          │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│        _numchuck Extension Module (C++ via nanobind)         │
+│        _numchuck Extension Module (C++ via nanobind)        │
 │  - ChucK class bindings                                     │
 │  - Audio callback infrastructure                            │
 │  - Parameter management                                     │
@@ -873,6 +873,36 @@ static std::unique_ptr<AudioContext> g_audio_context;
 - Move-only semantics
 
 ## Thread Safety
+
+> **IMPORTANT: Thread Safety Constraints for Real-Time Audio**
+>
+> When real-time audio is active (`start_audio()` has been called), the following
+> operations are **NOT thread-safe** and may cause crashes or undefined behavior:
+>
+> - `compile_code()` / `compile_file()` - Do not compile while audio is running
+> - `remove_shred()` / `remove_all_shreds()` - Stop audio first
+> - `clear_vm()` / `reset_shred_id()` - Stop audio first
+> - Deleting the ChucK instance - Always call `stop_audio()` and `shutdown_audio()` first
+> - `set_param()` and other parameter modifications - Stop audio first
+>
+> **Safe operations during real-time audio:**
+> - `now()` - Query current VM time
+> - `get_all_shred_ids()` - List active shreds (read-only)
+> - `get_shred_info()` - Query shred metadata (read-only)
+> - Global variable getters/setters - Thread-safe by design
+> - Event signaling (`signal_global_event()`, `broadcast_global_event()`)
+>
+> **Recommended pattern:**
+> ```python
+> # CORRECT: Stop audio before modifications
+> stop_audio()
+> chuck.compile_code("new code...")
+> start_audio(chuck)
+>
+> # INCORRECT: Modifying while audio runs (may crash!)
+> # start_audio(chuck)
+> # chuck.compile_code("new code...")  # UNSAFE!
+> ```
 
 ### Thread Model
 

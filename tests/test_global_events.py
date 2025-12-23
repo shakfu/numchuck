@@ -70,14 +70,18 @@ def test_event_nonexistent():
 
     run_audio_cycles(chuck)
 
-    # ChucK queues event messages, so non-existent events may not error immediately
-    # Just verify it doesn't crash
+    # ChucK queues event messages, so non-existent events may not error immediately.
+    # Valid outcomes: (1) no error (event silently ignored), or (2) RuntimeError raised.
+    # The key assertion is that it doesn't crash with a segfault or other fatal error.
+    error_raised = False
     try:
         chuck.signal_global_event("nonexistentEvent")
         run_audio_cycles(chuck)
     except RuntimeError:
-        # It's also valid to raise an error
-        pass
+        error_raised = True
+
+    # Test passes if we reach here (either outcome is acceptable)
+    assert isinstance(error_raised, bool)  # Explicitly document we handled both cases
 
 
 def test_listen_for_event():

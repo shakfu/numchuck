@@ -90,12 +90,21 @@ class EditorTab:
 
 
 class ChuckEditor:
-    """Multi-tab editor with project versioning."""
+    """Multi-tab editor with project versioning.
+
+    Note on thread safety:
+        The tabs list and current_tab_index are accessed from both key handlers
+        and the rendering system (via DynamicContainer). This is safe because
+        prompt_toolkit is single-threaded: key handlers, rendering, and all
+        callbacks execute sequentially on the same event loop thread. The
+        app.invalidate() call schedules a redraw but does not cause concurrent
+        access.
+    """
 
     def __init__(self, project_name=None, start_audio=False):
         self.app_state = ChuckApplication(project_name=project_name)
         self.tabs = []
-        self.current_tab_index = 0
+        self.current_tab_index = 0  # Safe: prompt_toolkit is single-threaded
         self.start_audio_flag = start_audio
         self.audio_started = False
         self.status_message = ""

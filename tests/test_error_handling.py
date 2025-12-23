@@ -170,29 +170,46 @@ def test_run_wrong_output_buffer_size():
 
 
 def test_run_wrong_dtype_input():
-    """Test that wrong dtype for input is caught by nanobind (implicit cast or error)"""
+    """Test that wrong dtype for input is handled by nanobind.
+
+    nanobind can either:
+    1. Implicitly convert float64 -> float32 (succeeds)
+    2. Reject the incompatible type (raises TypeError)
+
+    Both outcomes are valid - this test verifies neither crashes.
+    """
     chuck = numchuck.ChucK()
     chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
     chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
     chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
-    # Using float64 instead of float32 - nanobind may auto-convert or raise TypeError
-    # Behavior depends on nanobind configuration
+    # Using float64 instead of float32
     input_buf = np.zeros(512 * 2, dtype=np.float64)
     output_buf = np.zeros(512 * 2, dtype=np.float32)
 
-    # Either works (implicit conversion) or raises TypeError
+    converted = False
+    rejected = False
     try:
         chuck.run(input_buf, output_buf, 512)
-        # If it worked, nanobind converted it
+        converted = True
     except TypeError:
-        # Expected: nanobind rejected incompatible type
-        pass
+        rejected = True
+
+    # Exactly one outcome should occur
+    assert converted or rejected, "Expected either conversion or TypeError"
+    assert not (converted and rejected), "Both outcomes should not occur"
 
 
 def test_run_wrong_dtype_output():
-    """Test that wrong dtype for output is caught by nanobind"""
+    """Test that wrong dtype for output is handled by nanobind.
+
+    nanobind can either:
+    1. Implicitly convert and copy back to float64 (succeeds)
+    2. Reject the incompatible type (raises TypeError)
+
+    Both outcomes are valid - this test verifies neither crashes.
+    """
     chuck = numchuck.ChucK()
     chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
     chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
@@ -203,13 +220,17 @@ def test_run_wrong_dtype_output():
     # Using float64 instead of float32
     output_buf = np.zeros(512 * 2, dtype=np.float64)
 
-    # Either works (implicit conversion) or raises TypeError
+    converted = False
+    rejected = False
     try:
         chuck.run(input_buf, output_buf, 512)
-        # If it worked, nanobind converted it
+        converted = True
     except TypeError:
-        # Expected: nanobind rejected incompatible type
-        pass
+        rejected = True
+
+    # Exactly one outcome should occur
+    assert converted or rejected, "Expected either conversion or TypeError"
+    assert not (converted and rejected), "Both outcomes should not occur"
 
 
 def test_run_multidimensional_input():

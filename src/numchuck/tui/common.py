@@ -8,6 +8,8 @@ Provides base class with common functionality:
 - Common key bindings
 """
 
+from pathlib import Path
+
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout.containers import ConditionalContainer, Window
 from prompt_toolkit.layout.controls import FormattedTextControl
@@ -15,14 +17,117 @@ from prompt_toolkit.layout.dimension import Dimension as D
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.widgets import TextArea
 
+from .._numchuck import ChucK, PARAM_SAMPLE_RATE
+from .session import ChuckSession
+
+
+def format_elapsed_time(elapsed_sec: float) -> str:
+    """Format elapsed time in human-readable format.
+
+    Args:
+        elapsed_sec: Elapsed time in seconds
+
+    Returns:
+        Formatted string like "5.2s", "2m30.5s", or "1h05m"
+    """
+    if elapsed_sec < 60:
+        return f"{elapsed_sec:.1f}s"
+    elif elapsed_sec < 3600:
+        mins = int(elapsed_sec / 60)
+        secs = elapsed_sec % 60
+        return f"{mins}m{secs:04.1f}s"
+    else:
+        hours = int(elapsed_sec / 3600)
+        mins = int((elapsed_sec % 3600) / 60)
+        return f"{hours}h{mins:02d}m"
+
+
+def format_shred_name(full_name: str, max_len: int = 56) -> str:
+    """Format shred name for display, showing parent/filename.
+
+    Args:
+        full_name: Full path or name of the shred
+        max_len: Maximum length for the name
+
+    Returns:
+        Formatted name truncated to max_len
+    """
+    try:
+        path = Path(full_name)
+        if path.parent.name:
+            name = f"{path.parent.name}/{path.name}"
+        else:
+            name = path.name
+    except (ValueError, TypeError):
+        name = full_name
+    return name[:max_len]
+
+
+def generate_shreds_table(
+    shreds: dict,
+    chuck,
+    use_pipes: bool = False,
+) -> str:
+    """Generate formatted table of active shreds.
+
+    Args:
+        shreds: Dictionary of shred_id -> shred info
+        chuck: ChucK instance for querying VM time and sample rate
+        use_pipes: If True, use pipe separators; if False, use spaces
+
+    Returns:
+        Formatted table string
+    """
+    if not shreds:
+        return "No active shreds"
+
+    lines = []
+
+    # Header
+    if use_pipes:
+        lines.append(
+            "ID   | Name                                                    | Elapsed"
+        )
+        lines.append("-" * 78)
+    else:
+        lines.append(
+            "ID    Name                                                    Elapsed"
+        )
+        lines.append("\u2500" * 78)  # Unicode box drawing character
+
+    # Get current VM time for elapsed calculation
+    try:
+        current_time = chuck.now()
+    except (RuntimeError, AttributeError):
+        current_time = 0.0
+
+    # Get sample rate
+    try:
+        sample_rate = chuck.get_param_int(PARAM_SAMPLE_RATE)
+    except (RuntimeError, AttributeError, ValueError):
+        sample_rate = 44100
+
+    for shred_id, info in sorted(shreds.items()):
+        name = format_shred_name(info["name"])
+
+        # Calculate elapsed time in seconds
+        spork_time = info.get("time", 0.0)
+        elapsed_samples = current_time - spork_time
+        elapsed_sec = elapsed_samples / sample_rate if sample_rate > 0 else 0.0
+        time_str = format_elapsed_time(elapsed_sec)
+
+        if use_pipes:
+            lines.append(f"{shred_id:<5d} | {name:<56s} | {time_str}")
+        else:
+            lines.append(f"{shred_id:<5} {name:<56} {time_str}")
+
+    return "\n".join(lines)
+
 
 class ChuckApplication:
     """Base application managing ChucK instance and shared state."""
 
     def __init__(self, project_name=None):
-        from .._numchuck import ChucK
-        from .session import ChuckSession
-
         self.chuck = ChucK()
         self.session = ChuckSession(self.chuck, project_name=project_name)
 
@@ -84,48 +189,9 @@ class ChuckApplication:
         """Create shreds table that toggles with F2."""
 
         def get_text():
-            if not self.session.shreds:
-                return "No active shreds"
-
-            lines = [
-                "ID   | Name                                                    | Elapsed"
-            ]
-            lines.append("-" * 78)
-
-            # Get current VM time for elapsed calculation
-            try:
-                current_time = self.chuck.now()
-            except (RuntimeError, AttributeError):
-                current_time = 0.0
-
-            for sid, info in sorted(self.session.shreds.items()):
-                # Extract parent folder + filename from path
-                from pathlib import Path
-
-                full_name = info["name"]
-                try:
-                    path = Path(full_name)
-                    # Show parent/filename if it's a path, otherwise just the name
-                    if path.parent.name:
-                        name = f"{path.parent.name}/{path.name}"
-                    else:
-                        name = path.name
-                except (ValueError, TypeError):
-                    name = full_name
-                name = name[:56]  # Wider column for better readability
-
-                # Calculate elapsed time in seconds
-                spork_time = info.get("time", 0.0)
-                elapsed_samples = current_time - spork_time
-                # Get sample rate from ChucK (default 44100)
-                try:
-                    srate = self.chuck.get_param("SAMPLE_RATE")
-                except (RuntimeError, AttributeError, ValueError):
-                    srate = 44100
-                elapsed_sec = elapsed_samples / srate if srate > 0 else 0.0
-
-                lines.append(f"{sid:<5d} | {name:<56s} | {elapsed_sec:.1f}s")
-            return "\n".join(lines)
+            return generate_shreds_table(
+                self.session.shreds, self.chuck, use_pipes=True
+            )
 
         return ConditionalContainer(
             Window(content=FormattedTextControl(get_text), height=D(min=5, max=15)),

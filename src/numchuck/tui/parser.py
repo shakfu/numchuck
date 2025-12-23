@@ -1,3 +1,4 @@
+import ast
 import re
 from dataclasses import dataclass
 from typing import Optional
@@ -166,8 +167,6 @@ class CommandParser:
 
         # Array
         if s.startswith("[") and s.endswith("]"):
-            import ast
-
             return ast.literal_eval(s)
 
         # String

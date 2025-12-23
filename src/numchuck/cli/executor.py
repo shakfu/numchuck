@@ -40,7 +40,12 @@ def execute_files(
     Raises:
         ExecutionError: If compilation or execution fails
     """
-    from .._numchuck import ChucK
+    from .._numchuck import (
+        ChucK,
+        PARAM_SAMPLE_RATE,
+        PARAM_OUTPUT_CHANNELS,
+        PARAM_INPUT_CHANNELS,
+    )
 
     # Validate files exist
     missing_files = []
@@ -56,7 +61,11 @@ def execute_files(
 
     # Initialize ChucK VM
     try:
-        chuck = ChucK.create(srate, channels)
+        chuck = ChucK()
+        chuck.set_param(PARAM_SAMPLE_RATE, srate)
+        chuck.set_param(PARAM_OUTPUT_CHANNELS, channels)
+        chuck.set_param(PARAM_INPUT_CHANNELS, 0)
+        chuck.init()
     except Exception as e:
         print(f"Error: Failed to create ChucK VM: {e}", file=sys.stderr)
         raise ExecutionError(f"ChucK initialization failed: {e}")
