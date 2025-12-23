@@ -144,11 +144,11 @@ if (CMAKE_HOST_APPLE)
 endif()
 
 
-# target_compile_options(chuck_lib
-# 	PUBLIC
-# 	-stdlib=libc++
-# 	-O3
-# )
+# Position-independent code required for shared library on Linux
+target_compile_options(chuck_lib
+	PRIVATE
+	$<$<PLATFORM_ID:Linux>:-fPIC>
+)
 
 target_compile_definitions(chuck_lib
 	PUBLIC
