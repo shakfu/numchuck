@@ -56,14 +56,15 @@ def test_chugin_loading():
     chuck.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
 
     # Set chugin search path to examples/chugins
-    chugins_dir = os.path.join(os.path.dirname(__file__), '../examples/chugins')
+    chugins_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/chugins'))
     if os.path.exists(chugins_dir):
-        chuck.set_param_string(pychuck.PARAM_USER_CHUGINS, chugins_dir)
+        chuck.set_param_string_list(pychuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
 
     chuck.init()
 
     # Try to use a chugin (Bitcrusher)
     code = '''
+    @import "Bitcrusher";
     SinOsc s => Bitcrusher bc => dac;
     440 => s.freq;
     0.3 => s.gain;
@@ -171,3 +172,152 @@ def test_file_with_syntax_error():
 
     # Clean up
     os.remove(error_file)
+
+
+# Helper to check if chugins are available
+def _chugins_available():
+    """Check if chugins directory exists and has .chug files"""
+    chugins_dir = os.path.join(os.path.dirname(__file__), '../examples/chugins')
+    if not os.path.exists(chugins_dir):
+        return False
+    chug_files = [f for f in os.listdir(chugins_dir) if f.endswith('.chug')]
+    return len(chug_files) > 0
+
+
+@pytest.mark.skipif(not _chugins_available(), reason="Chugins not built")
+def test_chugin_bitcrusher_strict():
+    """Strict test: Bitcrusher chugin must load and produce audio output"""
+    import numpy as np
+
+    chugins_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/chugins'))
+    bitcrusher_path = os.path.join(chugins_dir, 'Bitcrusher.chug')
+
+    # Skip if Bitcrusher specifically isn't available
+    if not os.path.exists(bitcrusher_path):
+        pytest.skip("Bitcrusher.chug not found")
+
+    chuck = pychuck.ChucK()
+    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
+    chuck.set_param_string_list(pychuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
+    chuck.init()
+
+    # Code using Bitcrusher chugin
+    code = '''
+    @import "Bitcrusher";
+    SinOsc s => Bitcrusher bc => dac;
+    440 => s.freq;
+    0.5 => s.gain;
+    8 => bc.bits;
+    1 => bc.downsampleFactor;
+    while(true) { 1::samp => now; }
+    '''
+
+    success, shred_ids = chuck.compile_code(code)
+    assert success, "Failed to compile code with Bitcrusher chugin"
+    assert len(shred_ids) > 0, "No shreds created"
+
+    # Run and verify audio output
+    frames = 1024
+    input_buf = np.zeros(frames * 2, dtype=np.float32)
+    output_buf = np.zeros(frames * 2, dtype=np.float32)
+    chuck.run(input_buf, output_buf, frames)
+
+    # Verify non-zero output (audio is being generated)
+    max_amplitude = np.max(np.abs(output_buf))
+    assert max_amplitude > 0.01, f"Expected audio output, got max amplitude {max_amplitude}"
+
+    chuck.remove_all_shreds()
+
+
+@pytest.mark.skipif(not _chugins_available(), reason="Chugins not built")
+def test_chugin_gverb_strict():
+    """Strict test: GVerb chugin must load and process audio"""
+    import numpy as np
+
+    chugins_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/chugins'))
+    gverb_path = os.path.join(chugins_dir, 'GVerb.chug')
+
+    if not os.path.exists(gverb_path):
+        pytest.skip("GVerb.chug not found")
+
+    chuck = pychuck.ChucK()
+    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
+    chuck.set_param_string_list(pychuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
+    chuck.init()
+
+    # Code using GVerb chugin
+    code = '''
+    @import "GVerb";
+    Impulse imp => GVerb rev => dac;
+    1.0 => imp.next;
+    while(true) { 1::samp => now; }
+    '''
+
+    success, shred_ids = chuck.compile_code(code)
+    assert success, "Failed to compile code with GVerb chugin"
+    assert len(shred_ids) > 0, "No shreds created"
+
+    # Run and verify audio output
+    frames = 2048
+    input_buf = np.zeros(frames * 2, dtype=np.float32)
+    output_buf = np.zeros(frames * 2, dtype=np.float32)
+    chuck.run(input_buf, output_buf, frames)
+
+    # GVerb should produce reverb tail from impulse
+    max_amplitude = np.max(np.abs(output_buf))
+    assert max_amplitude > 0.001, f"Expected reverb output, got max amplitude {max_amplitude}"
+
+    chuck.remove_all_shreds()
+
+
+@pytest.mark.skipif(not _chugins_available(), reason="Chugins not built")
+def test_chugin_convrev_example():
+    """Test loading the ConvRev.ck example file that uses ConvRev chugin"""
+    import numpy as np
+
+    chugins_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/chugins'))
+    convrev_path = os.path.join(chugins_dir, 'ConvRev.chug')
+    example_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/convrev/ConvRev.ck'))
+    ir_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/convrev/IRs/hagia-sophia.wav'))
+
+    if not os.path.exists(convrev_path):
+        pytest.skip("ConvRev.chug not found")
+    if not os.path.exists(example_file):
+        pytest.skip("ConvRev.ck example not found")
+    if not os.path.exists(ir_file):
+        pytest.skip("IR file not found")
+
+    chuck = pychuck.ChucK()
+    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
+    chuck.set_param_string_list(pychuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
+
+    # Set working directory so me.dir() works correctly
+    examples_convrev_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/convrev'))
+    chuck.set_param_string(pychuck.PARAM_WORKING_DIRECTORY, examples_convrev_dir)
+
+    chuck.init()
+
+    success, shred_ids = chuck.compile_file(example_file)
+    assert success, "Failed to compile ConvRev.ck example"
+    assert len(shred_ids) > 0, "No shreds created"
+
+    # Run for a bit and verify audio output
+    frames = 4096
+    input_buf = np.zeros(frames * 2, dtype=np.float32)
+    output_buf = np.zeros(frames * 2, dtype=np.float32)
+    chuck.run(input_buf, output_buf, frames)
+
+    # Should produce audio from the convolution reverb
+    max_amplitude = np.max(np.abs(output_buf))
+    assert max_amplitude > 0.001, f"Expected audio output from ConvRev, got max amplitude {max_amplitude}"
+
+    chuck.remove_all_shreds()

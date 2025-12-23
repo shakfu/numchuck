@@ -20,9 +20,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 **Key Highlights:**
 - New high-level `Chuck` class with Pythonic properties and methods
 - Optional static chugin linking (embeds chugins in extension)
-- Full mypy type checking support with proper stubs
+- Full `mypy` type checking support with proper stubs
 - Dynamic chugins now output to `examples/chugins/` (not bundled in wheel)
-- Improved build system with scikit-build-core and uv
+- Improved build system with `scikit-build-core` and `uv`
+- Strict chugin loading tests using `PARAM_IMPORT_PATH_SYSTEM`
+- 136 tests, all passing
 
 ### Added
 
@@ -49,6 +51,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 - **Developer Dependencies**:
   - Added `types-Pygments>=2.18.0` for mypy compatibility
+
+- **Strict Chugin Tests** (`tests/test_examples.py`):
+  - `test_chugin_bitcrusher_strict` - Verifies Bitcrusher chugin loads and produces audio
+  - `test_chugin_gverb_strict` - Verifies GVerb chugin loads and processes reverb
+  - `test_chugin_convrev_example` - Tests loading `examples/convrev/ConvRev.ck` with IR file
+  - Uses `PARAM_IMPORT_PATH_SYSTEM` to set chugin search path (matching chuck-max)
+  - Uses `@import "<chugin-name>";` syntax to load chugins
+  - Tests skip gracefully if chugins not built
 
 ### Changed
 
