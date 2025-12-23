@@ -2,9 +2,15 @@
 """
 TUI subcommand - launches vanilla REPL
 """
-import sys
 
-def main(start_audio=False, smart_enter=True, show_sidebar=True, project_name=None, files=None):
+
+def main(
+    start_audio=False,
+    smart_enter=True,
+    show_sidebar=True,
+    project_name=None,
+    files=None,
+):
     """
     Launch vanilla TUI REPL
 
@@ -16,8 +22,12 @@ def main(start_audio=False, smart_enter=True, show_sidebar=True, project_name=No
         files: Optional list of ChucK files to load on startup
     """
     from .repl import ChuckREPL
-    repl = ChuckREPL(smart_enter=smart_enter, show_sidebar=show_sidebar, project_name=project_name)
+
+    repl = ChuckREPL(
+        smart_enter=smart_enter, show_sidebar=show_sidebar, project_name=project_name
+    )
     repl.run(start_audio=start_audio, files=files or [])
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

@@ -1,6 +1,6 @@
 """Type stubs for pychuck module."""
 
-from typing import Callable, List, Tuple, Optional, Dict, Any
+from typing import Callable, List, Tuple, Dict, Any
 import numpy as np
 from numpy.typing import NDArray
 
@@ -31,51 +31,46 @@ class ChucK:
         args: str = "",
         count: int = 1,
         immediate: bool = False,
-        filepath: str = ""
+        filepath: str = "",
     ) -> Tuple[bool, List[int]]: ...
-
     def compile_file(
-        self,
-        path: str,
-        args: str = "",
-        count: int = 1,
-        immediate: bool = False
+        self, path: str, args: str = "", count: int = 1, immediate: bool = False
     ) -> Tuple[bool, List[int]]: ...
 
     # Audio processing
     def run(
-        self,
-        input: NDArray[np.float32],
-        output: NDArray[np.float32],
-        num_frames: int
+        self, input: NDArray[np.float32], output: NDArray[np.float32], num_frames: int
     ) -> None: ...
 
     # Global variables - primitives
     def set_global_int(self, name: str, value: int) -> None: ...
     def set_global_float(self, name: str, value: float) -> None: ...
     def set_global_string(self, name: str, value: str) -> None: ...
-
     def get_global_int(self, name: str, callback: Callable[[int], None]) -> None: ...
-    def get_global_float(self, name: str, callback: Callable[[float], None]) -> None: ...
+    def get_global_float(
+        self, name: str, callback: Callable[[float], None]
+    ) -> None: ...
     def get_global_string(self, name: str, callback: Callable[[str], None]) -> None: ...
 
     # Global variables - arrays
     def set_global_int_array(self, name: str, values: List[int]) -> None: ...
     def set_global_float_array(self, name: str, values: List[float]) -> None: ...
     def set_global_int_array_value(self, name: str, index: int, value: int) -> None: ...
-    def set_global_associative_int_array_value(self, name: str, key: str, value: int) -> None: ...
-
-    def get_global_int_array(self, name: str, callback: Callable[[List[int]], None]) -> None: ...
-    def get_global_float_array(self, name: str, callback: Callable[[List[float]], None]) -> None: ...
+    def set_global_associative_int_array_value(
+        self, name: str, key: str, value: int
+    ) -> None: ...
+    def get_global_int_array(
+        self, name: str, callback: Callable[[List[int]], None]
+    ) -> None: ...
+    def get_global_float_array(
+        self, name: str, callback: Callable[[List[float]], None]
+    ) -> None: ...
 
     # Global events
     def signal_global_event(self, name: str) -> None: ...
     def broadcast_global_event(self, name: str) -> None: ...
     def listen_for_global_event(
-        self,
-        name: str,
-        callback: Callable[[], None],
-        listen_forever: bool = True
+        self, name: str, callback: Callable[[], None], listen_forever: bool = True
     ) -> int: ...
     def stop_listening_for_global_event(self, name: str, callback_id: int) -> None: ...
 
@@ -112,37 +107,27 @@ class ChucK:
     # Static methods
     @staticmethod
     def version() -> str: ...
-
     @staticmethod
     def int_size() -> int: ...
-
     @staticmethod
     def num_vms() -> int: ...
-
     @staticmethod
     def set_log_level(level: int) -> None: ...
-
     @staticmethod
     def get_log_level() -> int: ...
-
     @staticmethod
     def global_cleanup() -> None: ...
-
     @staticmethod
     def poop() -> None: ...
-
     @staticmethod
     def set_stdout_callback(callback: Callable[[str], None]) -> bool: ...
-
     @staticmethod
     def set_stderr_callback(callback: Callable[[str], None]) -> bool: ...
-
     @staticmethod
     def create(sample_rate: int, channels: int) -> ChucK: ...
 
 # Module-level functions
 def version() -> str: ...
-
 def start_audio(
     chuck: ChucK,
     sample_rate: int = 44100,
@@ -151,25 +136,30 @@ def start_audio(
     dac_device: int = 0,
     adc_device: int = 0,
     buffer_size: int = 512,
-    num_buffers: int = 8
+    num_buffers: int = 8,
 ) -> bool: ...
-
 def stop_audio() -> bool: ...
-
 def shutdown_audio(msWait: int = 0) -> None: ...
-
 def audio_info() -> Dict[str, int]: ...
 
 # Parameter constants
 PARAM_AUTO_DEPEND: str
 PARAM_CHUGIN_ENABLE: str
+PARAM_COMPILER_HIGHLIGHT_ON_ERROR: str
 PARAM_DEPRECATE_LEVEL: str
 PARAM_DUMP_INSTRUCTIONS: str
+PARAM_IMPORT_PATH_PACKAGES: str
+PARAM_IMPORT_PATH_SYSTEM: str
+PARAM_IMPORT_PATH_USER: str
 PARAM_INPUT_CHANNELS: str
+PARAM_IS_REALTIME_AUDIO_HINT: str
 PARAM_OTF_ENABLE: str
 PARAM_OTF_PORT: str
+PARAM_OTF_PRINT_WARNINGS: str
 PARAM_OUTPUT_CHANNELS: str
 PARAM_SAMPLE_RATE: str
+PARAM_TTY_COLOR: str
+PARAM_TTY_WIDTH_HINT: str
 PARAM_USER_CHUGINS: str
 PARAM_VERSION: str
 PARAM_VM_ADAPTIVE: str

@@ -9,136 +9,102 @@ Provides subcommands for different pychuck modes:
     version - Show version information
     info    - Show ChucK and pychuck info
 """
+
 import sys
 import argparse
-from pathlib import Path
 
 
 def create_parser():
     """Create the argument parser with all subcommands."""
     parser = argparse.ArgumentParser(
-        prog='pychuck',
-        description='Python bindings for ChucK audio programming language'
+        prog="pychuck",
+        description="Python bindings for ChucK audio programming language",
     )
 
-    subparsers = parser.add_subparsers(dest='command', help='Available commands')
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # edit subcommand
     edit_parser = subparsers.add_parser(
-        'edit',
-        help='Launch multi-tab editor for livecoding'
+        "edit", help="Launch multi-tab editor for livecoding"
+    )
+    edit_parser.add_argument("files", nargs="*", help="ChucK files to open in tabs")
+    edit_parser.add_argument(
+        "--project", type=str, help="Project name for versioned file storage"
     )
     edit_parser.add_argument(
-        'files',
-        nargs='*',
-        help='ChucK files to open in tabs'
-    )
-    edit_parser.add_argument(
-        '--project',
-        type=str,
-        help='Project name for versioned file storage'
-    )
-    edit_parser.add_argument(
-        '--start-audio',
-        action='store_true',
-        help='Start audio automatically on startup'
+        "--start-audio",
+        action="store_true",
+        help="Start audio automatically on startup",
     )
 
     # repl subcommand
-    repl_parser = subparsers.add_parser(
-        'repl',
-        help='Launch interactive REPL'
+    repl_parser = subparsers.add_parser("repl", help="Launch interactive REPL")
+    repl_parser.add_argument("files", nargs="*", help="ChucK files to load on startup")
+    repl_parser.add_argument(
+        "--start-audio",
+        action="store_true",
+        help="Start audio automatically on REPL startup",
     )
     repl_parser.add_argument(
-        'files',
-        nargs='*',
-        help='ChucK files to load on startup'
+        "--no-smart-enter",
+        action="store_true",
+        help="Disable smart Enter mode (always require Esc+Enter to submit)",
     )
     repl_parser.add_argument(
-        '--start-audio',
-        action='store_true',
-        help='Start audio automatically on REPL startup'
+        "--no-sidebar",
+        action="store_true",
+        help="Hide topbar showing active shreds (can toggle with F2)",
     )
     repl_parser.add_argument(
-        '--no-smart-enter',
-        action='store_true',
-        help='Disable smart Enter mode (always require Esc+Enter to submit)'
-    )
-    repl_parser.add_argument(
-        '--no-sidebar',
-        action='store_true',
-        help='Hide topbar showing active shreds (can toggle with F2)'
-    )
-    repl_parser.add_argument(
-        '--project',
-        type=str,
-        help='Project name for versioned file storage'
+        "--project", type=str, help="Project name for versioned file storage"
     )
 
     # run subcommand
     run_parser = subparsers.add_parser(
-        'run',
-        help='Execute ChucK files from command line'
+        "run", help="Execute ChucK files from command line"
+    )
+    run_parser.add_argument("files", nargs="+", help="ChucK files to execute")
+    run_parser.add_argument(
+        "--srate", type=int, default=44100, help="Sample rate (default: 44100)"
     )
     run_parser.add_argument(
-        'files',
-        nargs='+',
-        help='ChucK files to execute'
+        "--channels", type=int, default=2, help="Number of audio channels (default: 2)"
     )
     run_parser.add_argument(
-        '--srate',
-        type=int,
-        default=44100,
-        help='Sample rate (default: 44100)'
+        "--silent",
+        action="store_true",
+        help="Run without audio output (useful for testing)",
     )
     run_parser.add_argument(
-        '--channels',
-        type=int,
-        default=2,
-        help='Number of audio channels (default: 2)'
-    )
-    run_parser.add_argument(
-        '--silent',
-        action='store_true',
-        help='Run without audio output (useful for testing)'
-    )
-    run_parser.add_argument(
-        '--duration',
+        "--duration",
         type=float,
-        help='Run for specified duration in seconds, then exit'
+        help="Run for specified duration in seconds, then exit",
     )
 
     # version subcommand
-    version_parser = subparsers.add_parser(
-        'version',
-        help='Show version information'
-    )
+    subparsers.add_parser("version", help="Show version information")
 
     # info subcommand
-    info_parser = subparsers.add_parser(
-        'info',
-        help='Show ChucK and pychuck info'
-    )
+    subparsers.add_parser("info", help="Show ChucK and pychuck info")
 
     # tui subcommand (backward compatibility - maps to repl)
     tui_parser = subparsers.add_parser(
-        'tui',
-        help='Launch interactive REPL (alias for repl)'
+        "tui", help="Launch interactive REPL (alias for repl)"
     )
     tui_parser.add_argument(
-        '--start-audio',
-        action='store_true',
-        help='Start audio automatically on REPL startup'
+        "--start-audio",
+        action="store_true",
+        help="Start audio automatically on REPL startup",
     )
     tui_parser.add_argument(
-        '--no-smart-enter',
-        action='store_true',
-        help='Disable smart Enter mode (always require Esc+Enter to submit)'
+        "--no-smart-enter",
+        action="store_true",
+        help="Disable smart Enter mode (always require Esc+Enter to submit)",
     )
     tui_parser.add_argument(
-        '--no-sidebar',
-        action='store_true',
-        help='Hide topbar showing active shreds (can toggle with F2)'
+        "--no-sidebar",
+        action="store_true",
+        help="Hide topbar showing active shreds (can toggle with F2)",
     )
 
     return parser
@@ -149,9 +115,7 @@ def cmd_edit(args):
     from ..tui.editor import main as editor_main
 
     editor_main(
-        files=args.files,
-        project_name=args.project,
-        start_audio=args.start_audio
+        files=args.files, project_name=args.project, start_audio=args.start_audio
     )
 
 
@@ -160,14 +124,14 @@ def cmd_repl(args):
     from ..tui.tui import main as tui_main
 
     # Get project name from args if provided
-    project_name = getattr(args, 'project', None)
+    project_name = getattr(args, "project", None)
 
     tui_main(
         start_audio=args.start_audio,
         smart_enter=not args.no_smart_enter,
         show_sidebar=not args.no_sidebar,
         project_name=project_name,
-        files=getattr(args, 'files', [])
+        files=getattr(args, "files", []),
     )
 
 
@@ -180,21 +144,23 @@ def cmd_run(args):
         srate=args.srate,
         channels=args.channels,
         silent=args.silent,
-        duration=args.duration
+        duration=args.duration,
     )
 
 
 def cmd_version(args):
     """Show version information."""
-    from .. import version
-    print(f"pychuck version: 0.1.1")
+    from .._pychuck import version
+
+    print("pychuck version: 0.1.1")
     print(f"ChucK version: {version()}")
 
 
 def cmd_info(args):
     """Show ChucK and pychuck info."""
-    from .. import ChucK, version
-    print(f"pychuck: 0.1.1")
+    from .._pychuck import ChucK, version
+
+    print("pychuck: 0.1.1")
     print(f"ChucK: {version()}")
     print(f"ChucK int size: {ChucK.int_size()} bits")
     print(f"Active VMs: {ChucK.num_vms()}")
@@ -207,12 +173,12 @@ def main():
 
     # Map commands to handlers
     command_handlers = {
-        'edit': cmd_edit,
-        'repl': cmd_repl,
-        'tui': cmd_repl,  # Backward compatibility
-        'run': cmd_run,
-        'version': cmd_version,
-        'info': cmd_info,
+        "edit": cmd_edit,
+        "repl": cmd_repl,
+        "tui": cmd_repl,  # Backward compatibility
+        "run": cmd_run,
+        "version": cmd_version,
+        "info": cmd_info,
     }
 
     # Execute command
@@ -223,5 +189,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

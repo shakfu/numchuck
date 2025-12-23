@@ -19,7 +19,7 @@ def get_pychuck_home() -> Path:
     Returns:
         Path to ~/.pychuck directory
     """
-    return Path.home() / '.pychuck'
+    return Path.home() / ".pychuck"
 
 
 def get_snippets_dir() -> Path:
@@ -32,7 +32,7 @@ def get_snippets_dir() -> Path:
     Returns:
         Path to ~/.pychuck/snippets directory
     """
-    return get_pychuck_home() / 'snippets'
+    return get_pychuck_home() / "snippets"
 
 
 def get_history_file() -> Path:
@@ -42,7 +42,7 @@ def get_history_file() -> Path:
     Returns:
         Path to ~/.pychuck/history file
     """
-    return get_pychuck_home() / 'history'
+    return get_pychuck_home() / "history"
 
 
 def get_sessions_dir() -> Path:
@@ -55,7 +55,7 @@ def get_sessions_dir() -> Path:
     Returns:
         Path to ~/.pychuck/sessions directory
     """
-    return get_pychuck_home() / 'sessions'
+    return get_pychuck_home() / "sessions"
 
 
 def get_logs_dir() -> Path:
@@ -68,7 +68,7 @@ def get_logs_dir() -> Path:
     Returns:
         Path to ~/.pychuck/logs directory
     """
-    return get_pychuck_home() / 'logs'
+    return get_pychuck_home() / "logs"
 
 
 def get_config_file() -> Path:
@@ -84,7 +84,7 @@ def get_config_file() -> Path:
     Returns:
         Path to ~/.pychuck/config.toml file
     """
-    return get_pychuck_home() / 'config.toml'
+    return get_pychuck_home() / "config.toml"
 
 
 def get_projects_dir() -> Path:
@@ -100,7 +100,7 @@ def get_projects_dir() -> Path:
     Returns:
         Path to ~/.pychuck/projects directory
     """
-    return get_pychuck_home() / 'projects'
+    return get_pychuck_home() / "projects"
 
 
 def ensure_pychuck_directories():
@@ -135,7 +135,7 @@ def list_snippets() -> list[str]:
     if not snippets_dir.exists():
         return []
 
-    return [f.stem for f in snippets_dir.glob('*.ck')]
+    return [f.stem for f in snippets_dir.glob("*.ck")]
 
 
 def get_snippet_path(name: str) -> Path:
@@ -148,7 +148,7 @@ def get_snippet_path(name: str) -> Path:
     Returns:
         Path to the snippet file
     """
-    return get_snippets_dir() / f'{name}.ck'
+    return get_snippets_dir() / f"{name}.ck"
 
 
 def list_projects() -> list[str]:
@@ -176,6 +176,7 @@ def create_project(name: str) -> Path:
         Path to the created project directory
     """
     from .project import Project
+
     projects_dir = get_projects_dir()
     project = Project(name, projects_dir)
     return project.project_dir

@@ -6,6 +6,7 @@ Provides non-interactive execution of ChucK files with options for:
 - Custom sample rate and channel count
 - Timed execution
 """
+
 import sys
 import time
 import signal
@@ -15,6 +16,7 @@ from typing import List, Optional
 
 class ExecutionError(Exception):
     """Raised when ChucK file execution fails."""
+
     pass
 
 
@@ -23,7 +25,7 @@ def execute_files(
     srate: int = 44100,
     channels: int = 2,
     silent: bool = False,
-    duration: Optional[float] = None
+    duration: Optional[float] = None,
 ):
     """
     Execute ChucK files from command line.
@@ -38,7 +40,7 @@ def execute_files(
     Raises:
         ExecutionError: If compilation or execution fails
     """
-    from .. import ChucK
+    from .._pychuck import ChucK
 
     # Validate files exist
     missing_files = []
@@ -47,7 +49,7 @@ def execute_files(
             missing_files.append(filepath)
 
     if missing_files:
-        print(f"Error: Files not found:", file=sys.stderr)
+        print("Error: Files not found:", file=sys.stderr)
         for f in missing_files:
             print(f"  {f}", file=sys.stderr)
         raise ExecutionError("One or more files not found")
@@ -63,7 +65,8 @@ def execute_files(
     audio_started = False
     if not silent:
         try:
-            from .. import start_audio
+            from .._pychuck import start_audio
+
             start_audio(chuck)
             audio_started = True
         except Exception as e:
@@ -85,22 +88,24 @@ def execute_files(
     for filepath in files:
         try:
             # Read file content
-            with open(filepath, 'r') as f:
-                code = f.read()
+            with open(filepath, "r") as fh:
+                code = fh.read()
 
             # Compile and run
-            shred_id = chuck.compile_code(code)
-            if shred_id == 0:
+            success, new_shred_ids = chuck.compile_code(code)
+            if not success or not new_shred_ids:
                 raise ExecutionError(f"Failed to compile {filepath}")
 
-            shred_ids.append(shred_id)
-            print(f"[shred {shred_id}] {filepath}")
+            shred_ids.extend(new_shred_ids)
+            for sid in new_shred_ids:
+                print(f"[shred {sid}] {filepath}")
 
         except Exception as e:
             print(f"Error compiling {filepath}: {e}", file=sys.stderr)
             # Cleanup
             if audio_started:
-                from .. import stop_audio
+                from .._pychuck import stop_audio
+
                 stop_audio()
             raise ExecutionError(f"Compilation failed: {e}")
 
@@ -129,24 +134,26 @@ def execute_files(
         for shred_id in shred_ids:
             try:
                 chuck.remove_shred(shred_id)
-            except:
+            except Exception:
                 pass
 
         # Stop audio
         if audio_started:
             try:
-                from .. import stop_audio, shutdown_audio
+                from .._pychuck import stop_audio, shutdown_audio
+
                 stop_audio()
                 shutdown_audio()
-            except:
+            except Exception:
                 pass
 
         print("Done.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # For testing
     import sys
+
     if len(sys.argv) > 1:
         execute_files(sys.argv[1:])
     else:

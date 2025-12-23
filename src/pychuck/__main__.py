@@ -13,9 +13,12 @@ For detailed help on each command:
     python -m pychuck <command> --help
 """
 
+
 def main():
     from .cli.main import main as cli_main
+
     cli_main()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

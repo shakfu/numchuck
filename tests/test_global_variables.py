@@ -3,7 +3,7 @@ Tests for ChucK global variable management.
 """
 
 import pytest
-import pychuck
+import pychuck._pychuck as pychuck
 import numpy as np
 
 

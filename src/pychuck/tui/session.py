@@ -1,4 +1,5 @@
-from typing import Dict, List, Optional
+from typing import Dict, Optional
+
 
 class ChuckSession:
     """Session managing ChucK instance state with optional project support."""
@@ -13,10 +14,17 @@ class ChuckSession:
         if project_name:
             from .project import Project
             from .paths import get_projects_dir
+
             projects_dir = get_projects_dir()
             self.project = Project(project_name, projects_dir)
 
-    def add_shred(self, shred_id: int, name: str, content: Optional[str] = None, shred_type: str = 'code'):
+    def add_shred(
+        self,
+        shred_id: int,
+        name: str,
+        content: Optional[str] = None,
+        shred_type: str = "code",
+    ):
         """Add a shred and optionally save to project.
 
         Args:
@@ -32,11 +40,11 @@ class ChuckSession:
             chuck_time = 0.0
 
         self.shreds[shred_id] = {
-            'id': shred_id,
-            'name': name,
-            'time': chuck_time,  # ChucK VM time in samples
-            'type': shred_type,  # 'code' or 'file'
-            'source': content or name  # Store source code or file path
+            "id": shred_id,
+            "name": name,
+            "time": chuck_time,  # ChucK VM time in samples
+            "type": shred_type,  # 'code' or 'file'
+            "source": content or name,  # Store source code or file path
         }
 
         # If we have a project and content, save versioned file
@@ -72,7 +80,7 @@ class ChuckSession:
     def get_shred_name(self, shred_id: int) -> str:
         """Get display name for a shred."""
         if shred_id in self.shreds:
-            return self.shreds[shred_id]['name']
+            return self.shreds[shred_id]["name"]
         return f"shred-{shred_id}"
 
 

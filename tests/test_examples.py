@@ -1,5 +1,5 @@
 import pytest
-import pychuck
+import pychuck._pychuck as pychuck
 import os
 import time
 

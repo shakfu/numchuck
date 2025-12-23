@@ -1,5 +1,6 @@
 import subprocess
-from .. import start_audio, stop_audio, shutdown_audio, audio_info
+from .._pychuck import start_audio, stop_audio, shutdown_audio, audio_info
+
 
 class CommandExecutor:
     def __init__(self, session):
@@ -8,7 +9,7 @@ class CommandExecutor:
 
     def execute(self, cmd):
         """Execute command and return error message if any"""
-        handler = getattr(self, f'_cmd_{cmd.type}', None)
+        handler = getattr(self, f"_cmd_{cmd.type}", None)
         if handler:
             return handler(cmd.args)
         else:
@@ -17,8 +18,9 @@ class CommandExecutor:
     def _cmd_spork_file(self, args):
         import os
         from pathlib import Path
+
         # Convert relative path to absolute path
-        path = os.path.abspath(args['path'])
+        path = os.path.abspath(args["path"])
 
         # Read file content for project versioning
         try:
@@ -26,28 +28,30 @@ class CommandExecutor:
         except (OSError, UnicodeDecodeError):
             content = None
 
-        success, shred_ids = self.chuck.compile_file(args['path'])
+        success, shred_ids = self.chuck.compile_file(args["path"])
         if success:
             for sid in shred_ids:
-                self.session.add_shred(sid, path, content=content, shred_type='file')
+                self.session.add_shred(sid, path, content=content, shred_type="file")
                 # Topbar shows new shred automatically
             return None
         else:
             return f"Failed to spork {args['path']}"
 
     def _cmd_spork_code(self, args):
-        code = args['code']
+        code = args["code"]
         success, shred_ids = self.chuck.compile_code(code)
         if success:
             for sid in shred_ids:
-                self.session.add_shred(sid, f"code-{sid}", content=code, shred_type='code')
+                self.session.add_shred(
+                    sid, f"code-{sid}", content=code, shred_type="code"
+                )
                 # Topbar shows new shred automatically
             return None
         else:
             return "Failed to spork code"
 
     def _cmd_remove_shred(self, args):
-        sid = args['id']
+        sid = args["id"]
         try:
             self.chuck.remove_shred(sid)
             self.session.remove_shred(sid)
@@ -57,7 +61,6 @@ class CommandExecutor:
             return f"Failed to remove shred {sid}: {e}"
 
     def _cmd_remove_all(self, args):
-        count = len(self.session.shreds)
         self.chuck.remove_all_shreds()
         self.session.clear_shreds()
         # Topbar updates automatically
@@ -65,8 +68,8 @@ class CommandExecutor:
 
     def _cmd_replace_shred(self, args):
         try:
-            code = args['code']
-            old_id = args['id']
+            code = args["code"]
+            old_id = args["id"]
             new_id = self.chuck.replace_shred(old_id, code)
             if new_id > 0:
                 # Save replacement to project if available
@@ -74,7 +77,9 @@ class CommandExecutor:
                     self.session.replace_shred(old_id, code)
 
                 self.session.remove_shred(old_id)
-                self.session.add_shred(new_id, f"code-{new_id}", content=code, shred_type='code')
+                self.session.add_shred(
+                    new_id, f"code-{new_id}", content=code, shred_type="code"
+                )
                 return None
             else:
                 return f"Failed to replace shred {old_id}"
@@ -85,16 +90,17 @@ class CommandExecutor:
         """Replace shred with code from file"""
         try:
             from pathlib import Path
-            filepath = args['path']
+
+            filepath = args["path"]
             code = Path(filepath).read_text()
 
-            new_id = self.chuck.replace_shred(args['id'], code)
+            new_id = self.chuck.replace_shred(args["id"], code)
             if new_id > 0:
-                self.session.remove_shred(args['id'])
+                self.session.remove_shred(args["id"])
                 # Save to project if available
                 if self.session.project:
                     self.session.replace_shred(new_id, code)
-                self.session.add_shred(new_id, filepath, shred_type='file')
+                self.session.add_shred(new_id, filepath, shred_type="file")
                 return None
             else:
                 return f"Failed to replace shred {args['id']}"
@@ -107,7 +113,7 @@ class CommandExecutor:
         now = self.chuck.now()
         audio = "running" if self.session.audio_running else "stopped"
 
-        print(f"[chuck](VM): status")
+        print("[chuck](VM): status")
         print(f"  shreds: {len(all_ids)}")
         print(f"  audio: {audio}")
         print(f"  now: {now} samples")
@@ -129,7 +135,7 @@ class CommandExecutor:
 
     def _cmd_shred_info(self, args):
         try:
-            info = self.chuck.get_shred_info(args['id'])
+            info = self.chuck.get_shred_info(args["id"])
             print(f"Shred {info['id']}:")
             print(f"  name: {info['name']}")
             print(f"  running: {info['is_running']}")
@@ -159,8 +165,8 @@ class CommandExecutor:
         print(f"now: {self.chuck.now()}")
 
     def _cmd_set_global(self, args):
-        val = args['value']
-        name = args['name']
+        val = args["value"]
+        name = args["name"]
 
         if isinstance(val, int):
             self.chuck.set_global_int(name, val)
@@ -177,7 +183,7 @@ class CommandExecutor:
         print(f"set {name} = {val}")
 
     def _cmd_get_global(self, args):
-        name = args['name']
+        name = args["name"]
 
         # Try int first (callback prints value)
         found = [False]  # Use list to allow modification in nested function
@@ -192,7 +198,7 @@ class CommandExecutor:
 
         def handle_string(v):
             found[0] = True
-            print(f"{name} = \"{v}\"")
+            print(f'{name} = "{v}"')
 
         try:
             self.chuck.get_global_int(name, handle_int)
@@ -209,11 +215,11 @@ class CommandExecutor:
             print(f"✗ global variable '{name}' not found or wrong type")
 
     def _cmd_signal_event(self, args):
-        self.chuck.signal_global_event(args['name'])
+        self.chuck.signal_global_event(args["name"])
         print(f"signaled event '{args['name']}'")
 
     def _cmd_broadcast_event(self, args):
-        self.chuck.broadcast_global_event(args['name'])
+        self.chuck.broadcast_global_event(args["name"])
         print(f"broadcast event '{args['name']}'")
 
     def _cmd_start_audio(self, args):
@@ -251,12 +257,13 @@ class CommandExecutor:
 
     def _cmd_clear_screen(self, args):
         import sys
-        sys.stdout.write('\033[2J\033[H')  # Clear screen and move cursor to home
+
+        sys.stdout.write("\033[2J\033[H")  # Clear screen and move cursor to home
         sys.stdout.flush()
 
     def _cmd_compile_file(self, args):
         # Compile with count=0 (don't run)
-        success, _ = self.chuck.compile_file(args['path'], count=0)
+        success, _ = self.chuck.compile_file(args["path"], count=0)
         if success:
             print(f"✓ compiled {args['path']}")
         else:
@@ -264,7 +271,7 @@ class CommandExecutor:
             # TODO: Add chuck.get_last_error() to get compiler error messages
 
     def _cmd_exec_code(self, args):
-        success, _ = self.chuck.compile_code(args['code'], immediate=True)
+        success, _ = self.chuck.compile_code(args["code"], immediate=True)
         if success:
             print("✓ executed")
         else:
@@ -276,20 +283,20 @@ class CommandExecutor:
         import tempfile
         import os
 
-        shred_id = args['id']
+        shred_id = args["id"]
 
         if shred_id not in self.session.shreds:
             return f"Shred {shred_id} not found"
 
         shred_info = self.session.shreds[shred_id]
-        source = shred_info['source']
-        shred_type = shred_info['type']
+        source = shred_info["source"]
+        shred_type = shred_info["type"]
 
         # Get editor from environment or use default
-        editor = os.environ.get('EDITOR', 'nano')
+        editor = os.environ.get("EDITOR", "nano")
 
         # Create temp file with current content
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.ck', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".ck", delete=False) as f:
             f.write(source)
             temp_path = f.name
 
@@ -298,7 +305,7 @@ class CommandExecutor:
             subprocess.run([editor, temp_path])
 
             # Read the modified file
-            with open(temp_path, 'r') as f:
+            with open(temp_path, "r") as f:
                 new_code = f.read()
 
             # Replace the shred if content changed
@@ -310,8 +317,10 @@ class CommandExecutor:
                         self.session.replace_shred(shred_id, new_code)
 
                     self.session.remove_shred(shred_id)
-                    name = shred_info['name']
-                    self.session.add_shred(new_id, name, content=new_code, shred_type=shred_type)
+                    name = shred_info["name"]
+                    self.session.add_shred(
+                        new_id, name, content=new_code, shred_type=shred_type
+                    )
                     # Topbar updates automatically
                     return None
                 else:
@@ -321,22 +330,22 @@ class CommandExecutor:
             os.unlink(temp_path)
 
     def _cmd_shell(self, args):
-        subprocess.run(args['cmd'], shell=True)
+        subprocess.run(args["cmd"], shell=True)
 
     def _cmd_open_editor(self, args):
         import tempfile
         import os
 
         # Get editor from environment or use default
-        editor = os.environ.get('EDITOR', 'nano')
+        editor = os.environ.get("EDITOR", "nano")
 
         # Create temp file with .ck extension
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.ck', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".ck", delete=False) as f:
             # Write a template
-            f.write('// ChucK code - save and exit to spork\n')
-            f.write('SinOsc s => dac;\n')
-            f.write('440 => s.freq;\n')
-            f.write('second => now;\n')
+            f.write("// ChucK code - save and exit to spork\n")
+            f.write("SinOsc s => dac;\n")
+            f.write("440 => s.freq;\n")
+            f.write("second => now;\n")
             temp_path = f.name
 
         try:
@@ -344,15 +353,17 @@ class CommandExecutor:
             subprocess.run([editor, temp_path])
 
             # Read the file
-            with open(temp_path, 'r') as f:
+            with open(temp_path, "r") as f:
                 code = f.read()
 
             # Spork it if not empty/template
-            if code.strip() and '// ChucK code' not in code:
+            if code.strip() and "// ChucK code" not in code:
                 success, shred_ids = self.chuck.compile_code(code)
                 if success:
                     for sid in shred_ids:
-                        self.session.add_shred(sid, f"editor-{sid}", content=code, shred_type='code')
+                        self.session.add_shred(
+                            sid, f"editor-{sid}", content=code, shred_type="code"
+                        )
                         print(f"✓ sporked from editor -> shred {sid}")
                 else:
                     print("✗ failed to spork editor code")
@@ -366,6 +377,7 @@ class CommandExecutor:
     def _cmd_watch(self, args):
         """Monitor VM state continuously"""
         import time
+
         print("Watching VM state (Ctrl+C to stop)...")
         print()
         try:
@@ -373,17 +385,25 @@ class CommandExecutor:
                 shred_count = len(self.chuck.get_all_shred_ids())
                 now = self.chuck.now()
                 audio = "ON" if self.session.audio_running else "OFF"
-                print(f"\rAudio: {audio:<3} | Now: {now:>10.2f} | Shreds: {shred_count:<3}", end='', flush=True)
+                print(
+                    f"\rAudio: {audio:<3} | Now: {now:>10.2f} | Shreds: {shred_count:<3}",
+                    end="",
+                    flush=True,
+                )
                 time.sleep(0.1)
         except KeyboardInterrupt:
             print("\n")
 
     def _cmd_load_snippet(self, args):
         """Load and spork a code snippet from ~/.pychuck/snippets/"""
-        import os
-        from .paths import get_snippet_path, get_snippets_dir, ensure_pychuck_directories, list_snippets
+        from .paths import (
+            get_snippet_path,
+            get_snippets_dir,
+            ensure_pychuck_directories,
+            list_snippets,
+        )
 
-        name = args['name']
+        name = args["name"]
         snippet_path = get_snippet_path(name)
 
         if not snippet_path.exists():
@@ -393,7 +413,7 @@ class CommandExecutor:
                 try:
                     ensure_pychuck_directories()
                     print(f"Created snippets directory: {snippets_dir}")
-                    print(f"Add .ck files to this directory to use @<name> syntax")
+                    print("Add .ck files to this directory to use @<name> syntax")
                 except Exception as e:
                     print(f"✗ could not create snippets directory: {e}")
                     return
@@ -418,7 +438,9 @@ class CommandExecutor:
         success, shred_ids = self.chuck.compile_file(str(snippet_path))
         if success:
             for sid in shred_ids:
-                self.session.add_shred(sid, f"@{name}", content=content, shred_type='file')
+                self.session.add_shred(
+                    sid, f"@{name}", content=content, shred_type="file"
+                )
                 print(f"✓ sporked snippet @{name} -> shred {sid}")
         else:
             print(f"✗ failed to spork snippet @{name}")

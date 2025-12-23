@@ -7,6 +7,7 @@ Provides base class with common functionality:
 - Shared UI components (help, shreds table, log)
 - Common key bindings
 """
+
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout.containers import ConditionalContainer, Window
 from prompt_toolkit.layout.controls import FormattedTextControl
@@ -19,7 +20,7 @@ class ChuckApplication:
     """Base application managing ChucK instance and shared state."""
 
     def __init__(self, project_name=None):
-        from .. import ChucK
+        from .._pychuck import ChucK
         from .session import ChuckSession
 
         self.chuck = ChucK()
@@ -37,24 +38,24 @@ class ChuckApplication:
         """Common key bindings shared across editor and REPL."""
         kb = KeyBindings()
 
-        @kb.add('c-q')
+        @kb.add("c-q")
         def exit_app(event):
             """Exit application"""
             event.app.exit()
 
-        @kb.add('f1')
+        @kb.add("f1")
         def toggle_help(event):
             """Toggle help window"""
             self.show_help = not self.show_help
             event.app.invalidate()
 
-        @kb.add('f2')
+        @kb.add("f2")
         def toggle_shreds(event):
             """Toggle shreds table"""
             self.show_shreds = not self.show_shreds
             event.app.invalidate()
 
-        @kb.add('f3')
+        @kb.add("f3")
         def toggle_log(event):
             """Toggle log window"""
             self.show_log = not self.show_log
@@ -69,25 +70,26 @@ class ChuckApplication:
             scrollbar=True,
             focusable=False,
             read_only=True,
-            wrap_lines=True
+            wrap_lines=True,
         )
 
         return ConditionalContainer(
             Window(
-                content=help_area.control,
-                height=D(min=10, max=30),
-                wrap_lines=True
+                content=help_area.control, height=D(min=10, max=30), wrap_lines=True
             ),
-            filter=Condition(lambda: self.show_help)
+            filter=Condition(lambda: self.show_help),
         )
 
     def create_shreds_table(self):
         """Create shreds table that toggles with F2."""
+
         def get_text():
             if not self.session.shreds:
                 return "No active shreds"
 
-            lines = ["ID   | Name                                                    | Elapsed"]
+            lines = [
+                "ID   | Name                                                    | Elapsed"
+            ]
             lines.append("-" * 78)
 
             # Get current VM time for elapsed calculation
@@ -99,7 +101,8 @@ class ChuckApplication:
             for sid, info in sorted(self.session.shreds.items()):
                 # Extract parent folder + filename from path
                 from pathlib import Path
-                full_name = info['name']
+
+                full_name = info["name"]
                 try:
                     path = Path(full_name)
                     # Show parent/filename if it's a path, otherwise just the name
@@ -112,11 +115,11 @@ class ChuckApplication:
                 name = name[:56]  # Wider column for better readability
 
                 # Calculate elapsed time in seconds
-                spork_time = info.get('time', 0.0)
+                spork_time = info.get("time", 0.0)
                 elapsed_samples = current_time - spork_time
                 # Get sample rate from ChucK (default 44100)
                 try:
-                    srate = self.chuck.get_param('SAMPLE_RATE')
+                    srate = self.chuck.get_param("SAMPLE_RATE")
                 except (RuntimeError, AttributeError, ValueError):
                     srate = 44100
                 elapsed_sec = elapsed_samples / srate if srate > 0 else 0.0
@@ -125,21 +128,13 @@ class ChuckApplication:
             return "\n".join(lines)
 
         return ConditionalContainer(
-            Window(
-                content=FormattedTextControl(get_text),
-                height=D(min=5, max=15)
-            ),
-            filter=Condition(lambda: self.show_shreds)
+            Window(content=FormattedTextControl(get_text), height=D(min=5, max=15)),
+            filter=Condition(lambda: self.show_shreds),
         )
 
     def create_log_window(self):
         """Create log window that toggles with F3."""
-        log_area = TextArea(
-            text="",
-            scrollbar=True,
-            focusable=False,
-            read_only=True
-        )
+        log_area = TextArea(text="", scrollbar=True, focusable=False, read_only=True)
 
         def log_callback(msg):
             """Callback for ChucK output"""
@@ -154,17 +149,14 @@ class ChuckApplication:
         self.chuck.set_chout_callback(log_callback)
         self.chuck.set_cherr_callback(log_callback)
 
-        return ConditionalContainer(
-            log_area,
-            filter=Condition(lambda: self.show_log)
-        )
+        return ConditionalContainer(log_area, filter=Condition(lambda: self.show_log))
 
     def create_status_bar(self, status_text_func):
         """Create status bar at bottom of screen."""
         return Window(
             content=FormattedTextControl(status_text_func),
             height=1,
-            style='bg:#444444 fg:#ffffff'
+            style="bg:#444444 fg:#ffffff",
         )
 
     def cleanup(self):
@@ -175,8 +167,8 @@ class ChuckApplication:
             pass
 
         # Break circular references to allow proper garbage collection
-        if hasattr(self, 'session'):
+        if hasattr(self, "session"):
             self.session.chuck = None
             del self.session
-        if hasattr(self, 'chuck'):
+        if hasattr(self, "chuck"):
             del self.chuck

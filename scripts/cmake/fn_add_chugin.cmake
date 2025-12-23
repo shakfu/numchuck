@@ -47,23 +47,8 @@ function(add_chugin)
         set(CHUGIN_CHUCK_HEADER_PATH ${CMAKE_SOURCE_DIR}/thirdparty/chugins/chuck/include)
     endif()
 
-    if(CM_MULTIPLATFORM_CHUGINS)
-        string(TOLOWER ${CMAKE_HOST_SYSTEM_PROCESSOR} ARCH)
-        if(CMAKE_HOST_APPLE)
-            set(CHUGINS_DIR ${CMAKE_SOURCE_DIR}/examples/chugins/darwin-${ARCH})
-            set(CHUGINS_PREFIX chugins/darwin-${ARCH})
-        else()
-            set(CHUGINS_DIR ${CMAKE_SOURCE_DIR}/examples/chugins/windows-${ARCH})
-            set(CHUGINS_PREFIX chugins/windows-${ARCH})
-        endif()
-    elseif(CM_MACOS_BUNDLED_CHUGINS AND CMAKE_HOST_APPLE)
-        # EXTERNAL_RESOURCES_DIR also defined in CMakeLists.txt in chugins directory
-        set(CHUGINS_DIR ${EXTERNAL_RESOURCES_DIR}/chugins)
-        set(CHUGINS_PREFIX chugins)
-    else()
-        set(CHUGINS_DIR ${CMAKE_SOURCE_DIR}/examples/chugins)
-        set(CHUGINS_PREFIX chugins)
-    endif()
+    set(CHUGINS_DIR ${CMAKE_SOURCE_DIR}/examples/chugins)
+    set(CHUGINS_PREFIX pychuck/chugins)
 
     message(STATUS "CHUGIN_NAME: ${CHUGIN_NAME}")
     if(CHUGIN_DEBUG)
@@ -140,7 +125,7 @@ function(add_chugin)
         HAVE_CONFIG_H
         $<$<CONFIG:Release>:NDEBUG>
         $<$<PLATFORM_ID:Darwin>:__MACOSX_CORE__>
-        $<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:__CK_DLL_STATIC__>
+        $<$<BOOL:${CM_STATIC_CHUGINS}>:__CK_DLL_STATIC__>
     )
 
     target_compile_options(

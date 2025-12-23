@@ -29,8 +29,11 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "mypy>=1.14.1",
     "pytest>=8.3.5",
     "pytest-asyncio>=0.21.0",
+    "ruff>=0.14.10",
+    "types-Pygments>=2.18.0",
 ]
 
 [project.urls]
@@ -52,6 +55,9 @@ build-dir = "build/{wheel_tag}"
 
 # Build stable ABI wheels for CPython 3.12+
 wheel.py-api = "cp312"
+
+# set cmake arguments
+# cmake.args = ["-DCM_STATIC_CHUGINS=ON"]
 
 [tool.cibuildwheel]
 # Necessary to see build output from the actual compilation

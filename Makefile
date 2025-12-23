@@ -34,18 +34,18 @@ DMG = $(DIST_NAME).dmg
 ZIP = $(DIST_NAME).zip
 
 
-.PHONY: all build clean test install repl snap
+.PHONY: all build clean test install repl snap typecheck lint format
 
 all: build
 
-build:
-	@mkdir -p build && \
-		cd build && \
-		cmake $(GENERATOR) .. $(EXTRA_OPTIONS) && \
-		cmake --build . --config '$(CONFIG)' && \
-		cmake --install . --config '$(CONFIG)'
+# build:
+# 	@mkdir -p build && \
+# 		cd build && \
+# 		cmake $(GENERATOR) .. $(EXTRA_OPTIONS) && \
+# 		cmake --build . --config '$(CONFIG)' && \
+# 		cmake --install . --config '$(CONFIG)'
 
-install:
+build:
 	@uv sync --reinstall-package pychuck
 
 clean:
@@ -59,3 +59,14 @@ repl:
 
 snap:
 	@git add --all . && git commit -m 'snap' && git push
+
+typecheck:
+	@uv run mypy src/
+
+lint:
+	@uv run ruff check --fix src/
+
+format:
+	@uv run ruff format src/
+
+

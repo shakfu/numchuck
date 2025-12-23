@@ -196,16 +196,64 @@ This creates a complete history of your livecoding session, making it easy to:
 * Replay session timeline
 * Share reproducible livecoding performances
 
-### Real-Time Audio
+### High-Level API (Recommended)
+
+The `Chuck` class provides a Pythonic interface with properties and simplified methods:
 
 ```python
-import pychuck
+from pychuck import Chuck
+
+# Create with parameters (auto-initializes)
+chuck = Chuck(sample_rate=48000, output_channels=2)
+
+# Properties instead of get_param/set_param
+print(chuck.sample_rate)   # 48000
+print(chuck.version)       # "1.5.5.3-dev (chai)"
+
+# Compile and run
+success, shreds = chuck.compile("SinOsc s => dac; 1::second => now;")
+output = chuck.run(44100)  # Returns numpy array
+
+# Shred management
+print(chuck.shreds)        # [1]
+chuck.remove_shred(1)
+chuck.clear()
+
+# Synchronous global variables
+chuck.compile("global int tempo;")
+chuck.run(100)
+chuck.set_int("tempo", 120)
+val = chuck.get_int("tempo")  # 120
+
+# Events
+chuck.signal_event("trigger")
+chuck.on_event("response", my_callback)
+
+# Access low-level API when needed
+chuck.raw.set_param(...)
+```
+
+### Low-Level API
+
+For fine-grained control, use the low-level API via `pychuck._pychuck`:
+
+```python
+from pychuck._pychuck import ChucK, start_audio, stop_audio
+```
+
+#### Real-Time Audio
+
+```python
+from pychuck._pychuck import (
+    ChucK, start_audio, stop_audio, shutdown_audio,
+    PARAM_SAMPLE_RATE, PARAM_OUTPUT_CHANNELS
+)
 import time
 
 # Create and configure ChucK
-chuck = pychuck.ChucK()
-chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+chuck = ChucK()
+chuck.set_param(PARAM_SAMPLE_RATE, 44100)
+chuck.set_param(PARAM_OUTPUT_CHANNELS, 2)
 chuck.init()
 
 # Compile ChucK code
@@ -216,22 +264,22 @@ chuck.compile_code('''
 ''')
 
 # Start real-time audio playback
-pychuck.start_audio(chuck)
+start_audio(chuck)
 time.sleep(2)  # Play for 2 seconds
-pychuck.stop_audio()
-pychuck.shutdown_audio()
+stop_audio()
+shutdown_audio()
 ```
 
-### Offline Rendering
+#### Offline Rendering
 
 ```python
-import pychuck
+from pychuck._pychuck import ChucK, PARAM_SAMPLE_RATE, PARAM_OUTPUT_CHANNELS
 import numpy as np
 
 # Create ChucK instance
-chuck = pychuck.ChucK()
-chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+chuck = ChucK()
+chuck.set_param(PARAM_SAMPLE_RATE, 44100)
+chuck.set_param(PARAM_OUTPUT_CHANNELS, 2)
 chuck.init()
 
 # Compile code
@@ -249,7 +297,111 @@ chuck.run(np.zeros(0, dtype=np.float32), output, frames)
 
 ## API Reference
 
-### ChucK Class
+### High-Level API (`pychuck.Chuck`)
+
+The `Chuck` class provides a Pythonic wrapper with properties and simplified methods.
+
+```python
+from pychuck import Chuck
+```
+
+#### Constructor
+
+```python
+Chuck(
+    sample_rate: int = 44100,
+    input_channels: int = 2,
+    output_channels: int = 2,
+    working_directory: str = "",
+    chugin_enable: bool = True,
+    user_chugins: list[str] | None = None,
+    vm_adaptive: bool = False,
+    vm_halt: bool = False,
+    auto_depend: bool = False,
+    deprecate_level: int = 1,
+    dump_instructions: bool = False,
+    otf_enable: bool = False,
+    otf_port: int = 8888,
+    tty_color: bool = False,
+    tty_width_hint: int = 80,
+    auto_init: bool = True,
+)
+```
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `sample_rate` | `int` | Audio sample rate in Hz |
+| `input_channels` | `int` | Number of input channels |
+| `output_channels` | `int` | Number of output channels |
+| `working_directory` | `str` | Working directory for file operations |
+| `version` | `str` | ChucK version string (read-only) |
+| `chugin_enable` | `bool` | Whether chugin loading is enabled |
+| `user_chugins` | `list[str]` | List of user chugin paths |
+| `vm_adaptive` | `bool` | Whether adaptive VM timing is enabled |
+| `vm_halt` | `bool` | Whether VM halts when no shreds remain |
+| `auto_depend` | `bool` | Whether automatic dependency resolution is enabled |
+| `deprecate_level` | `int` | Deprecation warning level (0=none, 1=warn, 2=error) |
+| `dump_instructions` | `bool` | Whether VM instruction dumping is enabled |
+| `otf_enable` | `bool` | Whether on-the-fly programming is enabled |
+| `otf_port` | `int` | Port for on-the-fly programming |
+| `tty_color` | `bool` | Whether colored terminal output is enabled |
+| `tty_width_hint` | `int` | Terminal width hint for formatting |
+| `compiler_highlight_on_error` | `bool` | Syntax highlighting in error messages |
+| `is_realtime_audio_hint` | `bool` | Hint for real-time audio mode |
+| `otf_print_warnings` | `bool` | Whether OTF compiler warnings are printed |
+| `shreds` | `list[int]` | List of all active shred IDs |
+| `raw` | `ChucK` | Access to underlying low-level ChucK instance |
+
+#### Core Methods
+
+* **`init() -> bool`** - Initialize ChucK (called automatically if `auto_init=True`)
+* **`compile(code, args="", count=1, immediate=False) -> tuple[bool, list[int]]`** - Compile ChucK code
+* **`compile_file(path, args="", count=1, immediate=False) -> tuple[bool, list[int]]`** - Compile from file
+* **`run(num_frames) -> np.ndarray`** - Run VM and return output audio as numpy array
+* **`run_with_input(input_buf, output_buf, num_frames)`** - Run with explicit buffers
+
+#### Shred Management
+
+* **`remove_shred(shred_id) -> bool`** - Remove a shred by ID
+* **`replace_shred(shred_id, code) -> tuple[bool, list[int]]`** - Replace running shred with new code
+* **`shred_info(shred_id) -> dict | None`** - Get shred information
+* **`clear()`** - Remove all shreds from VM
+* **`reset_id()`** - Reset shred ID counter
+
+#### Global Variables
+
+* **`set_int(name, value)`** - Set global int
+* **`get_int(name, run_frames=256) -> int`** - Get global int (synchronous)
+* **`set_float(name, value)`** - Set global float
+* **`get_float(name, run_frames=256) -> float`** - Get global float (synchronous)
+* **`set_string(name, value)`** - Set global string
+* **`get_string(name, run_frames=256) -> str`** - Get global string (synchronous)
+* **`get_int_async(name, callback)`** - Get global int via callback
+* **`get_float_async(name, callback)`** - Get global float via callback
+* **`get_string_async(name, callback)`** - Get global string via callback
+
+#### Events
+
+* **`signal_event(name) -> bool`** - Signal event (wakes one shred)
+* **`broadcast_event(name) -> bool`** - Broadcast event (wakes all shreds)
+* **`on_event(name, callback, once=False) -> bool`** - Register event callback
+
+#### Console Output
+
+* **`set_stdout_callback(callback)`** - Capture ChucK stdout (chout)
+* **`set_stderr_callback(callback)`** - Capture ChucK stderr (cherr)
+
+---
+
+### Low-Level API (`pychuck._pychuck.ChucK`)
+
+The low-level API provides direct access to all ChucK functionality with explicit parameter management.
+
+```python
+from pychuck._pychuck import ChucK
+```
 
 #### Initialization Methods
 

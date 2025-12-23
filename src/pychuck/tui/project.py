@@ -3,23 +3,31 @@ Project management for livecoding sessions.
 
 Handles versioning scheme: file.ck → file-1.ck → file-1-1.ck
 """
+
 from pathlib import Path
-from typing import Optional, Tuple
-import time
+from typing import Optional
 
 
 class ProjectVersion:
     """Represents a versioned file in a project."""
 
-    def __init__(self, base_name: str, shred_id: Optional[int] = None,
-                 replace_version: Optional[int] = None):
+    def __init__(
+        self,
+        base_name: str,
+        shred_id: Optional[int] = None,
+        replace_version: Optional[int] = None,
+    ):
         self.base_name = base_name  # e.g., "mysynth.ck"
-        self.shred_id = shred_id     # e.g., 1 (from first spork)
+        self.shred_id = shred_id  # e.g., 1 (from first spork)
         self.replace_version = replace_version  # e.g., 2 (from second replace)
 
     def filename(self) -> str:
         """Generate filename based on versioning scheme."""
-        name, ext = self.base_name.rsplit('.', 1) if '.' in self.base_name else (self.base_name, 'ck')
+        name, ext = (
+            self.base_name.rsplit(".", 1)
+            if "." in self.base_name
+            else (self.base_name, "ck")
+        )
 
         if self.shred_id is None:
             return f"{name}.{ext}"
@@ -28,17 +36,17 @@ class ProjectVersion:
         else:
             return f"{name}-{self.shred_id}-{self.replace_version}.{ext}"
 
-    def next_replace(self) -> 'ProjectVersion':
+    def next_replace(self) -> "ProjectVersion":
         """Get next replacement version."""
         next_ver = 1 if self.replace_version is None else self.replace_version + 1
         return ProjectVersion(self.base_name, self.shred_id, next_ver)
 
     @classmethod
-    def from_filename(cls, filename: str) -> 'ProjectVersion':
+    def from_filename(cls, filename: str) -> "ProjectVersion":
         """Parse filename to extract version info."""
         # Parse: mysynth-1-2.ck → base="mysynth.ck", shred=1, replace=2
-        name, ext = filename.rsplit('.', 1) if '.' in filename else (filename, 'ck')
-        parts = name.split('-')
+        name, ext = filename.rsplit(".", 1) if "." in filename else (filename, "ck")
+        parts = name.split("-")
 
         if len(parts) == 1:
             return cls(f"{parts[0]}.{ext}", None, None)
@@ -65,7 +73,7 @@ class Project:
         self.project_dir.mkdir(parents=True, exist_ok=True)
 
         # Track shred ID → current version for each file
-        self.shred_versions = {}  # shred_id → ProjectVersion
+        self.shred_versions: dict[int, ProjectVersion] = {}
 
     def save_on_spork(self, filename: str, content: str, shred_id: int) -> Path:
         """Save file when sporked with new shred ID."""
@@ -105,13 +113,15 @@ class Project:
         files = []
         for path in self.list_versions():
             version = ProjectVersion.from_filename(path.name)
-            files.append({
-                'filename': path.name,
-                'base': version.base_name,
-                'shred_id': version.shred_id,
-                'replace_version': version.replace_version,
-                'mtime': path.stat().st_mtime
-            })
+            files.append(
+                {
+                    "filename": path.name,
+                    "base": version.base_name,
+                    "shred_id": version.shred_id,
+                    "replace_version": version.replace_version,
+                    "mtime": path.stat().st_mtime,
+                }
+            )
 
         # Sort by modification time
-        return sorted(files, key=lambda x: x['mtime'])
+        return sorted(files, key=lambda x: x["mtime"])

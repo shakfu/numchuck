@@ -3,7 +3,7 @@ Tests for ChucK shred management and introspection.
 """
 
 import pytest
-import pychuck
+import pychuck._pychuck as pychuck
 import numpy as np
 
 

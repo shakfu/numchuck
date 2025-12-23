@@ -1,4 +1,4 @@
-import pychuck
+import pychuck._pychuck as pychuck
 import numpy as np
 
 
