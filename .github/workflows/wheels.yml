@@ -44,7 +44,7 @@ jobs:
       - name: Install system dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install cmake bison flex
+          brew install bison flex
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.3.0
