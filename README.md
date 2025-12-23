@@ -969,62 +969,6 @@ chuck.compile_code('''
 print("ChucK output:", output_log)
 ```
 
-## Architecture
-
-* **Core**: ChucK virtual machine and compiler (C++)
-* **Bindings**: nanobind for efficient Python/C++ interop
-* **Build**: CMake + scikit-build-core for modern Python packaging
-* **Audio**:
-  * Real-time: RtAudio (CoreAudio on macOS, DirectSound/WASAPI on Windows, ALSA/JACK on Linux)
-  * Offline: Float32 sample processing, interleaved buffer format
-* **Plugins**: Chugin support for extending ChucK functionality
-
-## Features
-
-### Complete ChucK Integration
-
-* Full ChucK VM and compiler access
-* Compile from strings or files
-* Parameter configuration and introspection
-* Advanced shred (thread) management and introspection
-
-### Interactive Python/ChucK Communication
-
-* **Global Variables**: Bidirectional data exchange between Python and ChucK
-  * Set/get primitives (int, float, string)
-  * Set/get arrays (indexed and associative)
-  * Async callbacks for getting values
-* **Global Events**: Event-driven communication
-  * Signal/broadcast events from Python to ChucK
-  * Listen for events from ChucK in Python
-  * Persistent or one-shot event listeners
-* **Console Capture**: Redirect ChucK output to Python callbacks
-
-### Live Coding Support
-
-* **Shred Introspection**: List, query, and monitor running shreds
-* **Shred Control**: Remove individual shreds or clear entire VM
-* **Hot Swapping**: Replace running shred code without stopping audio
-* **VM Management**: Clear globals, reset IDs, fine-grained control
-
-### Two Audio Modes
-
-* **Real-time**: Asynchronous playback through system audio
-* **Offline**: Synchronous rendering to numpy arrays
-
-### Plugin Support
-
-* Load chugins (ChucK plugins)
-* Configurable search paths
-* Examples included in `examples/chugins/`
-
-### Examples Included
-
-* Basic synthesis examples in `examples/basic/`
-* Effect examples in `examples/effects/`
-* Pre-built chugins in `examples/chugins/`
-* Comprehensive test suite
-
 ## Requirements
 
 * Python 3.8+
@@ -1046,12 +990,21 @@ make test
 make clean
 ```
 
+## What's with the name?
+
+numchuck initially started off as `pychuck`. When I posted in the Chuck Discord about an earlier iteration of the project, [David Braun](https://github.com/dbraun) suggested the name NumChuck, which fits much better with the project’s use of [NumPy](https://numpy.org).
+
+Nonetheless, the inertia of the initial name held until I went to publish the project on PyPI and discovered that there was already a [pychuck](https://pypi.org/project/pychuck/) project whose purpose is to implement (rather than wrap) the Chuck language in Python—-which is, in hindsight, a much stronger claim to the name.
+
+Luckily, the name numchuck was available, allowing this project to narrowly avoid an unnecessary naming showdown.
+
 ## License
 
-ChucK is licensed under the GNU General Public License v2.0.
+numchuck is licensed under the GNU General Public License v3.0
 
 ## Credits
 
-* **ChucK**: Ge Wang, Perry Cook, and the ChucK team
-* **nanobind**: Wenzel Jakob and contributors
-* **claude-code**: Anthropic
+* [ChucK](https://chuck.stanford.edu): Ge Wang, Perry Cook, and the ChucK team
+* [nanobind](https://github.com/wjakob/nanobind): Wenzel Jakob and contributors
+* [David Braun](https://github.com/dbraun): For suggesting the name, numchuck!
+* [claude-code](https://github.com/anthropics/claude-code): Anthropic
