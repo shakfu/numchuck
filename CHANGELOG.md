@@ -15,6 +15,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [Unreleased]
 
+## [0.1.2]
+
 **Summary:** This release introduces a high-level Pythonic API, cross-platform wheel building, and build system enhancements. The new `Chuck` class provides properties and simplified methods while the low-level API remains available for fine-grained control.
 
 **Key Highlights:**
@@ -137,7 +139,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
-## [0.1.1] - Previous Release
+## [0.1.1]
 
 **Summary:** This release focuses on critical bug fixes, comprehensive documentation, developer experience improvements, and productivity enhancements. All critical and high-priority issues identified in the code review have been resolved, along with low-priority code quality improvements.
 

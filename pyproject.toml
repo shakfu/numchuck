@@ -1,6 +1,6 @@
 [project]
 name = "pychuck"
-version = "0.1.0"
+version = "0.1.2"
 description = "Python bindings for ChucK audio programming language"
 readme = "README.md"
 requires-python = ">=3.8"
