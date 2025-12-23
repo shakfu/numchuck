@@ -77,9 +77,9 @@ test-skip = "*-macosx_arm64 *-manylinux_aarch64"
 [tool.cibuildwheel.macos.environment]
 MACOSX_DEPLOYMENT_TARGET = "10.14"
 
-# Linux: Install build dependencies
+# Linux: Install build dependencies (manylinux uses yum/dnf)
 [tool.cibuildwheel.linux]
-before-build = "yum install -y alsa-lib-devel libsndfile-devel bison flex || apt-get update && apt-get install -y libasound2-dev libsndfile1-dev bison flex"
+before-build = "yum install -y alsa-lib-devel libsndfile-devel bison flex || (apt-get update && apt-get install -y libasound2-dev libsndfile1-dev bison flex)"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
