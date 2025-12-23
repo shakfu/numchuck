@@ -48,7 +48,6 @@ function(add_chugin)
     endif()
 
     set(CHUGINS_DIR ${CMAKE_SOURCE_DIR}/examples/chugins)
-    set(CHUGINS_PREFIX pychuck/chugins)
 
     message(STATUS "CHUGIN_NAME: ${CHUGIN_NAME}")
     if(CHUGIN_DEBUG)
@@ -102,11 +101,15 @@ function(add_chugin)
             POSITION_INDEPENDENT_CODE ON
         )
     else()
+        # Output dynamic chugins to examples/chugins directory
         set_target_properties(${CHUGIN_NAME}
             PROPERTIES
             PREFIX ""
             SUFFIX ".chug"
             POSITION_INDEPENDENT_CODE ON
+            LIBRARY_OUTPUT_DIRECTORY "${CHUGINS_DIR}"
+            LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CHUGINS_DIR}"
+            LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CHUGINS_DIR}"
         )
     endif()
 
@@ -154,17 +157,12 @@ function(add_chugin)
         ${CHUGIN_LINK_LIBS}
     )
 
-if (NOT CM_STATIC_CHUGINS)
-    install(
-        TARGETS ${CHUGIN_NAME}
-        LIBRARY DESTINATION ${CHUGINS_PREFIX}
-    )
-
-    if(CMAKE_HOST_APPLE AND CHUGIN_CODESIGN)
-        install(
-            CODE "execute_process (COMMAND codesign -vf -s - ${CHUGINS_DIR}/${CHUGIN_NAME}.chug)" 
+    # Codesign on macOS if requested (chugins are output to CHUGINS_DIR, not installed to wheel)
+    if(NOT CM_STATIC_CHUGINS AND CMAKE_HOST_APPLE AND CHUGIN_CODESIGN)
+        add_custom_command(TARGET ${CHUGIN_NAME} POST_BUILD
+            COMMAND codesign -vf -s - "${CHUGINS_DIR}/${CHUGIN_NAME}.chug"
+            COMMENT "Codesigning ${CHUGIN_NAME}.chug"
         )
     endif()
-endif()
 
 endfunction()

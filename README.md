@@ -364,8 +364,8 @@ Chuck(
 
 #### Shred Management
 
-* **`remove_shred(shred_id) -> bool`** - Remove a shred by ID
-* **`replace_shred(shred_id, code) -> tuple[bool, list[int]]`** - Replace running shred with new code
+* **`remove_shred(shred_id) -> None`** - Remove a shred by ID
+* **`replace_shred(shred_id, code, args="") -> int`** - Replace running shred with new code, returns new shred ID
 * **`shred_info(shred_id) -> dict | None`** - Get shred information
 * **`clear()`** - Remove all shreds from VM
 * **`reset_id()`** - Reset shred ID counter
@@ -384,9 +384,10 @@ Chuck(
 
 #### Events
 
-* **`signal_event(name) -> bool`** - Signal event (wakes one shred)
-* **`broadcast_event(name) -> bool`** - Broadcast event (wakes all shreds)
-* **`on_event(name, callback, once=False) -> bool`** - Register event callback
+* **`signal_event(name) -> None`** - Signal event (wakes one shred)
+* **`broadcast_event(name) -> None`** - Broadcast event (wakes all shreds)
+* **`on_event(name, callback, listen_forever=True) -> int`** - Register event callback, returns callback ID
+* **`stop_listening_for_event(name, callback_id) -> None`** - Stop listening for event
 
 #### Console Output
 
@@ -1028,6 +1029,25 @@ make test
 # Clean build artifacts
 make clean
 ```
+
+### Build Options
+
+#### Static Chugin Linking
+
+By default, chugins are built as dynamic libraries (`.chug` files) and output to `examples/chugins/`. To embed chugins statically into the extension:
+
+1. Edit `pyproject.toml` and uncomment the cmake.args line:
+   ```toml
+   [tool.scikit-build]
+   cmake.args = ["-DCM_STATIC_CHUGINS=ON"]
+   ```
+
+2. Rebuild the package:
+   ```bash
+   pip install -e .
+   ```
+
+This links 30+ chugins directly into `_pychuck`, eliminating the need for external `.chug` files. Note: PitchTrack and Spectacle chugins are excluded due to symbol conflicts with Sigmund and Multicomb respectively.
 
 ## License
 

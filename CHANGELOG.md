@@ -15,6 +15,76 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [Unreleased]
 
+**Summary:** This release introduces a high-level Pythonic API, static chugin linking, improved type checking, and build system enhancements. The new `Chuck` class provides properties and simplified methods while the low-level API remains available for fine-grained control.
+
+**Key Highlights:**
+- New high-level `Chuck` class with Pythonic properties and methods
+- Optional static chugin linking (embeds chugins in extension)
+- Full mypy type checking support with proper stubs
+- Dynamic chugins now output to `examples/chugins/` (not bundled in wheel)
+- Improved build system with scikit-build-core and uv
+
+### Added
+
+- **High-Level Python API** (`pychuck.api.Chuck`):
+  - Pythonic wrapper class with properties instead of get/set methods
+  - Properties: `sample_rate`, `version`, `chugin_enable`, `working_directory`, etc.
+  - Simplified methods: `compile()`, `run()`, `set_int()`, `get_int()`, etc.
+  - Synchronous global variable getters (handles async callbacks internally)
+  - Constructor with all parameters as kwargs with sensible defaults
+  - Access low-level API via `chuck.raw` property
+  - Exported directly from `pychuck` package: `from pychuck import Chuck`
+
+- **Static Chugin Linking** (optional build flag):
+  - `cmake.args = ["-DCM_STATIC_CHUGINS=ON"]` in pyproject.toml
+  - Embeds 33 chugins directly into `_pychuck` extension
+  - Uses `-force_load` (macOS) / `--whole-archive` (Linux)
+  - Excludes conflicting chugins (PitchTrack/Sigmund, Multicomb/Spectacle have symbol conflicts)
+  - Results in single self-contained extension (~3.8MB vs ~3.4MB)
+
+- **Type Stub Improvements** (`_pychuck.pyi`):
+  - Added 8 missing PARAM_* constants (TTY_COLOR, TTY_WIDTH_HINT, COMPILER_HIGHLIGHT_ON_ERROR, etc.)
+  - Renamed from `__init__.pyi` to `_pychuck.pyi` to match module
+  - Added `py.typed` marker for PEP 561 compliance
+
+- **Developer Dependencies**:
+  - Added `types-Pygments>=2.18.0` for mypy compatibility
+
+### Changed
+
+- **Package Exports**:
+  - `pychuck` now exports only the high-level `Chuck` class
+  - Low-level API available via `from pychuck._pychuck import ChucK`
+  - Internal modules import from `_pychuck` directly
+
+- **Chugin Build System** (`scripts/cmake/fn_add_chugin.cmake`):
+  - Dynamic chugins now output to `examples/chugins/` directory
+  - Removed wheel installation of `.chug` files
+  - Chugins managed externally (use chump package manager)
+  - Codesigning moved from install-time to post-build command
+
+- **API Method Signatures** (`api.py`):
+  - `remove_shred()` returns `None` (not `bool`)
+  - `replace_shred()` returns `int` (new shred ID, 0 on failure)
+  - `signal_event()` and `broadcast_event()` return `None`
+  - `on_event()` returns `int` callback ID, added `stop_listening_for_event()`
+
+### Fixed
+
+- **Type Checking** (`make typecheck` now passes):
+  - Fixed `set_param` vs `set_param_string` for working_directory
+  - Fixed `compile_code` return type handling in executor.py
+  - Added type annotation for `shred_versions` dict in project.py
+  - Fixed variable shadowing (`f` -> `fh`) in executor.py
+
+- **Linting** (`make lint` passes):
+  - Removed unused variables (`version_parser`, `info_parser`, `count`)
+  - Changed bare `except:` to `except Exception:`
+
+---
+
+## [0.1.1] - Previous Release
+
 **Summary:** This release focuses on critical bug fixes, comprehensive documentation, developer experience improvements, and productivity enhancements. All critical and high-priority issues identified in the code review have been resolved, along with low-priority code quality improvements.
 
 **Key Highlights:**
