@@ -150,135 +150,88 @@ class Chuck:
         """
         return self._chuck.compile_file(path, args, count, immediate)
 
-    def run(self, num_frames: int) -> NDArray[np.float32]:
+    def run(
+        self,
+        num_frames: int,
+        *,
+        output: NDArray[np.float32] | None = None,
+        input: NDArray[np.float32] | None = None,
+        reuse: bool = False,
+    ) -> NDArray[np.float32]:
         """Run the VM for a number of frames, returning the output audio.
-
-        Allocates new buffers on each call. Best for simple scripts,
-        offline rendering, and prototyping.
 
         Args:
             num_frames: Number of audio frames to compute
+            output: Pre-allocated output buffer, or None to allocate
+            input: Pre-allocated input buffer, or None for silence
+            reuse: If True and output is None, reuse internal buffer (zero GC)
 
         Returns:
-            Output audio as numpy array of shape (num_frames * output_channels,)
+            Output audio as numpy array (num_frames * output_channels,)
 
-        Example:
-            >>> audio = chuck.run(44100)  # 1 second of audio
+        Examples:
+            # Simple (allocates each call)
+            audio = chuck.run(512)
+
+            # Zero allocation with your buffer
+            buf = np.zeros(1024, dtype=np.float32)
+            chuck.run(512, output=buf)
+
+            # Zero allocation with internal buffer
+            audio = chuck.run(512, reuse=True)
+
+            # Effect mode (both buffers)
+            chuck.run(512, output=out_buf, input=in_buf)
         """
         in_channels = self.input_channels
         out_channels = self.output_channels
-        input_buf = np.zeros(num_frames * in_channels, dtype=np.float32)
-        output_buf = np.zeros(num_frames * out_channels, dtype=np.float32)
+
+        # Determine output buffer
+        if output is not None:
+            output_buf = output
+        elif reuse:
+            # Use internal reusable buffer
+            if self._reuse_num_frames != num_frames or self._reuse_output_buf is None:
+                self._reuse_output_buf = np.zeros(
+                    num_frames * out_channels, dtype=np.float32
+                )
+                self._reuse_input_buf = np.zeros(
+                    num_frames * in_channels, dtype=np.float32
+                )
+                self._reuse_num_frames = num_frames
+            output_buf = self._reuse_output_buf
+        else:
+            output_buf = np.zeros(num_frames * out_channels, dtype=np.float32)
+
+        # Determine input buffer
+        if input is not None:
+            input_buf = input
+        elif reuse and self._reuse_input_buf is not None:
+            input_buf = self._reuse_input_buf
+        else:
+            input_buf = np.zeros(num_frames * in_channels, dtype=np.float32)
+
         self._chuck.run(input_buf, output_buf, num_frames)
         return output_buf
 
-    def run_into(
-        self,
-        output_buf: NDArray[np.float32],
-        num_frames: int,
-        input_buf: NDArray[np.float32] | None = None,
-    ) -> NDArray[np.float32]:
-        """Run the VM into a pre-allocated output buffer.
+    def advance(self, num_frames: int) -> None:
+        """Advance the VM by a number of frames without returning audio.
 
-        Best for real-time loops, streaming, and performance-critical code.
-        The output buffer is modified in-place and returned for chaining.
-
-        Args:
-            output_buf: Pre-allocated output buffer (num_frames * output_channels)
-            num_frames: Number of audio frames to compute
-            input_buf: Optional pre-allocated input buffer. If None, uses silence.
-
-        Returns:
-            The output_buf (same reference, modified in-place)
-
-        Example:
-            >>> output_buf = np.zeros(1024, dtype=np.float32)
-            >>> while running:
-            ...     chuck.run_into(output_buf, 512)
-            ...     stream.write(output_buf)
-        """
-        if input_buf is None:
-            input_buf = np.zeros(num_frames * self.input_channels, dtype=np.float32)
-        self._chuck.run(input_buf, output_buf, num_frames)
-        return output_buf
-
-    def run_process(
-        self,
-        input_buf: NDArray[np.float32],
-        output_buf: NDArray[np.float32],
-        num_frames: int,
-    ) -> NDArray[np.float32]:
-        """Run the VM processing input audio to output (audio effect style).
-
-        Best for using ChucK as an audio effect or processor.
-        Both buffers are provided by the caller; output is modified in-place.
-
-        Args:
-            input_buf: Input audio buffer (num_frames * input_channels)
-            output_buf: Output audio buffer (num_frames * output_channels)
-            num_frames: Number of audio frames to compute
-
-        Returns:
-            The output_buf (same reference, modified in-place)
-
-        Example:
-            >>> input_buf = get_audio_input()
-            >>> output_buf = np.zeros_like(input_buf)
-            >>> chuck.run_process(input_buf, output_buf, len(input_buf) // 2)
-        """
-        self._chuck.run(input_buf, output_buf, num_frames)
-        return output_buf
-
-    def run_frames(self, num_frames: int) -> None:
-        """Run the VM for a number of frames, discarding the output.
-
-        Best for advancing time to trigger callbacks or process events
-        when you don't need the audio output.
+        Use when you only need to trigger callbacks or advance time,
+        and don't need the audio output.
 
         Args:
             num_frames: Number of audio frames to compute
 
         Example:
             >>> chuck.get_int_async("myVar", lambda v: print(v))
-            >>> chuck.run_frames(256)  # triggers callback
+            >>> chuck.advance(256)  # triggers callback
         """
         in_channels = self.input_channels
         out_channels = self.output_channels
         input_buf = np.zeros(num_frames * in_channels, dtype=np.float32)
         output_buf = np.zeros(num_frames * out_channels, dtype=np.float32)
         self._chuck.run(input_buf, output_buf, num_frames)
-
-    def run_reuse(self, num_frames: int) -> NDArray[np.float32]:
-        """Run the VM reusing an internal buffer (zero allocation after first call).
-
-        Best for real-time loops where you want zero GC pressure without
-        managing buffers yourself. Buffers are lazily allocated on first call
-        and reused on subsequent calls with the same num_frames.
-
-        Note: If num_frames changes, buffers are reallocated.
-
-        Args:
-            num_frames: Number of audio frames to compute
-
-        Returns:
-            Output audio as numpy array (same internal buffer each call)
-
-        Example:
-            >>> chuck.compile("SinOsc s => dac;")
-            >>> while running:
-            ...     audio = chuck.run_reuse(512)  # no allocation after first call
-            ...     stream.write(audio)
-        """
-        # Reallocate if num_frames changed or first call
-        if self._reuse_num_frames != num_frames or self._reuse_output_buf is None:
-            in_channels = self.input_channels
-            out_channels = self.output_channels
-            self._reuse_input_buf = np.zeros(num_frames * in_channels, dtype=np.float32)
-            self._reuse_output_buf = np.zeros(num_frames * out_channels, dtype=np.float32)
-            self._reuse_num_frames = num_frames
-
-        self._chuck.run(self._reuse_input_buf, self._reuse_output_buf, num_frames)
-        return self._reuse_output_buf
 
     # -------------------------------------------------------------------------
     # Audio parameters (read-only after init)

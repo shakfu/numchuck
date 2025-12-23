@@ -359,8 +359,12 @@ Chuck(
 * **`init() -> bool`** - Initialize ChucK (called automatically if `auto_init=True`)
 * **`compile(code, args="", count=1, immediate=False) -> tuple[bool, list[int]]`** - Compile ChucK code
 * **`compile_file(path, args="", count=1, immediate=False) -> tuple[bool, list[int]]`** - Compile from file
-* **`run(num_frames) -> np.ndarray`** - Run VM and return output audio as numpy array
-* **`run_with_input(input_buf, output_buf, num_frames)`** - Run with explicit buffers
+* **`run(num_frames, *, output=None, input=None, reuse=False) -> np.ndarray`** - Run VM and return output audio
+  * No args: allocates new buffer each call
+  * `output=buf`: uses provided buffer (zero allocation)
+  * `input=buf`: uses provided input buffer
+  * `reuse=True`: uses internal buffer (zero GC without manual management)
+* **`advance(num_frames) -> None`** - Advance VM time without returning audio (for callbacks/events)
 
 #### Shred Management
 

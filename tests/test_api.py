@@ -111,81 +111,81 @@ class TestRunning:
         output = chuck.run(500)
         assert len(output) == 1000  # 500 frames * 2 channels
 
-    def test_run_into_preallocated_buffer(self):
-        """Test run_into with pre-allocated buffer."""
+    def test_run_with_output_buffer(self):
+        """Test run with pre-allocated output buffer."""
         chuck = Chuck(output_channels=1)
         chuck.compile("SinOsc s => dac; 440 => s.freq; 1::second => now;")
         output_buf = np.zeros(4410, dtype=np.float32)
-        result = chuck.run_into(output_buf, 4410)
+        result = chuck.run(4410, output=output_buf)
         # Should return the same buffer
         assert result is output_buf
         # Buffer should be modified in-place
         assert output_buf.max() > 0
 
-    def test_run_into_with_input_buffer(self):
-        """Test run_into with both input and output buffers."""
+    def test_run_with_input_and_output(self):
+        """Test run with both input and output buffers."""
         chuck = Chuck(output_channels=1, input_channels=1)
         chuck.compile("adc => dac;")  # Pass-through
         input_buf = np.ones(500, dtype=np.float32) * 0.5
         output_buf = np.zeros(500, dtype=np.float32)
-        result = chuck.run_into(output_buf, 500, input_buf)
+        result = chuck.run(500, output=output_buf, input=input_buf)
         assert result is output_buf
         # Output should have data (pass-through of input)
         assert isinstance(output_buf, np.ndarray)
 
-    def test_run_process(self):
-        """Test run_process with explicit input/output."""
+    def test_run_effect_mode(self):
+        """Test run with explicit input/output (effect mode)."""
         chuck = Chuck(output_channels=1, input_channels=1)
         chuck.compile("SinOsc s => dac; 440 => s.freq; 1::second => now;")
         input_buf = np.zeros(4410, dtype=np.float32)
         output_buf = np.zeros(4410, dtype=np.float32)
-        result = chuck.run_process(input_buf, output_buf, 4410)
+        result = chuck.run(4410, output=output_buf, input=input_buf)
         # Should return output buffer
         assert result is output_buf
         # Output should have audio
         assert output_buf.max() > 0
 
-    def test_run_frames_discards_output(self):
-        """Test run_frames advances time without returning audio."""
+    def test_advance_discards_output(self):
+        """Test advance() advances time without returning audio."""
         chuck = Chuck()
         chuck.compile("global int counter; 0 => counter;")
-        chuck.run_frames(100)
+        chuck.advance(100)
         # Just verify it doesn't crash and returns None
-        result = chuck.run_frames(100)
+        result = chuck.advance(100)
         assert result is None
 
-    def test_run_into_reuse_buffer_loop(self):
-        """Test run_into in a loop with reused buffer (zero allocation pattern)."""
+    def test_run_with_output_loop(self):
+        """Test run with output buffer in a loop (zero allocation pattern)."""
         chuck = Chuck(output_channels=1)
         chuck.compile("SinOsc s => dac; 440 => s.freq; 1::second => now;")
         output_buf = np.zeros(512, dtype=np.float32)
         # Simulate real-time loop
         for _ in range(10):
-            chuck.run_into(output_buf, 512)
+            chuck.run(512, output=output_buf)
         # Buffer should have valid audio after loop
         assert output_buf.max() > 0
 
     def test_run_reuse_internal_buffer(self):
-        """Test run_reuse with internal buffer management."""
+        """Test run with reuse=True for internal buffer management."""
         chuck = Chuck(output_channels=1)
         chuck.compile("SinOsc s => dac; 440 => s.freq; 1::second => now;")
         # First call allocates buffer
-        audio1 = chuck.run_reuse(512)
+        audio1 = chuck.run(512, reuse=True)
         assert isinstance(audio1, np.ndarray)
         assert len(audio1) == 512
         # Second call reuses same buffer
-        audio2 = chuck.run_reuse(512)
+        audio2 = chuck.run(512, reuse=True)
         assert audio1 is audio2  # Same buffer object
         assert audio2.max() > 0
 
     def test_run_reuse_reallocates_on_size_change(self):
-        """Test run_reuse reallocates when num_frames changes."""
+        """Test run with reuse=True reallocates when num_frames changes."""
         chuck = Chuck(output_channels=1)
         chuck.compile("SinOsc s => dac; 440 => s.freq; 1::second => now;")
-        audio1 = chuck.run_reuse(512)
+        audio1 = chuck.run(512, reuse=True)
         assert len(audio1) == 512
         # Different size triggers reallocation
-        audio2 = chuck.run_reuse(1024)
+        audio2 = chuck.run(1024, reuse=True)
         assert len(audio2) == 1024
         assert audio1 is not audio2  # Different buffer
 

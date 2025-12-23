@@ -37,14 +37,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Artifact collection job aggregates all wheels
   - PyPI publishing on tag push (trusted publisher)
 
-- **High-Level API Run Variants** (`pychuck.api.Chuck`):
-  - `run(num_frames)` - Convenience method, allocates buffers (prototyping, offline)
-  - `run_into(output_buf, num_frames, input_buf=None)` - Pre-allocated output buffer (real-time loops, zero GC)
-  - `run_process(input_buf, output_buf, num_frames)` - Both buffers provided (audio effects)
-  - `run_frames(num_frames)` - Advance time, discard output (callbacks/events)
-  - `run_reuse(num_frames)` - Internal buffer management (zero GC without manual buffer handling)
-  - All in-place methods return the output buffer for chaining
-  - Comprehensive tests for all variants
+- **Consolidated Run API** (`pychuck.api.Chuck`):
+  - `run(num_frames, *, output=None, input=None, reuse=False)` - Unified audio processing
+    - No args: allocates new buffer each call (prototyping, offline)
+    - `output=buf`: uses provided buffer (zero allocation)
+    - `output=buf, input=buf`: effect mode with both buffers
+    - `reuse=True`: uses internal buffer (zero GC without manual management)
+  - `advance(num_frames)` - Advance VM time without returning audio (callbacks/events)
+  - Clean two-method API replaces previous five methods
+  - Comprehensive tests for all usage patterns
 
 - **Linux Build Support**:
   - Parser generation with bison/flex on Linux
