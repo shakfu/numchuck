@@ -73,5 +73,12 @@ include(${CMAKE_SOURCE_DIR}/scripts/cmake/fn_add_chugin.cmake)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/nanobind)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/chuck)
+
+# Fix Windows naming conflict: chuck_lib outputs "chuck.lib" which conflicts
+# with the chuck executable's import library. Rename to "chuckcore.lib".
+if(WIN32)
+    set_property(TARGET chuck_lib PROPERTY OUTPUT_NAME chuckcore)
+endif()
+
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/chugins)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src)
