@@ -73,47 +73,94 @@ target_link_libraries(_pychuck
     $<$<AND:$<PLATFORM_ID:Linux>,$<BOOL:${LINUX_PULSE}>>:-lpulse-simple>
     $<$<AND:$<PLATFORM_ID:Linux>,$<BOOL:${LINUX_PULSE}>>:-lpulse>
     chuck_lib
-    # # $<$<BOOL:${CM_STATIC_CHUGINS}>:AbletonLink>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:ABSaturator>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:AmbPan>
-    # # $<$<BOOL:${CM_STATIC_CHUGINS}>:AudioUnit>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Binaural>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Bitcrusher>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:ConvRev>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Elliptic>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:ExpDelay>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:ExpEnv>
-    # # $<$<BOOL:${CM_STATIC_CHUGINS}>:Fauck>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:FIR>
-    # # $<$<BOOL:${CM_STATIC_CHUGINS}>:FluidSynth>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:FoldbackSaturator>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:GVerb>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:KasFilter>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Ladspa>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Line>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:MagicSine>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Mesh2D>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:MIAP>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Multicomb>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:NHHall>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Overdrive>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:PanN>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Patch>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Perlin>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:PitchTrack>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:PowerADSR>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Random>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Range>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:RegEx>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Sigmund>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Spectacle>
-    # # $<$<BOOL:${CM_STATIC_CHUGINS}>:WarpBuf>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:Wavetable>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:WinFuncEnv>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:WPDiodeLadder>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:WPKorg35>
-    # $<$<BOOL:${CM_STATIC_CHUGINS}>:XML>
 )
+
+# Link static chugins when CM_STATIC_CHUGINS is enabled
+if(CM_STATIC_CHUGINS)
+    # Core chugins (always available)
+    # Note: Some chugins have conflicting symbols and cannot be linked together:
+    #   - PitchTrack vs Sigmund (both have mayer FFT) - keeping Sigmund
+    #   - Multicomb vs Spectacle (both have Odelay) - keeping Multicomb
+    set(STATIC_CHUGINS
+        ABSaturator
+        AmbPan
+        Binaural
+        Bitcrusher
+        ConvRev
+        Elliptic
+        ExpDelay
+        ExpEnv
+        FIR
+        FoldbackSaturator
+        GVerb
+        KasFilter
+        Ladspa
+        Line
+        MagicSine
+        Mesh2D
+        MIAP
+        Multicomb
+        NHHall
+        Overdrive
+        PanN
+        Patch
+        Perlin
+        # PitchTrack  # conflicts with Sigmund (duplicate mayer FFT symbols)
+        PowerADSR
+        Random
+        Range
+        RegEx
+        Sigmund
+        # Spectacle  # conflicts with Multicomb (duplicate Odelay symbols)
+        Wavetable
+        WinFuncEnv
+        WPDiodeLadder
+        WPKorg35
+        XML
+    )
+
+    # Platform-specific chugins
+    if(CMAKE_HOST_APPLE)
+        list(APPEND STATIC_CHUGINS AudioUnit)
+    endif()
+
+    # Optional chugins (require external dependencies)
+    # if(CM_ABLETONLINK)
+    #     list(APPEND STATIC_CHUGINS AbletonLink)
+    # endif()
+    # if(CM_FAUST)
+    #     list(APPEND STATIC_CHUGINS Fauck)
+    # endif()
+    # if(CM_FLUIDSYNTH)
+    #     list(APPEND STATIC_CHUGINS FluidSynth)
+    # endif()
+    # if(CM_WARPBUF)
+    #     list(APPEND STATIC_CHUGINS WarpBuf)
+    # endif()
+
+    # Force linker to include all symbols from static chugins
+    # (chugins register via constructors, so no direct references exist)
+    if(CMAKE_HOST_APPLE)
+        # macOS: use -force_load for each static library
+        foreach(chugin ${STATIC_CHUGINS})
+            target_link_libraries(_pychuck PUBLIC -force_load $<TARGET_FILE:${chugin}>)
+        endforeach()
+        # Additional frameworks required by AudioUnit chugin
+        target_link_libraries(_pychuck PUBLIC
+            "-framework AudioToolbox"
+            "-framework AudioUnit"
+        )
+    else()
+        # Linux: use --whole-archive
+        target_link_libraries(_pychuck PUBLIC
+            -Wl,--whole-archive
+            ${STATIC_CHUGINS}
+            -Wl,--no-whole-archive
+        )
+    endif()
+
+    message(STATUS "Linking static chugins: ${STATIC_CHUGINS}")
+endif()
 
 
 set_target_properties(_pychuck PROPERTIES
