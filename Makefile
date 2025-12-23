@@ -50,7 +50,7 @@ build:
 	@uv sync --reinstall-package numchuck
 
 clean:
-	rm -rf build
+	@rm -rf build
 
 test:
 	@uv run pytest

@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [Unreleased]
 
+## [0.1.6]
+
+- version bump due to corrupted wheel: `numchuck-0.1.5-cp310-cp310-macosx_11_0_arm64.whl`
+
 ## [0.1.5]
 
 ### Added
