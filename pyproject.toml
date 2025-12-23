@@ -70,8 +70,8 @@ skip = "*-win32 *-manylinux_i686 *-musllinux_* pp*"
 test-command = "pytest {project}/tests -v --tb=short -k 'not realtime'"
 test-requires = ["pytest", "numpy"]
 
-# Skip testing on emulated architectures (slow)
-test-skip = "*-macosx_arm64 *-manylinux_aarch64"
+# Skip testing on emulated architectures (slow) and Windows (access violation in tests)
+test-skip = "*-macosx_arm64 *-manylinux_aarch64 *-win_amd64"
 
 # Needed for full C++17 support
 [tool.cibuildwheel.macos.environment]

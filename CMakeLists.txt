@@ -80,5 +80,11 @@ if(WIN32)
     set_property(TARGET chuck_lib PROPERTY OUTPUT_NAME chuckcore)
 endif()
 
+# Fix GCC 14+ strict type checking in ChucK source (void* to timezone* conversion)
+# This is needed for manylinux builds which use newer GCC versions
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "14")
+    target_compile_options(chuck_lib PRIVATE -fpermissive)
+endif()
+
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/chugins)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src)
