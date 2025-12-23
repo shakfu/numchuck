@@ -97,6 +97,11 @@ class Chuck:
         if auto_init:
             self._chuck.init()
 
+        # Internal buffers for run_reuse() - lazily allocated
+        self._reuse_input_buf: NDArray[np.float32] | None = None
+        self._reuse_output_buf: NDArray[np.float32] | None = None
+        self._reuse_num_frames: int = 0
+
     # -------------------------------------------------------------------------
     # Core operations
     # -------------------------------------------------------------------------
@@ -242,6 +247,38 @@ class Chuck:
         input_buf = np.zeros(num_frames * in_channels, dtype=np.float32)
         output_buf = np.zeros(num_frames * out_channels, dtype=np.float32)
         self._chuck.run(input_buf, output_buf, num_frames)
+
+    def run_reuse(self, num_frames: int) -> NDArray[np.float32]:
+        """Run the VM reusing an internal buffer (zero allocation after first call).
+
+        Best for real-time loops where you want zero GC pressure without
+        managing buffers yourself. Buffers are lazily allocated on first call
+        and reused on subsequent calls with the same num_frames.
+
+        Note: If num_frames changes, buffers are reallocated.
+
+        Args:
+            num_frames: Number of audio frames to compute
+
+        Returns:
+            Output audio as numpy array (same internal buffer each call)
+
+        Example:
+            >>> chuck.compile("SinOsc s => dac;")
+            >>> while running:
+            ...     audio = chuck.run_reuse(512)  # no allocation after first call
+            ...     stream.write(audio)
+        """
+        # Reallocate if num_frames changed or first call
+        if self._reuse_num_frames != num_frames or self._reuse_output_buf is None:
+            in_channels = self.input_channels
+            out_channels = self.output_channels
+            self._reuse_input_buf = np.zeros(num_frames * in_channels, dtype=np.float32)
+            self._reuse_output_buf = np.zeros(num_frames * out_channels, dtype=np.float32)
+            self._reuse_num_frames = num_frames
+
+        self._chuck.run(self._reuse_input_buf, self._reuse_output_buf, num_frames)
+        return self._reuse_output_buf
 
     # -------------------------------------------------------------------------
     # Audio parameters (read-only after init)

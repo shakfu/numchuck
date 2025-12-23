@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - `run_into(output_buf, num_frames, input_buf=None)` - Pre-allocated output buffer (real-time loops, zero GC)
   - `run_process(input_buf, output_buf, num_frames)` - Both buffers provided (audio effects)
   - `run_frames(num_frames)` - Advance time, discard output (callbacks/events)
+  - `run_reuse(num_frames)` - Internal buffer management (zero GC without manual buffer handling)
   - All in-place methods return the output buffer for chaining
   - Comprehensive tests for all variants
 

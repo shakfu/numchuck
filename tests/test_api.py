@@ -165,6 +165,30 @@ class TestRunning:
         # Buffer should have valid audio after loop
         assert output_buf.max() > 0
 
+    def test_run_reuse_internal_buffer(self):
+        """Test run_reuse with internal buffer management."""
+        chuck = Chuck(output_channels=1)
+        chuck.compile("SinOsc s => dac; 440 => s.freq; 1::second => now;")
+        # First call allocates buffer
+        audio1 = chuck.run_reuse(512)
+        assert isinstance(audio1, np.ndarray)
+        assert len(audio1) == 512
+        # Second call reuses same buffer
+        audio2 = chuck.run_reuse(512)
+        assert audio1 is audio2  # Same buffer object
+        assert audio2.max() > 0
+
+    def test_run_reuse_reallocates_on_size_change(self):
+        """Test run_reuse reallocates when num_frames changes."""
+        chuck = Chuck(output_channels=1)
+        chuck.compile("SinOsc s => dac; 440 => s.freq; 1::second => now;")
+        audio1 = chuck.run_reuse(512)
+        assert len(audio1) == 512
+        # Different size triggers reallocation
+        audio2 = chuck.run_reuse(1024)
+        assert len(audio2) == 1024
+        assert audio1 is not audio2  # Different buffer
+
 
 class TestShredManagement:
     """Test shred management."""
