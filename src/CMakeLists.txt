@@ -34,13 +34,13 @@ target_compile_options(_pychuck
 target_compile_definitions(_pychuck
     PRIVATE
     $<$<PLATFORM_ID:Darwin>:__MACOSX_CORE__>
-    $<$<PLATFORM_ID:Windows>:__PLATFORM_WIN32__>
-    $<$<PLATFORM_ID:Windows>:__WINDOWS_DS__>
-    $<$<PLATFORM_ID:Linux>:__LINUX_ALSA__> # default to __ALSA__
-    $<$<AND:$<PLATFORM_ID:Linux>,$<BOOL:${LINUX_ALSA}>>:__LINUX_ALSA__>
+    $<$<PLATFORM_ID:Linux>:__PLATFORM_LINUX__>
+    $<$<PLATFORM_ID:Linux>:__LINUX_ALSA__>
+    $<$<PLATFORM_ID:Linux>:__CK_SNDFILE_NATIVE__>
     $<$<AND:$<PLATFORM_ID:Linux>,$<BOOL:${LINUX_PULSE}>>:__LINUX_PULSE__>
     $<$<AND:$<PLATFORM_ID:Linux>,$<BOOL:${LINUX_JACK}>>:__UNIX_JACK__>
-    $<$<PLATFORM_ID:Linux>:__CK_SNDFILE_NATIVE__>
+    $<$<PLATFORM_ID:Windows>:__PLATFORM_WIN32__>
+    $<$<PLATFORM_ID:Windows>:__WINDOWS_DS__>
     HAVE_CONFIG_H
 )
 

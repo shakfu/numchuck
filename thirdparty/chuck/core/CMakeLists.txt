@@ -1,23 +1,20 @@
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-if (CMAKE_HOST_APPLE)
-execute_process(
-	COMMAND bison -dv -b chuck chuck.y
-	COMMAND flex -ochuck.yy.c chuck.lex
-	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-)
+# Generate parser files on macOS or Linux (if bison/flex available)
+if(NOT WIN32)
+	find_program(BISON_EXECUTABLE bison)
+	find_program(FLEX_EXECUTABLE flex)
+	if(BISON_EXECUTABLE AND FLEX_EXECUTABLE)
+		execute_process(
+			COMMAND ${BISON_EXECUTABLE} -dv -b chuck chuck.y
+			COMMAND ${FLEX_EXECUTABLE} -ochuck.yy.c chuck.lex
+			WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		)
+	endif()
 endif()
 
-if(APPLE)
-	set(C_CORE
-		chuck.tab.c
-		chuck.yy.c
-		util_network.c
-		util_raw.c
-		util_xforms.c
-	)
-elseif(WIN32)
+if(WIN32)
 	set(C_CORE
 		chuck_yacc.c
 		util_network.c
@@ -25,7 +22,10 @@ elseif(WIN32)
 		util_xforms.c
 	)
 else()
+	# macOS and Linux use bison/flex generated files
 	set(C_CORE
+		chuck.tab.c
+		chuck.yy.c
 		util_network.c
 		util_raw.c
 		util_xforms.c
@@ -153,6 +153,8 @@ endif()
 target_compile_definitions(chuck_lib
 	PUBLIC
 	$<$<PLATFORM_ID:Darwin>:__MACOSX_CORE__>
+	$<$<PLATFORM_ID:Linux>:__PLATFORM_LINUX__>
+	$<$<PLATFORM_ID:Linux>:__LINUX_ALSA__>
 	$<$<PLATFORM_ID:Windows>:__PLATFORM_WINDOWS__>
 	$<$<PLATFORM_ID:Windows>:__PLATFORM_WIN32__>
 	$<$<CONFIG:Debug>:__CHUCK_DEBUG__>
@@ -168,6 +170,9 @@ target_include_directories(chuck_lib
 
 target_link_libraries(chuck_lib
 	PUBLIC
+	$<$<PLATFORM_ID:Linux>:dl>
+	$<$<PLATFORM_ID:Linux>:pthread>
+	$<$<PLATFORM_ID:Linux>:m>
 	$<$<PLATFORM_ID:Windows>:kernel32>
 	$<$<PLATFORM_ID:Windows>:user32>
 	$<$<PLATFORM_ID:Windows>:gdi32>

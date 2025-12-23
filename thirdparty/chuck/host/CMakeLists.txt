@@ -23,6 +23,8 @@ endif()
 target_compile_definitions(chuck
 	PUBLIC
 	$<$<PLATFORM_ID:Darwin>:__MACOSX_CORE__>
+	$<$<PLATFORM_ID:Linux>:__PLATFORM_LINUX__>
+	$<$<PLATFORM_ID:Linux>:__LINUX_ALSA__>
 	$<$<PLATFORM_ID:Windows>:__PLATFORM_WIN32__>
 	$<$<PLATFORM_ID:Windows>:__WINDOWS_DS__>
 	# $<$<PLATFORM_ID:Windows>:__WINDOWS_ASIO__>
@@ -62,6 +64,10 @@ target_link_libraries(chuck
 	"$<$<PLATFORM_ID:Darwin>:-F/System/Library/PrivateFrameworks>"
 	"$<$<PLATFORM_ID:Darwin>:-weak_framework MultitouchSupport>"
 	$<$<PLATFORM_ID:Darwin>:-lm>
+	$<$<PLATFORM_ID:Linux>:asound>
+	$<$<PLATFORM_ID:Linux>:pthread>
+	$<$<PLATFORM_ID:Linux>:dl>
+	$<$<PLATFORM_ID:Linux>:m>
 	$<$<PLATFORM_ID:Windows>:kernel32>
 	$<$<PLATFORM_ID:Windows>:user32>
 	$<$<PLATFORM_ID:Windows>:gdi32>
@@ -81,6 +87,6 @@ target_link_libraries(chuck
 	$<$<PLATFORM_ID:Windows>:wsock32>
 	$<$<PLATFORM_ID:Windows>:ws2_32>
 	$<$<PLATFORM_ID:Windows>:winmm>
-	$<$<PLATFORM_ID:Windows>:iphlpapi>	
+	$<$<PLATFORM_ID:Windows>:iphlpapi>
 	chuck_lib
 )
