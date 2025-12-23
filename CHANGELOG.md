@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ### Changed
 
+## [0.1.3]
+
 - **Project Renamed**: `numchuck` -> `numchuck`
   - Package import: `from numchuck import Chuck`
   - CLI: `numchuck edit`, `numchuck repl`, `numchuck run`
