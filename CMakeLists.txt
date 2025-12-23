@@ -10,7 +10,7 @@ if(CMAKE_HOST_WIN32)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
 endif()
 
-project(pychuck_project LANGUAGES CXX)
+project(numchuck_project LANGUAGES CXX)
 
 
 enable_language(C)

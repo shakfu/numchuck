@@ -1,14 +1,14 @@
-# Error Handling in pychuck
+# Error Handling in numchuck
 
 ## Overview
 
-pychuck uses **exception-based error handling** consistently across all APIs. This document describes the error handling strategy and best practices.
+numchuck uses **exception-based error handling** consistently across all APIs. This document describes the error handling strategy and best practices.
 
 ## Error Handling Strategy
 
 ### Principle: Exceptions for All Errors
 
-All pychuck operations that can fail will raise Python exceptions. **Never rely on return values alone to detect errors** - check for exceptions.
+All numchuck operations that can fail will raise Python exceptions. **Never rely on return values alone to detect errors** - check for exceptions.
 
 ### Exception Types
 
@@ -23,10 +23,10 @@ All pychuck operations that can fail will raise Python exceptions. **Never rely 
 ### 1. Initialization
 
 ```python
-import pychuck
+import numchuck
 
 # Always check initialization
-chuck = pychuck.ChucK()
+chuck = numchuck.ChucK()
 try:
     chuck.init(44100, 2)
 except RuntimeError as e:
@@ -35,7 +35,7 @@ except RuntimeError as e:
 
 # Or use the convenience method (raises on failure)
 try:
-    chuck = pychuck.ChucK.create(44100, 2)
+    chuck = numchuck.ChucK.create(44100, 2)
 except RuntimeError as e:
     print(f"Failed to create ChucK: {e}")
     exit(1)
@@ -113,7 +113,7 @@ except RuntimeError as e:
 
 ## Input Validation
 
-pychuck validates all inputs before calling ChucK APIs:
+numchuck validates all inputs before calling ChucK APIs:
 
 ### Strings
 
@@ -151,7 +151,7 @@ chuck.run(input, output, 512)
 - Raises `RuntimeError` if not initialized
 
 ```python
-chuck = pychuck.ChucK()
+chuck = numchuck.ChucK()
 # [X] Will raise RuntimeError
 chuck.compile_code("...")  # RuntimeError: ChucK not initialized. Call init() first.
 
@@ -195,7 +195,7 @@ listener_ids.clear()
 
 ```python
 # Not yet implemented, but recommended pattern:
-with pychuck.ChucK.create(44100, 2) as chuck:
+with numchuck.ChucK.create(44100, 2) as chuck:
     chuck.compile_code("...")
     # Automatic cleanup on exit
 ```
@@ -223,11 +223,11 @@ except RuntimeError as e:
 
 ```python
 # [X] Bad - assumes initialized
-chuck = pychuck.ChucK()
+chuck = numchuck.ChucK()
 chuck.compile_code(code)
 
 # [x] Good - ensures initialization
-chuck = pychuck.ChucK()
+chuck = numchuck.ChucK()
 if not chuck.is_init():
     chuck.init(44100, 2)
 ```
@@ -305,8 +305,8 @@ if not chuck.is_init():
 ### 3. Use Verbose Logging
 
 ```python
-import pychuck
-pychuck.ChucK.set_log_level(pychuck.LOG_ALL)
+import numchuck
+numchuck.ChucK.set_log_level(numchuck.LOG_ALL)
 ```
 
 ## Summary
@@ -318,4 +318,4 @@ pychuck.ChucK.set_log_level(pychuck.LOG_ALL)
 - **Handle compilation failures** by checking return tuple
 - **Use try/except** around all ChucK operations
 
-Following these patterns ensures robust, leak-free pychuck applications.
+Following these patterns ensures robust, leak-free numchuck applications.

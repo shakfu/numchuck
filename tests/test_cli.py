@@ -7,16 +7,16 @@ import sys
 
 def test_cli_parser_creation():
     """Test CLI parser can be created."""
-    from pychuck.cli.main import create_parser
+    from numchuck.cli.main import create_parser
 
     parser = create_parser()
     assert parser is not None
-    assert parser.prog == 'pychuck'
+    assert parser.prog == 'numchuck'
 
 
 def test_edit_command_parsing():
     """Test edit command argument parsing."""
-    from pychuck.cli.main import create_parser
+    from numchuck.cli.main import create_parser
 
     parser = create_parser()
 
@@ -55,7 +55,7 @@ def test_edit_command_parsing():
 
 def test_repl_command_parsing():
     """Test repl command argument parsing."""
-    from pychuck.cli.main import create_parser
+    from numchuck.cli.main import create_parser
 
     parser = create_parser()
 
@@ -88,7 +88,7 @@ def test_repl_command_parsing():
 
 def test_run_command_parsing():
     """Test run command argument parsing."""
-    from pychuck.cli.main import create_parser
+    from numchuck.cli.main import create_parser
 
     parser = create_parser()
 
@@ -120,7 +120,7 @@ def test_run_command_parsing():
 
 def test_version_command_parsing():
     """Test version command parsing."""
-    from pychuck.cli.main import create_parser
+    from numchuck.cli.main import create_parser
 
     parser = create_parser()
 
@@ -130,7 +130,7 @@ def test_version_command_parsing():
 
 def test_info_command_parsing():
     """Test info command parsing."""
-    from pychuck.cli.main import create_parser
+    from numchuck.cli.main import create_parser
 
     parser = create_parser()
 
@@ -140,7 +140,7 @@ def test_info_command_parsing():
 
 def test_tui_command_backward_compatibility():
     """Test tui command is still supported for backward compatibility."""
-    from pychuck.cli.main import create_parser
+    from numchuck.cli.main import create_parser
 
     parser = create_parser()
 
@@ -155,7 +155,7 @@ def test_tui_command_backward_compatibility():
 
 def test_command_handlers_exist():
     """Test that all command handlers are defined."""
-    from pychuck.cli import main
+    from numchuck.cli import main
 
     assert hasattr(main, 'cmd_edit')
     assert hasattr(main, 'cmd_repl')
@@ -166,27 +166,27 @@ def test_command_handlers_exist():
 
 def test_version_command_output(capsys):
     """Test version command produces output."""
-    from pychuck.cli.main import cmd_version
+    from numchuck.cli.main import cmd_version
     from argparse import Namespace
 
     args = Namespace()
     cmd_version(args)
 
     captured = capsys.readouterr()
-    assert 'pychuck version:' in captured.out
+    assert 'numchuck version:' in captured.out
     assert 'ChucK version:' in captured.out
 
 
 def test_info_command_output(capsys):
     """Test info command produces output."""
-    from pychuck.cli.main import cmd_info
+    from numchuck.cli.main import cmd_info
     from argparse import Namespace
 
     args = Namespace()
     cmd_info(args)
 
     captured = capsys.readouterr()
-    assert 'pychuck:' in captured.out
+    assert 'numchuck:' in captured.out
     assert 'ChucK:' in captured.out
     assert 'ChucK int size:' in captured.out
     assert 'Active VMs:' in captured.out

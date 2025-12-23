@@ -1,13 +1,13 @@
-# Shell Completion for pychuck
+# Shell Completion for numchuck
 
-This directory contains shell completion scripts for the `pychuck` CLI.
+This directory contains shell completion scripts for the `numchuck` CLI.
 
 ## Features
 
 - Complete subcommands: `edit`, `repl`, `run`, `version`, `info`
 - Complete command-line options for each subcommand
 - Complete `.ck` file paths
-- Complete project names from `~/.pychuck/projects/`
+- Complete project names from `~/.numchuck/projects/`
 - Suggest common sample rates and channel counts
 
 ## Installation
@@ -19,13 +19,13 @@ This directory contains shell completion scripts for the `pychuck` CLI.
 Add to your `~/.bashrc` or `~/.bash_profile`:
 
 ```bash
-source /path/to/pychuck/completions/pychuck-completion.bash
+source /path/to/numchuck/completions/numchuck-completion.bash
 ```
 
 **Option 2: System-wide installation**
 
 ```bash
-sudo cp completions/pychuck-completion.bash /etc/bash_completion.d/pychuck
+sudo cp completions/numchuck-completion.bash /etc/bash_completion.d/numchuck
 ```
 
 Then restart your shell or run:
@@ -45,7 +45,7 @@ source ~/.bashrc
 echo $fpath
 
 # Copy to one of them (example)
-sudo cp completions/pychuck-completion.zsh /usr/local/share/zsh/site-functions/_pychuck
+sudo cp completions/numchuck-completion.zsh /usr/local/share/zsh/site-functions/_numchuck
 ```
 
 2. Reload completions:
@@ -59,7 +59,7 @@ compinit
 Add to your `~/.zshrc`:
 
 ```zsh
-fpath=(/path/to/pychuck/completions $fpath)
+fpath=(/path/to/numchuck/completions $fpath)
 autoload -Uz compinit && compinit
 ```
 
@@ -75,24 +75,24 @@ After installation, you can use tab completion:
 
 ```bash
 # Complete subcommands
-pychuck <TAB>
+numchuck <TAB>
 # Shows: edit repl run version info
 
 # Complete options for edit
-pychuck edit --<TAB>
+numchuck edit --<TAB>
 # Shows: --project --start-audio
 
 # Complete .ck files
-pychuck run <TAB>
+numchuck run <TAB>
 # Shows .ck files in current directory
 
 # Complete sample rates
-pychuck run file.ck --srate <TAB>
+numchuck run file.ck --srate <TAB>
 # Shows: 22050 44100 48000 96000
 
 # Complete project names
-pychuck edit --project <TAB>
-# Shows projects from ~/.pychuck/projects/
+numchuck edit --project <TAB>
+# Shows projects from ~/.numchuck/projects/
 ```
 
 ## Supported Completions
@@ -136,13 +136,13 @@ Test completion without installing:
 
 ```bash
 # Bash
-source completions/pychuck-completion.bash
-pychuck <TAB>
+source completions/numchuck-completion.bash
+numchuck <TAB>
 
 # Zsh
 fpath=(completions $fpath)
 autoload -Uz compinit && compinit
-pychuck <TAB>
+numchuck <TAB>
 ```
 
 ## Troubleshooting
@@ -176,7 +176,7 @@ pychuck <TAB>
 3. Check permissions:
    ```bash
    # Completion files should be readable
-   chmod 644 /path/to/_pychuck
+   chmod 644 /path/to/_numchuck
    ```
 
 ## Development
@@ -190,7 +190,7 @@ To modify completions:
 
 ### Adding New Subcommands
 
-When adding a new subcommand to `pychuck`:
+When adding a new subcommand to `numchuck`:
 
 1. Add to `commands` list in bash completion
 2. Add to `commands` array in zsh completion

@@ -23,7 +23,7 @@ def temp_projects_dir():
 
 def test_project_creation(temp_projects_dir):
     """Test project creation."""
-    from pychuck.tui.project import Project
+    from numchuck.tui.project import Project
 
     project = Project("test", temp_projects_dir)
     assert project.project_dir.exists()
@@ -33,7 +33,7 @@ def test_project_creation(temp_projects_dir):
 
 def test_spork_versioning(temp_projects_dir):
     """Test file versioning on spork."""
-    from pychuck.tui.project import Project
+    from numchuck.tui.project import Project
 
     project = Project("test", temp_projects_dir)
 
@@ -56,7 +56,7 @@ def test_spork_versioning(temp_projects_dir):
 
 def test_replace_versioning(temp_projects_dir):
     """Test file versioning on replace."""
-    from pychuck.tui.project import Project
+    from numchuck.tui.project import Project
 
     project = Project("test", temp_projects_dir)
 
@@ -83,7 +83,7 @@ def test_replace_versioning(temp_projects_dir):
 
 def test_replace_nonexistent_shred(temp_projects_dir):
     """Test replace with nonexistent shred raises error."""
-    from pychuck.tui.project import Project
+    from numchuck.tui.project import Project
 
     project = Project("test", temp_projects_dir)
 
@@ -93,7 +93,7 @@ def test_replace_nonexistent_shred(temp_projects_dir):
 
 def test_original_file_save(temp_projects_dir):
     """Test saving original file without versioning."""
-    from pychuck.tui.project import Project
+    from numchuck.tui.project import Project
 
     project = Project("test", temp_projects_dir)
 
@@ -105,7 +105,7 @@ def test_original_file_save(temp_projects_dir):
 
 def test_list_versions(temp_projects_dir):
     """Test listing all versions in project."""
-    from pychuck.tui.project import Project
+    from numchuck.tui.project import Project
 
     project = Project("test", temp_projects_dir)
 
@@ -126,7 +126,7 @@ def test_list_versions(temp_projects_dir):
 
 def test_get_timeline(temp_projects_dir):
     """Test getting chronological timeline."""
-    from pychuck.tui.project import Project
+    from numchuck.tui.project import Project
     import time
 
     project = Project("test", temp_projects_dir)
@@ -157,7 +157,7 @@ def test_get_timeline(temp_projects_dir):
 
 def test_project_version_parsing(temp_projects_dir):
     """Test parsing version info from filenames."""
-    from pychuck.tui.project import ProjectVersion
+    from numchuck.tui.project import ProjectVersion
 
     # Test base file
     v1 = ProjectVersion.from_filename("myfile.ck")
@@ -180,7 +180,7 @@ def test_project_version_parsing(temp_projects_dir):
 
 def test_project_version_filename_generation():
     """Test generating filenames from version info."""
-    from pychuck.tui.project import ProjectVersion
+    from numchuck.tui.project import ProjectVersion
 
     # Base file
     v1 = ProjectVersion("test.ck", None, None)
@@ -197,7 +197,7 @@ def test_project_version_filename_generation():
 
 def test_project_version_next_replace():
     """Test getting next replacement version."""
-    from pychuck.tui.project import ProjectVersion
+    from numchuck.tui.project import ProjectVersion
 
     # First replace
     v1 = ProjectVersion("test.ck", 1, None)

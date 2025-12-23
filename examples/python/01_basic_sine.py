@@ -9,13 +9,13 @@ This example demonstrates:
 - Playing audio for a specified duration
 """
 
-import pychuck
+import numchuck
 import time
 
 # Create and configure ChucK instance
-chuck = pychuck.ChucK()
-chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+chuck = numchuck.ChucK()
+chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 chuck.init()
 
 # Simple ChucK code: 440Hz sine wave
@@ -35,7 +35,7 @@ if success:
 
     # Start real-time audio
     print("Starting audio playback...")
-    pychuck.start_audio(chuck)
+    numchuck.start_audio(chuck)
 
     # Play for 3 seconds
     print("Playing 440Hz sine wave for 3 seconds...")
@@ -43,8 +43,8 @@ if success:
 
     # Clean up
     print("Stopping audio...")
-    pychuck.stop_audio()
-    pychuck.shutdown_audio()
+    numchuck.stop_audio()
+    numchuck.shutdown_audio()
     print("Done!")
 else:
     print("✗ Compilation failed!")

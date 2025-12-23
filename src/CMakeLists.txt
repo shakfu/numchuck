@@ -1,9 +1,9 @@
-# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/src/pychuck)
-# set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/src/pychuck)
+# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/src/numchuck)
+# set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/src/numchuck)
 
 nanobind_add_module(
   # Name of the extension
-  _pychuck
+  _numchuck
 
   # Target the stable ABI for Python 3.12+, which reduces
   # the number of binary wheels that must be built. This
@@ -19,19 +19,19 @@ nanobind_add_module(
   NB_STATIC
 
   # Source code goes here
-  ${CMAKE_SOURCE_DIR}/src/_pychuck.cpp
+  ${CMAKE_SOURCE_DIR}/src/_numchuck.cpp
   ${CMAKE_SOURCE_DIR}/thirdparty/chuck/host/chuck_audio.cpp
   ${CMAKE_SOURCE_DIR}/thirdparty/chuck/host/RtAudio/RtAudio.cpp
 )
 
-target_compile_options(_pychuck
+target_compile_options(_numchuck
     PUBLIC
     $<$<PLATFORM_ID:Linux>:-fno-strict-aliasing>
     $<$<PLATFORM_ID:Linux>:-fPIC>
 )
 
 # Define platform-specific RtAudio macros
-target_compile_definitions(_pychuck
+target_compile_definitions(_numchuck
     PRIVATE
     $<$<PLATFORM_ID:Darwin>:__MACOSX_CORE__>
     $<$<PLATFORM_ID:Linux>:__PLATFORM_LINUX__>
@@ -44,7 +44,7 @@ target_compile_definitions(_pychuck
     HAVE_CONFIG_H
 )
 
-target_include_directories(_pychuck
+target_include_directories(_numchuck
     PRIVATE
     ${CMAKE_SOURCE_DIR}/thirdparty/chuck/core
     ${CMAKE_SOURCE_DIR}/thirdparty/chuck/host
@@ -52,7 +52,7 @@ target_include_directories(_pychuck
     ${CMAKE_SOURCE_DIR}/thirdparty/chuck/host/RtAudio/include
 )
 
-target_link_libraries(_pychuck
+target_link_libraries(_numchuck
     PUBLIC
     "$<$<PLATFORM_ID:Darwin>:-framework CoreAudio>"
     "$<$<PLATFORM_ID:Darwin>:-framework CoreMIDI>"
@@ -75,14 +75,14 @@ target_link_libraries(_pychuck
     chuck_lib
 )
 
-set_target_properties(_pychuck PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/src/pychuck"
-    ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/src/pychuck"
-    LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/src/pychuck"
+set_target_properties(_numchuck PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/src/numchuck"
+    ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/src/numchuck"
+    LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/src/numchuck"
 )
 
 
 # Install directive for scikit-build-core
-install(TARGETS _pychuck LIBRARY DESTINATION pychuck)
+install(TARGETS _numchuck LIBRARY DESTINATION numchuck)
 
 

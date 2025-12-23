@@ -1,4 +1,4 @@
-PROJECT_NAME = pychuck
+PROJECT_NAME = numchuck
 VERSION = 0.1.0
 
 PLATFORM = $(shell uname)
@@ -46,7 +46,7 @@ all: build
 # 		cmake --install . --config '$(CONFIG)'
 
 build:
-	@uv sync --reinstall-package pychuck
+	@uv sync --reinstall-package numchuck
 
 clean:
 	rm -rf build
@@ -55,7 +55,7 @@ test:
 	@uv run pytest
 
 repl:
-	@uv run pychuck repl
+	@uv run numchuck repl
 
 snap:
 	@git add --all . && git commit -m 'snap' && git push

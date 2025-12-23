@@ -213,7 +213,7 @@ static void validate_audio_buffer(const T& array, const char* name,
     // Output arrays use ndarray<SAMPLE, ..., nb::c_contig> (writable, contiguous)
 }
 
-NB_MODULE(_pychuck, m) {
+NB_MODULE(_numchuck, m) {
     m.doc() = "Python bindings for ChucK audio programming language";
 
     // ChucK parameter constants

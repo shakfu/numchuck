@@ -1,7 +1,7 @@
 Error Handling
 ==============
 
-pychuck uses exception-based error handling for a clean and Pythonic API.
+numchuck uses exception-based error handling for a clean and Pythonic API.
 
 Exception Types
 ---------------
@@ -19,10 +19,10 @@ Raised when invalid input parameters are provided:
 
 .. code-block:: python
 
-   chuck = pychuck.ChucK()
+   chuck = numchuck.ChucK()
 
    # ValueError: Sample rate must be positive
-   chuck.set_param(pychuck.PARAM_SAMPLE_RATE, -1)
+   chuck.set_param(numchuck.PARAM_SAMPLE_RATE, -1)
 
    # ValueError: Code cannot be empty
    chuck.compile_code("")
@@ -40,7 +40,7 @@ Raised when operations fail or ChucK is not properly initialized:
 
 .. code-block:: python
 
-   chuck = pychuck.ChucK()
+   chuck = numchuck.ChucK()
 
    # RuntimeError: ChucK not initialized
    chuck.compile_code("SinOsc s => dac;")
@@ -90,10 +90,10 @@ Always Initialize
 
 .. code-block:: python
 
-   chuck = pychuck.ChucK()
-   chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-   chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-   chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+   chuck = numchuck.ChucK()
+   chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+   chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+   chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
    chuck.init()
    chuck.start()
 
@@ -134,7 +134,7 @@ Validate Buffers
    import numpy as np
 
    # Correct buffer types and sizes
-   num_channels = chuck.get_param_int(pychuck.PARAM_OUTPUT_CHANNELS)
+   num_channels = chuck.get_param_int(numchuck.PARAM_OUTPUT_CHANNELS)
    input_buf = np.zeros(frames * 0, dtype=np.float32)  # Match input channels
    output_buf = np.zeros(frames * num_channels, dtype=np.float32)
 
@@ -182,14 +182,14 @@ Use context managers for resource cleanup:
 
    class ChuckContext:
        def __init__(self, sample_rate=44100, channels=2):
-           self.chuck = pychuck.ChucK()
+           self.chuck = numchuck.ChucK()
            self.sample_rate = sample_rate
            self.channels = channels
 
        def __enter__(self):
-           self.chuck.set_param(pychuck.PARAM_SAMPLE_RATE, self.sample_rate)
-           self.chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-           self.chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, self.channels)
+           self.chuck.set_param(numchuck.PARAM_SAMPLE_RATE, self.sample_rate)
+           self.chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+           self.chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, self.channels)
            self.chuck.init()
            self.chuck.start()
            return self.chuck
@@ -287,7 +287,7 @@ Enable Verbose Output
 .. code-block:: python
 
    # ChucK will print to stdout/stderr
-   chuck.set_param(pychuck.PARAM_DUMP_INSTRUCTIONS, 1)
+   chuck.set_param(numchuck.PARAM_DUMP_INSTRUCTIONS, 1)
 
 See Also
 --------

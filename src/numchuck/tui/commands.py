@@ -1,5 +1,5 @@
 import subprocess
-from .._pychuck import start_audio, stop_audio, shutdown_audio, audio_info
+from .._numchuck import start_audio, stop_audio, shutdown_audio, audio_info
 
 
 class CommandExecutor:
@@ -395,11 +395,11 @@ class CommandExecutor:
             print("\n")
 
     def _cmd_load_snippet(self, args):
-        """Load and spork a code snippet from ~/.pychuck/snippets/"""
+        """Load and spork a code snippet from ~/.numchuck/snippets/"""
         from .paths import (
             get_snippet_path,
             get_snippets_dir,
-            ensure_pychuck_directories,
+            ensure_numchuck_directories,
             list_snippets,
         )
 
@@ -411,7 +411,7 @@ class CommandExecutor:
             snippets_dir = get_snippets_dir()
             if not snippets_dir.exists():
                 try:
-                    ensure_pychuck_directories()
+                    ensure_numchuck_directories()
                     print(f"Created snippets directory: {snippets_dir}")
                     print("Add .ck files to this directory to use @<name> syntax")
                 except Exception as e:

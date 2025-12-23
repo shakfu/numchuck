@@ -3,13 +3,13 @@ Tests for ChucK global variable management.
 """
 
 import pytest
-import pychuck._pychuck as pychuck
+import numchuck._numchuck as numchuck
 import numpy as np
 
 
 def run_audio_cycles(chuck, cycles=5):
     """Helper to run audio processing cycles to allow VM to process messages."""
-    num_channels = chuck.get_param_int(pychuck.PARAM_OUTPUT_CHANNELS)
+    num_channels = chuck.get_param_int(numchuck.PARAM_OUTPUT_CHANNELS)
     frames = 512
     input_buf = np.zeros(frames * num_channels, dtype=np.float32)
     output_buf = np.zeros(frames * num_channels, dtype=np.float32)
@@ -19,10 +19,10 @@ def run_audio_cycles(chuck, cycles=5):
 
 def test_set_get_global_int():
     """Test setting and getting global int variables."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
     chuck.start()
 
@@ -50,10 +50,10 @@ def test_set_get_global_int():
 
 def test_set_get_global_float():
     """Test setting and getting global float variables."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
     chuck.start()
 
@@ -78,10 +78,10 @@ def test_set_get_global_float():
 
 def test_set_get_global_string():
     """Test setting and getting global string variables."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
     chuck.start()
 
@@ -106,10 +106,10 @@ def test_set_get_global_string():
 
 def test_set_get_global_int_array():
     """Test setting and getting global int arrays."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
     chuck.start()
 
@@ -136,10 +136,10 @@ def test_set_get_global_int_array():
 
 def test_set_global_int_array_value():
     """Test setting individual int array elements."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
     chuck.start()
 
@@ -167,10 +167,10 @@ def test_set_global_int_array_value():
 
 def test_get_all_globals():
     """Test getting list of all global variables."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
     chuck.start()
 

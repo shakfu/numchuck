@@ -3,13 +3,13 @@ Tests for ChucK shred management and introspection.
 """
 
 import pytest
-import pychuck._pychuck as pychuck
+import numchuck._numchuck as numchuck
 import numpy as np
 
 
 def run_audio_cycles(chuck, cycles=5):
     """Helper to run audio processing cycles to allow VM to process messages."""
-    num_channels = chuck.get_param_int(pychuck.PARAM_OUTPUT_CHANNELS)
+    num_channels = chuck.get_param_int(numchuck.PARAM_OUTPUT_CHANNELS)
     frames = 512
     input_buf = np.zeros(frames * num_channels, dtype=np.float32)
     output_buf = np.zeros(frames * num_channels, dtype=np.float32)
@@ -19,10 +19,10 @@ def run_audio_cycles(chuck, cycles=5):
 
 def test_remove_shred():
     """Test removing a shred by ID."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
     chuck.start()
 
@@ -46,10 +46,10 @@ def test_remove_shred():
 
 def test_get_all_shred_ids():
     """Test getting all running shred IDs."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
     chuck.start()
 
@@ -71,10 +71,10 @@ def test_get_all_shred_ids():
 
 def test_get_shred_info():
     """Test getting detailed shred information."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
     chuck.start()
 
@@ -93,10 +93,10 @@ def test_get_shred_info():
 
 def test_get_shred_info_nonexistent():
     """Test that getting info for non-existent shred raises error."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
     chuck.start()
 
@@ -106,10 +106,10 @@ def test_get_shred_info_nonexistent():
 
 def test_clear_vm():
     """Test clearing the VM."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
     chuck.start()
 
@@ -135,10 +135,10 @@ def test_clear_vm():
 
 def test_reset_shred_id():
     """Test resetting shred ID counter."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
     chuck.start()
 

@@ -1,12 +1,12 @@
 .DS_Store
 
-# pychuck
+# numchuck
 
 examples/chugins/*.chug
 *.chug
 
 # User data directory (history, snippets, sessions, etc.)
-.pychuck/
+.numchuck/
 
 
 # Byte-compiled / optimized / DLL files

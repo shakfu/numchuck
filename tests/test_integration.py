@@ -1,12 +1,12 @@
 """
-Integration tests for pychuck.
+Integration tests for numchuck.
 
 These tests verify complete workflows and interactions between components,
 testing end-to-end scenarios rather than isolated units.
 """
 
 import pytest
-import pychuck._pychuck as pychuck
+import numchuck._numchuck as numchuck
 import numpy as np
 import time
 from pathlib import Path
@@ -15,10 +15,10 @@ import tempfile
 
 def init_chuck(sample_rate=44100, input_channels=0, output_channels=2):
     """Helper to initialize ChucK with standard settings."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, sample_rate)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, input_channels)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, output_channels)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, sample_rate)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, input_channels)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, output_channels)
     chuck.init()
     chuck.start()
     return chuck
@@ -26,7 +26,7 @@ def init_chuck(sample_rate=44100, input_channels=0, output_channels=2):
 
 def run_audio_cycles(chuck, cycles=5):
     """Helper to run audio processing cycles to allow VM to process messages."""
-    num_channels = chuck.get_param_int(pychuck.PARAM_OUTPUT_CHANNELS)
+    num_channels = chuck.get_param_int(numchuck.PARAM_OUTPUT_CHANNELS)
     frames = 512
     input_buf = np.zeros(frames * 0, dtype=np.float32)  # No input channels
     output_buf = np.zeros(frames * num_channels, dtype=np.float32)
@@ -399,15 +399,15 @@ class TestVMLifecycle:
 
     def test_init_run_reset_cycle(self):
         """Test complete VM initialization and reset cycle."""
-        chuck = pychuck.ChucK()
+        chuck = numchuck.ChucK()
 
         # Initial state
         assert not chuck.is_init()
 
         # Initialize
-        chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-        chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-        chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+        chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+        chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+        chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
         chuck.init()
         assert chuck.is_init()
 
@@ -439,12 +439,12 @@ class TestVMLifecycle:
 
     def test_multiple_initialization(self):
         """Test that multiple init calls work correctly."""
-        chuck = pychuck.ChucK()
+        chuck = numchuck.ChucK()
 
         # First init
-        chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-        chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-        chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+        chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+        chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+        chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
         chuck.init()
         assert chuck.is_init()
 
@@ -457,8 +457,8 @@ class TestVMLifecycle:
         run_audio_cycles(chuck)
 
         # Second init (should work)
-        chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 48000)
-        chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 1)
+        chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 48000)
+        chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 1)
         chuck.init()
         assert chuck.is_init()
 

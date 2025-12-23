@@ -101,7 +101,7 @@ class ChuckEditor:
         self.status_message = ""
 
         # Initialize ChucK
-        from .._pychuck import (
+        from .._numchuck import (
             PARAM_SAMPLE_RATE,
             PARAM_OUTPUT_CHANNELS,
             PARAM_INPUT_CHANNELS,
@@ -248,7 +248,7 @@ class ChuckEditor:
             """Start audio (Ctrl-A)"""
             if not self.audio_started:
                 try:
-                    from .._pychuck import start_audio
+                    from .._numchuck import start_audio
 
                     start_audio(self.app_state.chuck)
                     self.audio_started = True
@@ -453,7 +453,7 @@ class ChuckEditor:
         project_info = (
             f"Project: {self.app_state.session.project.name}"
             if self.app_state.session.project
-            else "No project (use: pychuck edit --project <name>)"
+            else "No project (use: numchuck edit --project <name>)"
         )
 
         project_dir = (
@@ -508,7 +508,7 @@ Versioning: file.ck → file-1.ck (spork) → file-1-1.ck (replace)
         # Stop audio if running
         if self.audio_started:
             try:
-                from .._pychuck import stop_audio, shutdown_audio
+                from .._numchuck import stop_audio, shutdown_audio
 
                 stop_audio()
                 shutdown_audio(500)
@@ -544,7 +544,7 @@ Versioning: file.ck → file-1.ck (spork) → file-1-1.ck (replace)
         # Start audio if requested
         if self.start_audio_flag:
             try:
-                from .._pychuck import start_audio
+                from .._numchuck import start_audio
 
                 start_audio(self.app_state.chuck)
                 self.audio_started = True

@@ -1,12 +1,12 @@
-# pychuck
+# numchuck
 
 Python bindings for the [ChucK](https://chuck.stanford.edu) audio programming language using [nanobind](https://github.com/wjakob/nanobind).
 
-The pychuck library provides interactive control over ChucK, enabling live coding workflows, bidirectional Python/ChucK communication, and comprehensive VM introspection—all while maintaining the existing real-time and offline audio capabilities.
+The numchuck library provides interactive control over ChucK, enabling live coding workflows, bidirectional Python/ChucK communication, and comprehensive VM introspection—all while maintaining the existing real-time and offline audio capabilities.
 
 ## Overview
 
-`pychuck` is a high-performance Python wrapper for ChucK that provides:
+`numchuck` is a high-performance Python wrapper for ChucK that provides:
 
 ### Library
 
@@ -39,7 +39,7 @@ The pychuck library provides interactive control over ChucK, enabling live codin
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd pychuck
+cd numchuck
 
 # Build the extension
 make build
@@ -52,22 +52,22 @@ make test
 
 ### Command-Line Interface
 
-pychuck provides three modes of operation:
+numchuck provides three modes of operation:
 
 #### 1. Multi-Tab Editor (for livecoding)
 
 ```bash
 # Launch the editor
-python -m pychuck edit
+python -m numchuck edit
 
 # Open specific files in tabs
-python -m pychuck edit bass.ck melody.ck
+python -m numchuck edit bass.ck melody.ck
 
 # Enable project versioning
-python -m pychuck edit --project mymusic
+python -m numchuck edit --project mymusic
 
 # Start with audio enabled
-python -m pychuck edit --start-audio --project mymusic
+python -m numchuck edit --start-audio --project mymusic
 ```
 
 **Editor Features:**
@@ -88,22 +88,22 @@ python -m pychuck edit --start-audio --project mymusic
 
 ```bash
 # Launch the REPL
-python -m pychuck repl
+python -m numchuck repl
 
 # Load files on startup
-python -m pychuck repl bass.ck melody.ck
+python -m numchuck repl bass.ck melody.ck
 
 # Enable project versioning
-python -m pychuck repl --project mymusic
+python -m numchuck repl --project mymusic
 
 # Start with audio enabled
-python -m pychuck repl --start-audio
+python -m numchuck repl --start-audio
 
 # Disable smart Enter mode
-python -m pychuck repl --no-smart-enter
+python -m numchuck repl --no-smart-enter
 
 # Hide sidebar (can toggle with F2)
-python -m pychuck repl --no-sidebar
+python -m numchuck repl --no-sidebar
 ```
 
 **REPL Commands:**
@@ -120,29 +120,29 @@ python -m pychuck repl --no-sidebar
 
 ```bash
 # Execute ChucK files from command line
-python -m pychuck run myfile.ck
+python -m numchuck run myfile.ck
 
 # Run multiple files
-python -m pychuck run bass.ck melody.ck
+python -m numchuck run bass.ck melody.ck
 
 # Run for 10 seconds then exit
-python -m pychuck run myfile.ck --duration 10
+python -m numchuck run myfile.ck --duration 10
 
 # Silent mode (no audio)
-python -m pychuck run myfile.ck --silent
+python -m numchuck run myfile.ck --silent
 
 # Custom sample rate
-python -m pychuck run myfile.ck --srate 48000
+python -m numchuck run myfile.ck --srate 48000
 ```
 
 #### 4. Version and Info
 
 ```bash
 # Show version
-python -m pychuck version
+python -m numchuck version
 
-# Show ChucK and pychuck info
-python -m pychuck info
+# Show ChucK and numchuck info
+python -m numchuck info
 ```
 
 **Interface Features:**
@@ -177,10 +177,10 @@ python -m pychuck info
 
 ### Project Versioning
 
-When using `--project <name>`, pychuck automatically versions your files as you livecode:
+When using `--project <name>`, numchuck automatically versions your files as you livecode:
 
 ```sh
-~/.pychuck/projects/mymusic/
+~/.numchuck/projects/mymusic/
   bass.ck           # Original file
   bass-1.ck         # After first spork (shred ID 1)
   bass-1-1.ck       # After first replace of shred 1
@@ -201,7 +201,7 @@ This creates a complete history of your livecoding session, making it easy to:
 The `Chuck` class provides a Pythonic interface with properties and simplified methods:
 
 ```python
-from pychuck import Chuck
+from numchuck import Chuck
 
 # Create with parameters (auto-initializes)
 chuck = Chuck(sample_rate=48000, output_channels=2)
@@ -235,16 +235,16 @@ chuck.raw.set_param(...)
 
 ### Low-Level API
 
-For fine-grained control, use the low-level API via `pychuck._pychuck`:
+For fine-grained control, use the low-level API via `numchuck._numchuck`:
 
 ```python
-from pychuck._pychuck import ChucK, start_audio, stop_audio
+from numchuck._numchuck import ChucK, start_audio, stop_audio
 ```
 
 #### Real-Time Audio
 
 ```python
-from pychuck._pychuck import (
+from numchuck._numchuck import (
     ChucK, start_audio, stop_audio, shutdown_audio,
     PARAM_SAMPLE_RATE, PARAM_OUTPUT_CHANNELS
 )
@@ -273,7 +273,7 @@ shutdown_audio()
 #### Offline Rendering
 
 ```python
-from pychuck._pychuck import ChucK, PARAM_SAMPLE_RATE, PARAM_OUTPUT_CHANNELS
+from numchuck._numchuck import ChucK, PARAM_SAMPLE_RATE, PARAM_OUTPUT_CHANNELS
 import numpy as np
 
 # Create ChucK instance
@@ -297,12 +297,12 @@ chuck.run(np.zeros(0, dtype=np.float32), output, frames)
 
 ## API Reference
 
-### High-Level API (`pychuck.Chuck`)
+### High-Level API (`numchuck.Chuck`)
 
 The `Chuck` class provides a Pythonic wrapper with properties and simplified methods.
 
 ```python
-from pychuck import Chuck
+from numchuck import Chuck
 ```
 
 #### Constructor
@@ -400,12 +400,12 @@ Chuck(
 
 ---
 
-### Low-Level API (`pychuck._pychuck.ChucK`)
+### Low-Level API (`numchuck._numchuck.ChucK`)
 
 The low-level API provides direct access to all ChucK functionality with explicit parameter management.
 
 ```python
-from pychuck._pychuck import ChucK
+from numchuck._numchuck import ChucK
 ```
 
 #### Initialization Methods
@@ -623,13 +623,13 @@ SinOsc s => dac;
 ### Real-Time Audio Playback
 
 ```python
-import pychuck
+import numchuck
 import time
 
 # Create and initialize ChucK
-chuck = pychuck.ChucK()
-chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+chuck = numchuck.ChucK()
+chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 chuck.init()
 
 # Compile ChucK code
@@ -641,25 +641,25 @@ chuck.compile_code('''
 ''')
 
 # Start real-time audio (plays asynchronously)
-pychuck.start_audio(chuck, sample_rate=44100, num_dac_channels=2)
+numchuck.start_audio(chuck, sample_rate=44100, num_dac_channels=2)
 
 # Audio plays in background
 time.sleep(3)  # Play for 3 seconds
 
 # Stop audio
-pychuck.stop_audio()
-pychuck.shutdown_audio()
+numchuck.stop_audio()
+numchuck.shutdown_audio()
 ```
 
 ### Offline Audio Processing
 
 ```python
-import pychuck
+import numchuck
 import numpy as np
 
-chuck = pychuck.ChucK()
-chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+chuck = numchuck.ChucK()
+chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 chuck.init()
 
 chuck.compile_code('''
@@ -681,11 +681,11 @@ chuck.run(np.zeros(0, dtype=np.float32), output, frames)
 
 ```python
 # Get ChucK version
-print(f"ChucK version: {pychuck.version()}")
+print(f"ChucK version: {numchuck.version()}")
 
 # Configure VM
-chuck.set_param(pychuck.PARAM_VM_HALT, 0)
-chuck.set_param_string(pychuck.PARAM_WORKING_DIRECTORY, "/path/to/files")
+chuck.set_param(numchuck.PARAM_VM_HALT, 0)
+chuck.set_param_string(numchuck.PARAM_WORKING_DIRECTORY, "/path/to/files")
 
 # Check status
 print(f"Initialized: {chuck.is_init()}")
@@ -706,35 +706,35 @@ chuck.remove_all_shreds()
 ### Loading ChucK Files
 
 ```python
-import pychuck
+import numchuck
 
-chuck = pychuck.ChucK()
-chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+chuck = numchuck.ChucK()
+chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 chuck.init()
 
 # Compile from file
 success, shred_ids = chuck.compile_file("examples/basic/blit2.ck")
 
 # Start playback
-pychuck.start_audio(chuck)
+numchuck.start_audio(chuck)
 import time; time.sleep(2)
-pychuck.stop_audio()
-pychuck.shutdown_audio()
+numchuck.stop_audio()
+numchuck.shutdown_audio()
 ```
 
 ### Using Chugins (Plugins)
 
 ```python
-import pychuck
+import numchuck
 
-chuck = pychuck.ChucK()
-chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+chuck = numchuck.ChucK()
+chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 
 # Enable chugins and set search path
-chuck.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
-chuck.set_param_string(pychuck.PARAM_USER_CHUGINS, "./examples/chugins")
+chuck.set_param(numchuck.PARAM_CHUGIN_ENABLE, 1)
+chuck.set_param_string(numchuck.PARAM_USER_CHUGINS, "./examples/chugins")
 
 chuck.init()
 
@@ -751,13 +751,13 @@ chuck.compile_code(code)
 ### Global Variables (Python/ChucK Communication)
 
 ```python
-import pychuck
+import numchuck
 import numpy as np
 
-chuck = pychuck.ChucK()
-chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+chuck = numchuck.ChucK()
+chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 chuck.init()
 chuck.start()
 
@@ -802,13 +802,13 @@ print(f"Globals: {globals_list}")
 ### Global Events (Event-Driven Communication)
 
 ```python
-import pychuck
+import numchuck
 import numpy as np
 
-chuck = pychuck.ChucK()
-chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+chuck = numchuck.ChucK()
+chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 chuck.init()
 chuck.start()
 
@@ -859,13 +859,13 @@ chuck.stop_listening_for_global_event("response", listener_id)
 ### Shred Management & Introspection
 
 ```python
-import pychuck
+import numchuck
 import numpy as np
 
-chuck = pychuck.ChucK()
-chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+chuck = numchuck.ChucK()
+chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 chuck.init()
 chuck.start()
 
@@ -899,13 +899,13 @@ print(f"After clear_vm: {chuck.get_all_shred_ids()}")
 ### Live Coding with replace_shred()
 
 ```python
-import pychuck
+import numchuck
 import numpy as np
 
-chuck = pychuck.ChucK()
-chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+chuck = numchuck.ChucK()
+chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 chuck.init()
 chuck.start()
 
@@ -934,9 +934,9 @@ print(f"Replaced shred {original_id} with {new_id}")
 ### Capturing ChucK Console Output
 
 ```python
-import pychuck
+import numchuck
 
-chuck = pychuck.ChucK()
+chuck = numchuck.ChucK()
 chuck.init()
 
 # Capture chout (console output)

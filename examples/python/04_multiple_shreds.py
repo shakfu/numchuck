@@ -8,13 +8,13 @@ This example demonstrates:
 - Managing shred lifecycle
 """
 
-import pychuck
+import numchuck
 import time
 
 # Create and configure ChucK
-chuck = pychuck.ChucK()
-chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+chuck = numchuck.ChucK()
+chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 chuck.init()
 
 # ChucK code for a single oscillator
@@ -60,7 +60,7 @@ print(f"Shred IDs: {shred_ids}")
 
 # Start real-time audio
 print("\nStarting audio playback...")
-pychuck.start_audio(chuck)
+numchuck.start_audio(chuck)
 
 # Play for 4 seconds
 print("Playing harmonic series for 4 seconds...")
@@ -89,6 +89,6 @@ time.sleep(2)
 
 # Clean up
 print("\nStopping audio...")
-pychuck.stop_audio()
-pychuck.shutdown_audio()
+numchuck.stop_audio()
+numchuck.shutdown_audio()
 print("Done!")

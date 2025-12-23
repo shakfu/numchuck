@@ -1,5 +1,5 @@
 """
-Test error handling and validation in pychuck.
+Test error handling and validation in numchuck.
 
 Tests cover:
 - Invalid parameters
@@ -10,7 +10,7 @@ Tests cover:
 """
 
 import pytest
-import pychuck._pychuck as pychuck
+import numchuck._numchuck as numchuck
 import numpy as np
 
 
@@ -20,9 +20,9 @@ import numpy as np
 
 def test_compile_code_empty_string():
     """Test that compiling empty code raises ValueError"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     with pytest.raises(ValueError, match="Code cannot be empty"):
@@ -31,9 +31,9 @@ def test_compile_code_empty_string():
 
 def test_compile_code_zero_count():
     """Test that count=0 raises ValueError"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     code = "SinOsc s => dac;"
@@ -43,9 +43,9 @@ def test_compile_code_zero_count():
 
 def test_compile_file_empty_path():
     """Test that compiling with empty file path raises ValueError"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     with pytest.raises(ValueError, match="File path cannot be empty"):
@@ -54,9 +54,9 @@ def test_compile_file_empty_path():
 
 def test_compile_file_zero_count():
     """Test that count=0 raises ValueError for file compilation"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     with pytest.raises(ValueError, match="Count must be at least 1"):
@@ -69,7 +69,7 @@ def test_compile_file_zero_count():
 
 def test_compile_code_not_initialized():
     """Test that compiling without init raises RuntimeError"""
-    chuck = pychuck.ChucK()
+    chuck = numchuck.ChucK()
 
     code = "SinOsc s => dac;"
     with pytest.raises(RuntimeError, match="ChucK instance not initialized"):
@@ -78,7 +78,7 @@ def test_compile_code_not_initialized():
 
 def test_compile_file_not_initialized():
     """Test that compiling file without init raises RuntimeError"""
-    chuck = pychuck.ChucK()
+    chuck = numchuck.ChucK()
 
     with pytest.raises(RuntimeError, match="ChucK instance not initialized"):
         chuck.compile_file("test.ck")
@@ -86,7 +86,7 @@ def test_compile_file_not_initialized():
 
 def test_run_not_initialized():
     """Test that running audio without init raises RuntimeError"""
-    chuck = pychuck.ChucK()
+    chuck = numchuck.ChucK()
 
     input_buf = np.zeros(0, dtype=np.float32)
     output_buf = np.zeros(512 * 2, dtype=np.float32)
@@ -97,10 +97,10 @@ def test_run_not_initialized():
 
 def test_start_audio_not_initialized():
     """Test that starting audio without init raises RuntimeError"""
-    chuck = pychuck.ChucK()
+    chuck = numchuck.ChucK()
 
     with pytest.raises(RuntimeError, match="ChucK instance not initialized"):
-        pychuck.start_audio(chuck)
+        numchuck.start_audio(chuck)
 
 
 # ============================================================================
@@ -109,10 +109,10 @@ def test_start_audio_not_initialized():
 
 def test_run_negative_frames():
     """Test that negative num_frames raises ValueError"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     input_buf = np.zeros(0, dtype=np.float32)
@@ -124,10 +124,10 @@ def test_run_negative_frames():
 
 def test_run_zero_frames():
     """Test that num_frames=0 raises ValueError"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     input_buf = np.zeros(0, dtype=np.float32)
@@ -139,10 +139,10 @@ def test_run_zero_frames():
 
 def test_run_wrong_input_buffer_size():
     """Test that wrong input buffer size raises ValueError"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)  # 2 input channels
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)  # 2 input channels
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     # Buffer too small (should be 512 * 2 = 1024)
@@ -155,10 +155,10 @@ def test_run_wrong_input_buffer_size():
 
 def test_run_wrong_output_buffer_size():
     """Test that wrong output buffer size raises ValueError"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     input_buf = np.zeros(0, dtype=np.float32)
@@ -171,10 +171,10 @@ def test_run_wrong_output_buffer_size():
 
 def test_run_wrong_dtype_input():
     """Test that wrong dtype for input is caught by nanobind (implicit cast or error)"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     # Using float64 instead of float32 - nanobind may auto-convert or raise TypeError
@@ -193,10 +193,10 @@ def test_run_wrong_dtype_input():
 
 def test_run_wrong_dtype_output():
     """Test that wrong dtype for output is caught by nanobind"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     input_buf = np.zeros(0, dtype=np.float32)
@@ -214,10 +214,10 @@ def test_run_wrong_dtype_output():
 
 def test_run_multidimensional_input():
     """Test that multidimensional input array is rejected by nanobind"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     # 2D array instead of 1D - nanobind should reject at binding level
@@ -231,10 +231,10 @@ def test_run_multidimensional_input():
 
 def test_run_multidimensional_output():
     """Test that multidimensional output array is rejected by nanobind"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     input_buf = np.zeros(0, dtype=np.float32)
@@ -252,35 +252,35 @@ def test_run_multidimensional_output():
 
 def test_start_audio_zero_sample_rate():
     """Test that sample_rate=0 raises ValueError"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     with pytest.raises(ValueError, match="Sample rate must be positive"):
-        pychuck.start_audio(chuck, sample_rate=0)
+        numchuck.start_audio(chuck, sample_rate=0)
 
 
 def test_start_audio_zero_channels():
     """Test that zero channels raises ValueError"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     with pytest.raises(ValueError, match="At least one audio channel"):
-        pychuck.start_audio(chuck, num_dac_channels=0, num_adc_channels=0)
+        numchuck.start_audio(chuck, num_dac_channels=0, num_adc_channels=0)
 
 
 def test_start_audio_zero_buffer_size():
     """Test that buffer_size=0 raises ValueError"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     with pytest.raises(ValueError, match="Buffer size must be positive"):
-        pychuck.start_audio(chuck, buffer_size=0)
+        numchuck.start_audio(chuck, buffer_size=0)
 
 
 # ============================================================================
@@ -289,9 +289,9 @@ def test_start_audio_zero_buffer_size():
 
 def test_compile_invalid_syntax():
     """Test that invalid ChucK syntax returns False"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     # Invalid ChucK code
@@ -304,9 +304,9 @@ def test_compile_invalid_syntax():
 
 def test_compile_nonexistent_file():
     """Test that compiling non-existent file returns False"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     success, shred_ids = chuck.compile_file("/nonexistent/path/to/file.ck")
@@ -317,9 +317,9 @@ def test_compile_nonexistent_file():
 
 def test_compile_undefined_class():
     """Test that using undefined class returns False"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     # UndefinedClass doesn't exist
@@ -332,9 +332,9 @@ def test_compile_undefined_class():
 
 def test_compile_type_mismatch():
     """Test that type mismatch returns False"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     # Type error: can't assign string to int
@@ -351,9 +351,9 @@ def test_compile_type_mismatch():
 
 def test_compile_with_count_multiple():
     """Test compiling with count > 1 creates multiple shreds"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     code = "SinOsc s => dac; 440 => s.freq; while(true) { 1::samp => now; }"
@@ -369,10 +369,10 @@ def test_compile_with_count_multiple():
 
 def test_large_buffer_processing():
     """Test processing large buffer (stress test)"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     code = '''
@@ -400,10 +400,10 @@ def test_large_buffer_processing():
 
 def test_zero_input_channels_with_input():
     """Test that providing input when channels=0 still validates size"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)  # No input channels
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)  # No input channels
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     # Providing input data when no input channels configured
@@ -416,9 +416,9 @@ def test_zero_input_channels_with_input():
 
 def test_multiple_init_calls():
     """Test that multiple init calls don't cause issues"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 
     # First init succeeds
     result1 = chuck.init()
@@ -438,9 +438,9 @@ def test_multiple_init_calls():
 
 def test_sequential_compile_and_remove():
     """Test sequential compilation and removal"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     code = "SinOsc s => dac; while(true) { 1::samp => now; }"
@@ -467,12 +467,12 @@ def test_sequential_compile_and_remove():
 def test_audio_stop_without_start():
     """Test that stopping audio without starting doesn't crash"""
     # This should not raise any errors
-    pychuck.stop_audio()
-    pychuck.shutdown_audio()
+    numchuck.stop_audio()
+    numchuck.shutdown_audio()
 
 
 def test_audio_shutdown_without_start():
     """Test that shutting down audio without starting doesn't crash"""
     # This should not raise any errors
-    pychuck.shutdown_audio(msWait=0)
-    pychuck.shutdown_audio(msWait=100)
+    numchuck.shutdown_audio(msWait=0)
+    numchuck.shutdown_audio(msWait=100)

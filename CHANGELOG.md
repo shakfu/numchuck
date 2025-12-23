@@ -15,6 +15,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [Unreleased]
 
+### Changed
+
+- **Project Renamed**: `numchuck` -> `numchuck`
+  - Package import: `from numchuck import Chuck`
+  - CLI: `numchuck edit`, `numchuck repl`, `numchuck run`
+  - Config directory: `~/.numchuck/`
+  - All internal references updated
+
 ## [0.1.2]
 
 **Summary:** This release introduces a high-level Pythonic API, cross-platform wheel building, and build system enhancements. The new `Chuck` class provides properties and simplified methods while the low-level API remains available for fine-grained control.
@@ -39,7 +47,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Artifact collection job aggregates all wheels
   - PyPI publishing on tag push (trusted publisher)
 
-- **Consolidated Run API** (`pychuck.api.Chuck`):
+- **Consolidated Run API** (`numchuck.api.Chuck`):
   - `run(num_frames, *, output=None, input=None, reuse=False)` - Unified audio processing
     - No args: allocates new buffer each call (prototyping, offline)
     - `output=buf`: uses provided buffer (zero allocation)
@@ -55,18 +63,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Link libraries: `-ldl`, `-lpthread`, `-lm`, `-lasound`, `-lsndfile`
   - Position-independent code (`-fPIC`) for shared library linking
 
-- **High-Level Python API** (`pychuck.api.Chuck`):
+- **High-Level Python API** (`numchuck.api.Chuck`):
   - Pythonic wrapper class with properties instead of get/set methods
   - Properties: `sample_rate`, `version`, `chugin_enable`, `working_directory`, etc.
   - Simplified methods: `compile()`, `run()`, `set_int()`, `get_int()`, etc.
   - Synchronous global variable getters (handles async callbacks internally)
   - Constructor with all parameters as kwargs with sensible defaults
   - Access low-level API via `chuck.raw` property
-  - Exported directly from `pychuck` package: `from pychuck import Chuck`
+  - Exported directly from `numchuck` package: `from numchuck import Chuck`
 
-- **Type Stub Improvements** (`_pychuck.pyi`):
+- **Type Stub Improvements** (`_numchuck.pyi`):
   - Added 8 missing PARAM_* constants (TTY_COLOR, TTY_WIDTH_HINT, COMPILER_HIGHLIGHT_ON_ERROR, etc.)
-  - Renamed from `__init__.pyi` to `_pychuck.pyi` to match module
+  - Renamed from `__init__.pyi` to `_numchuck.pyi` to match module
   - Added `py.typed` marker for PEP 561 compliance
 
 - **Developer Dependencies**:
@@ -83,9 +91,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ### Changed
 
 - **Package Exports**:
-  - `pychuck` now exports only the high-level `Chuck` class
-  - Low-level API available via `from pychuck._pychuck import ChucK`
-  - Internal modules import from `_pychuck` directly
+  - `numchuck` now exports only the high-level `Chuck` class
+  - Low-level API available via `from numchuck._numchuck import ChucK`
+  - Internal modules import from `_numchuck` directly
 
 - **Chugin Build System** (`scripts/cmake/fn_add_chugin.cmake`):
   - Dynamic chugins now output to `examples/chugins/` directory
@@ -163,7 +171,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ### Added
 
 - **Comprehensive Error Handling Documentation** (`docs/error_handling.md`):
-  - Complete guide to exception-based error handling in pychuck
+  - Complete guide to exception-based error handling in numchuck
   - Examples for all API patterns (initialization, compilation, events, etc.)
   - Best practices for error handling and resource cleanup
   - Input validation rules and error message formats
@@ -202,20 +210,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - No API changes needed (cleanup already existed but was undocumented)
 
 - **CLI Subcommand Renamed**: `exec` -> `run`:
-  - `pychuck run` replaces `pychuck exec` for consistency with common CLI conventions
+  - `numchuck run` replaces `numchuck exec` for consistency with common CLI conventions
   - Updated all documentation (README, CLAUDE.md, CHANGELOG.md, architecture.md)
   - Updated tests and Makefile
   - Backward compatibility can be added if needed
 
 - **Build System Updates**:
   - Makefile now uses `uv` for all Python operations
-  - `make install` -> `uv sync --reinstall-package pychuck`
+  - `make install` -> `uv sync --reinstall-package numchuck`
   - `make test` -> `uv run pytest` (uses pyproject.toml config)
-  - `make repl` -> `uv run python -m pychuck repl`
+  - `make repl` -> `uv run python -m numchuck repl`
   - pytest configuration in pyproject.toml to skip thirdparty/
 
 - **Module Documentation**:
-  - Added comprehensive docstring to `src/pychuck/__init__.py`
+  - Added comprehensive docstring to `src/numchuck/__init__.py`
   - Documents exception types and when they're raised
   - Includes usage examples
   - Clear error handling contract
@@ -227,7 +235,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Better error handling in UI display code (shred tables, status bars)
   - Prevents masking of critical exceptions (KeyboardInterrupt, SystemExit)
 
-- **Type Stubs** (`src/pychuck/__init__.pyi`):
+- **Type Stubs** (`src/numchuck/__init__.pyi`):
   - Complete type annotations for all public APIs
   - ChucK class with all methods typed
   - Module-level functions with signatures
@@ -252,19 +260,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Build requirements and instructions
   - Intersphinx mapping to Python/NumPy docs
 
-- **Version Management** (`src/pychuck/_version.py`):
+- **Version Management** (`src/numchuck/_version.py`):
   - Single source for version number
   - Imported by `__init__.py` for `__version__` and `__version_info__`
   - Eliminates version duplication across the codebase
   - Follows Python packaging best practices
 
 - **Shell Completion Support** (`completions/`):
-  - Bash completion script (`pychuck-completion.bash`)
-  - Zsh completion script (`pychuck-completion.zsh`)
+  - Bash completion script (`numchuck-completion.bash`)
+  - Zsh completion script (`numchuck-completion.zsh`)
   - Complete all subcommands: edit, repl, run, version, info
   - Complete command-line options for each subcommand
   - Complete `.ck` file paths automatically
-  - Complete project names from `~/.pychuck/projects/`
+  - Complete project names from `~/.numchuck/projects/`
   - Suggest common sample rates and channel counts
   - Installation instructions in `completions/README.md`
 
@@ -298,7 +306,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - pytest config excludes thirdparty/ and other non-test directories
   - Comprehensive end-to-end workflow coverage
 
-- **Multi-Tab Editor** (`pychuck edit`):
+- **Multi-Tab Editor** (`numchuck edit`):
   - Full-screen ChucK editor with syntax highlighting
   - Multi-tab support: Ctrl-T (new), Ctrl-W (close), Ctrl-N/Ctrl-P (navigate)
   - F5 or Ctrl-R to spork (compile and run current buffer)
@@ -315,7 +323,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - **Project Versioning System** (`tui/project.py`):
   - Automatic file versioning for livecoding sessions
   - Versioning scheme: `file.ck` -> `file-1.ck` (spork) -> `file-1-1.ck` (replace)
-  - Stored in `~/.pychuck/projects/<project_name>/`
+  - Stored in `~/.numchuck/projects/<project_name>/`
   - Tracks spork and replace operations with shred IDs
   - Chronological timeline support with modification times
   - `ProjectVersion` class for parsing and generating versioned filenames
@@ -329,7 +337,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Centralized ChucK instance and session management
   - Proper cleanup with circular reference breaking (no memory leaks)
 
-- **Command-Line Execution Mode** (`pychuck run`):
+- **Command-Line Execution Mode** (`numchuck run`):
   - Non-interactive file execution from command line
   - Multiple file support
   - Duration parameter: `--duration N` runs for N seconds then exits
@@ -340,12 +348,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Implemented in `cli/executor.py` (~120 lines)
 
 - **Subcommand-Based CLI** (`cli/main.py`):
-  - `pychuck edit [files...] [--project name] [--start-audio]` - Launch editor
-  - `pychuck repl [files...] [--project name] [--start-audio]` - Launch REPL
-  - `pychuck run <files...> [options]` - Execute files
-  - `pychuck version` - Show version information
-  - `pychuck info` - Show ChucK and pychuck info
-  - `pychuck tui` - Backward compatibility alias for repl
+  - `numchuck edit [files...] [--project name] [--start-audio]` - Launch editor
+  - `numchuck repl [files...] [--project name] [--start-audio]` - Launch REPL
+  - `numchuck run <files...> [options]` - Execute files
+  - `numchuck version` - Show version information
+  - `numchuck info` - Show ChucK and numchuck info
+  - `numchuck tui` - Backward compatibility alias for repl
   - Comprehensive argument parsing with help text
   - Command handlers in separate module
   - ~220 lines of clean CLI code
@@ -362,7 +370,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Shortcut symbols still supported for compatibility
 
 - **REPL File Loading on Startup**:
-  - Load ChucK files on REPL startup: `pychuck repl file1.ck file2.ck`
+  - Load ChucK files on REPL startup: `numchuck repl file1.ck file2.ck`
   - Files are automatically sporked before entering interactive mode
   - Works with project versioning when `--project` specified
   - Implemented in `tui/repl.py` run() method
@@ -428,7 +436,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Auto-clears on next command
   - Handles unknown commands gracefully
 
-- **ChucK Language Module** (`src/pychuck/chuck_lang.py`):
+- **ChucK Language Module** (`src/numchuck/chuck_lang.py`):
   - Single source of truth for all ChucK language elements
   - Complete sets: KEYWORDS, TYPES, OPERATORS, TIME_UNITS, UGENS, STD_CLASSES
   - 80+ UGens including oscillators, filters, reverbs, STK instruments, chugins
@@ -511,7 +519,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ### Added
 
-- **ChucK Pygments Lexer** (`src/pychuck/cli/chuck_lexer.py`):
+- **ChucK Pygments Lexer** (`src/numchuck/cli/chuck_lexer.py`):
   - Complete syntax highlighting for ChucK language
   - Recognizes ChucK operators (`=>`, `+=>`, `@=>`, etc.)
   - Time duration literals (`100::ms`, `1::second`, etc.)
@@ -522,12 +530,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - 16 comprehensive tests in `tests/test_chuck_lexer.py`
   - Documentation: `docs/CHUCK_LEXER.md`
 
-- **Centralized Path Management** (`src/pychuck/cli/paths.py`):
-  - `get_pychuck_home()` - Returns `~/.pychuck`
-  - `get_snippets_dir()` - Returns `~/.pychuck/snippets`
-  - `get_history_file()` - Returns `~/.pychuck/history`
+- **Centralized Path Management** (`src/numchuck/cli/paths.py`):
+  - `get_numchuck_home()` - Returns `~/.numchuck`
+  - `get_snippets_dir()` - Returns `~/.numchuck/snippets`
+  - `get_history_file()` - Returns `~/.numchuck/history`
   - `get_sessions_dir()`, `get_logs_dir()`, `get_projects_dir()`, `get_config_file()` - Future directories
-  - `ensure_pychuck_directories()` - Creates directory structure
+  - `ensure_numchuck_directories()` - Creates directory structure
   - `list_snippets()`, `get_snippet_path()` - Snippet utilities
 
 - **REPL Enhancements**:
@@ -545,17 +553,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - No need for special commands or mode switching
 
 - **Documentation**:
-  - `docs/pychuck_home.md` - Complete guide to `~/.pychuck/` directory structure
+  - `docs/numchuck_home.md` - Complete guide to `~/.numchuck/` directory structure
   - `docs/chuck_lexer.md` - ChucK lexer usage and implementation guide
 
 ### Changed
 
 - **Directory Structure Migration**:
-  - `~/.chuck_repl_history` -> `~/.pychuck/history`
-  - `~/.chuck_snippets/` -> `~/.pychuck/snippets/`
-  - REPL now creates full `~/.pychuck/` directory structure on startup
+  - `~/.chuck_repl_history` -> `~/.numchuck/history`
+  - `~/.chuck_snippets/` -> `~/.numchuck/snippets/`
+  - REPL now creates full `~/.numchuck/` directory structure on startup
   - Updated all code to use new path utilities from `paths.py`
-  - Updated `.gitignore` to ignore `~/.pychuck/` instead of individual files
+  - Updated `.gitignore` to ignore `~/.numchuck/` instead of individual files
 
 - **REPL Improvements**:
   - REPL version display updated to show "PyChucK REPL v0.1.1"
@@ -574,7 +582,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - `smart_enter` parameter in ChuckREPL constructor (defaults to True)
 
 - **Command-line interface**:
-  - `python -m pychuck tui` now launches vanilla REPL directly
+  - `python -m numchuck tui` now launches vanilla REPL directly
   - Added `--start-audio` flag to automatically start audio on REPL startup
   - Added `--no-smart-enter` flag to disable smart Enter mode
   - Removed `--rich`, `--simple`, `--basic` command-line flags
@@ -631,7 +639,7 @@ Version 0.1.3 represents a major REPL overhaul focused on user experience:
 1. **Smart multiline editing** - Context-aware Enter behavior eliminates mode switching
 2. **ChucK syntax highlighting** - Full Pygments lexer for ChucK language
 3. **Automatic code detection** - ChucK code is compiled, commands are executed
-4. **Unified directory structure** - All user data in `~/.pychuck/`
+4. **Unified directory structure** - All user data in `~/.numchuck/`
 5. **Required prompt-toolkit** - Simplified codebase, better UX
 6. **CLI options** - `--start-audio` and `--no-smart-enter` flags
 
@@ -719,7 +727,7 @@ The REPL now provides a modern, intuitive interface for both quick REPL commands
 
 ### Changed
 
-- **Type stub file (`_pychuck.pyi`)** updated with all new methods:
+- **Type stub file (`_numchuck.pyi`)** updated with all new methods:
   - 30+ new method signatures with full type annotations
   - Callback types use `Callable` with proper signatures
   - Return types for introspection methods (`list[int]`, `dict[str, Any]`, etc.)
@@ -859,7 +867,7 @@ Implementation based on analysis of `chuck_tilde.cpp` (Max/MSP external):
 
 ### Changed
 
-- **Type stub file (`_pychuck.pyi`)** completely rewritten to match actual implementation
+- **Type stub file (`_numchuck.pyi`)** completely rewritten to match actual implementation
   - Fixed incorrect method signatures (module functions vs class methods)
   - Added all parameter constants
   - Added comprehensive docstrings

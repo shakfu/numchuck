@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-pychuck command-line interface
+numchuck command-line interface
 
-Provides subcommands for different pychuck modes:
+Provides subcommands for different numchuck modes:
     edit    - Launch multi-tab editor for livecoding
     repl    - Launch interactive REPL
     run     - Execute ChucK files from command line
     version - Show version information
-    info    - Show ChucK and pychuck info
+    info    - Show ChucK and numchuck info
 """
 
 import sys
@@ -17,7 +17,7 @@ import argparse
 def create_parser():
     """Create the argument parser with all subcommands."""
     parser = argparse.ArgumentParser(
-        prog="pychuck",
+        prog="numchuck",
         description="Python bindings for ChucK audio programming language",
     )
 
@@ -85,7 +85,7 @@ def create_parser():
     subparsers.add_parser("version", help="Show version information")
 
     # info subcommand
-    subparsers.add_parser("info", help="Show ChucK and pychuck info")
+    subparsers.add_parser("info", help="Show ChucK and numchuck info")
 
     # tui subcommand (backward compatibility - maps to repl)
     tui_parser = subparsers.add_parser(
@@ -150,17 +150,17 @@ def cmd_run(args):
 
 def cmd_version(args):
     """Show version information."""
-    from .._pychuck import version
+    from .._numchuck import version
 
-    print("pychuck version: 0.1.1")
+    print("numchuck version: 0.1.1")
     print(f"ChucK version: {version()}")
 
 
 def cmd_info(args):
-    """Show ChucK and pychuck info."""
-    from .._pychuck import ChucK, version
+    """Show ChucK and numchuck info."""
+    from .._numchuck import ChucK, version
 
-    print("pychuck: 0.1.1")
+    print("numchuck: 0.1.1")
     print(f"ChucK: {version()}")
     print(f"ChucK int size: {ChucK.int_size()} bits")
     print(f"Active VMs: {ChucK.num_vms()}")

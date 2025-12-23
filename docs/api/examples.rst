@@ -1,7 +1,7 @@
 Examples
 ========
 
-Complete examples demonstrating common pychuck usage patterns.
+Complete examples demonstrating common numchuck usage patterns.
 
 Basic Synthesis
 ---------------
@@ -11,13 +11,13 @@ Simple Sine Wave
 
 .. code-block:: python
 
-   import pychuck
+   import numchuck
    import time
 
-   chuck = pychuck.ChucK()
-   chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-   chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-   chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+   chuck = numchuck.ChucK()
+   chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+   chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+   chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
    chuck.init()
    chuck.start()
 
@@ -39,12 +39,12 @@ Chord Generator
 
 .. code-block:: python
 
-   import pychuck
+   import numchuck
 
-   chuck = pychuck.ChucK()
-   chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-   chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-   chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+   chuck = numchuck.ChucK()
+   chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+   chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+   chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
    chuck.init()
    chuck.start()
 
@@ -71,13 +71,13 @@ Interactive Parameter Control
 
 .. code-block:: python
 
-   import pychuck
+   import numchuck
    import time
 
-   chuck = pychuck.ChucK()
-   chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-   chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-   chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+   chuck = numchuck.ChucK()
+   chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+   chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+   chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
    chuck.init()
    chuck.start()
 
@@ -105,12 +105,12 @@ Hot-Swapping Shreds
 
 .. code-block:: python
 
-   import pychuck
+   import numchuck
 
-   chuck = pychuck.ChucK()
-   chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-   chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-   chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+   chuck = numchuck.ChucK()
+   chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+   chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+   chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
    chuck.init()
    chuck.start()
 
@@ -152,13 +152,13 @@ Trigger Synthesis
 
 .. code-block:: python
 
-   import pychuck
+   import numchuck
    import time
 
-   chuck = pychuck.ChucK()
-   chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-   chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-   chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+   chuck = numchuck.ChucK()
+   chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+   chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+   chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
    chuck.init()
    chuck.start()
 
@@ -196,13 +196,13 @@ Bidirectional Communication
 
 .. code-block:: python
 
-   import pychuck
+   import numchuck
    import time
 
-   chuck = pychuck.ChucK()
-   chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-   chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-   chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+   chuck = numchuck.ChucK()
+   chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+   chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+   chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
    chuck.init()
    chuck.start()
 
@@ -242,14 +242,14 @@ Offline Rendering
 
 .. code-block:: python
 
-   import pychuck
+   import numchuck
    import numpy as np
    import wave
 
-   chuck = pychuck.ChucK()
-   chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-   chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-   chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+   chuck = numchuck.ChucK()
+   chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+   chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+   chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
    chuck.init()
 
    # Generate audio
@@ -284,14 +284,14 @@ Real-time Analysis
 
 .. code-block:: python
 
-   import pychuck
+   import numchuck
    import numpy as np
    import time
 
-   chuck = pychuck.ChucK()
-   chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-   chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-   chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+   chuck = numchuck.ChucK()
+   chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+   chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+   chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
    chuck.init()
 
    # Generate modulating sine wave
@@ -332,13 +332,13 @@ Load and Run ChucK Files
 
 .. code-block:: python
 
-   import pychuck
+   import numchuck
    import time
 
-   chuck = pychuck.ChucK()
-   chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-   chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-   chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+   chuck = numchuck.ChucK()
+   chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+   chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+   chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
    chuck.init()
    chuck.start()
 
@@ -355,12 +355,12 @@ Multiple File Compilation
 
 .. code-block:: python
 
-   import pychuck
+   import numchuck
 
-   chuck = pychuck.ChucK()
-   chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-   chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-   chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+   chuck = numchuck.ChucK()
+   chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+   chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+   chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
    chuck.init()
    chuck.start()
 
@@ -382,13 +382,13 @@ Sequencer
 
 .. code-block:: python
 
-   import pychuck
+   import numchuck
    import time
 
-   chuck = pychuck.ChucK()
-   chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-   chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-   chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+   chuck = numchuck.ChucK()
+   chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+   chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+   chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
    chuck.init()
    chuck.start()
 
@@ -437,19 +437,19 @@ Multiple Instances
 
 .. code-block:: python
 
-   import pychuck
+   import numchuck
 
    # Create two separate ChucK instances
-   chuck1 = pychuck.ChucK()
-   chuck1.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-   chuck1.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-   chuck1.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+   chuck1 = numchuck.ChucK()
+   chuck1.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+   chuck1.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+   chuck1.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
    chuck1.init()
 
-   chuck2 = pychuck.ChucK()
-   chuck2.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-   chuck2.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-   chuck2.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+   chuck2 = numchuck.ChucK()
+   chuck2.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+   chuck2.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+   chuck2.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
    chuck2.init()
 
    # Each instance can run independently

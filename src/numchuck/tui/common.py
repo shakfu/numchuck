@@ -20,7 +20,7 @@ class ChuckApplication:
     """Base application managing ChucK instance and shared state."""
 
     def __init__(self, project_name=None):
-        from .._pychuck import ChucK
+        from .._numchuck import ChucK
         from .session import ChuckSession
 
         self.chuck = ChucK()

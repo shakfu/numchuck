@@ -1,9 +1,9 @@
-"""Tests for the high-level pychuck.Chuck API."""
+"""Tests for the high-level numchuck.Chuck API."""
 
 import numpy as np
 import pytest
 
-from pychuck import Chuck
+from numchuck import Chuck
 
 
 class TestChuckConstruction:

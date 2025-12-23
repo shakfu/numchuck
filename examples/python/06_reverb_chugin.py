@@ -8,7 +8,7 @@ This example demonstrates:
 - Mixing dry and wet signals
 """
 
-import pychuck
+import numchuck
 import time
 import os
 
@@ -17,11 +17,11 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 chugins_dir = os.path.join(script_dir, '../../examples/chugins')
 
 # Create and configure ChucK
-chuck = pychuck.ChucK()
-chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
-chuck.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
-chuck.set_param_string(pychuck.PARAM_USER_CHUGINS, chugins_dir)
+chuck = numchuck.ChucK()
+chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
+chuck.set_param(numchuck.PARAM_CHUGIN_ENABLE, 1)
+chuck.set_param_string(numchuck.PARAM_USER_CHUGINS, chugins_dir)
 chuck.init()
 
 # ChucK code using GVerb reverb
@@ -57,14 +57,14 @@ if success:
     print("  Playing impulses every 500ms")
 
     print("\nStarting audio playback...")
-    pychuck.start_audio(chuck)
+    numchuck.start_audio(chuck)
 
     print("Playing reverb demo for 10 seconds...")
     time.sleep(10)
 
     print("\nStopping audio...")
-    pychuck.stop_audio()
-    pychuck.shutdown_audio()
+    numchuck.stop_audio()
+    numchuck.shutdown_audio()
     print("Done!")
 else:
     print("✗ Compilation failed!")

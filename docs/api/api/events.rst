@@ -18,13 +18,13 @@ Event Methods
 From ChucK Class
 ~~~~~~~~~~~~~~~~
 
-.. automethod:: pychuck.ChucK.signal_global_event
+.. automethod:: numchuck.ChucK.signal_global_event
 
-.. automethod:: pychuck.ChucK.broadcast_global_event
+.. automethod:: numchuck.ChucK.broadcast_global_event
 
-.. automethod:: pychuck.ChucK.listen_for_global_event
+.. automethod:: numchuck.ChucK.listen_for_global_event
 
-.. automethod:: pychuck.ChucK.stop_listening_for_global_event
+.. automethod:: numchuck.ChucK.stop_listening_for_global_event
 
 Usage Examples
 --------------
@@ -83,13 +83,13 @@ Beat Synchronization
 
 .. code-block:: python
 
-   import pychuck
+   import numchuck
    import time
 
-   chuck = pychuck.ChucK()
-   chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-   chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-   chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+   chuck = numchuck.ChucK()
+   chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+   chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+   chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
    chuck.init()
    chuck.start()
 

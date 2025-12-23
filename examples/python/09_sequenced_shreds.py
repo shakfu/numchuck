@@ -9,13 +9,13 @@ This example demonstrates:
 - Removing shreds dynamically to create variation
 """
 
-import pychuck
+import numchuck
 import time
 
 # Create and configure ChucK
-chuck = pychuck.ChucK()
-chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+chuck = numchuck.ChucK()
+chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 chuck.init()
 
 print("=== Sequenced Shreds Demo ===\n")
@@ -44,7 +44,7 @@ if success:
     print(f"  ✓ Bass shred ID: {ids[0]}")
 
 # Start audio
-pychuck.start_audio(chuck)
+numchuck.start_audio(chuck)
 time.sleep(2)
 
 # Layer 2: Snare (offset by 250ms)
@@ -228,8 +228,8 @@ print("\n--- Ending composition ---")
 chuck.remove_all_shreds()
 time.sleep(0.5)
 
-pychuck.stop_audio()
-pychuck.shutdown_audio()
+numchuck.stop_audio()
+numchuck.shutdown_audio()
 
 print("\n✓ Done!")
 print(f"\nSequencing summary:")

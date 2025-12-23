@@ -8,7 +8,7 @@ This example demonstrates:
 - Real-time playback of external ChucK scripts
 """
 
-import pychuck
+import numchuck
 import time
 import os
 
@@ -19,9 +19,9 @@ chuck_file = os.path.join(script_dir, '../../examples/basic/blit2.ck')
 print(f"Loading ChucK file: {chuck_file}")
 
 # Create and configure ChucK
-chuck = pychuck.ChucK()
-chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+chuck = numchuck.ChucK()
+chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 chuck.init()
 
 # Compile the ChucK file
@@ -33,10 +33,10 @@ if success:
 
     # Start real-time audio
     print("Starting audio playback...")
-    pychuck.start_audio(chuck)
+    numchuck.start_audio(chuck)
 
     # Get audio info
-    info = pychuck.audio_info()
+    info = numchuck.audio_info()
     print(f"\nAudio System Info:")
     print(f"  Sample rate: {info['sample_rate']} Hz")
     print(f"  Output channels: {info['num_channels_out']}")
@@ -49,8 +49,8 @@ if success:
 
     # Clean up
     print("\nStopping audio...")
-    pychuck.stop_audio()
-    pychuck.shutdown_audio()
+    numchuck.stop_audio()
+    numchuck.shutdown_audio()
     print("Done!")
 else:
     print(f"✗ Compilation failed!")

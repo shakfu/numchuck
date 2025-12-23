@@ -1,5 +1,5 @@
 """
-Command-line interface for pychuck
+Command-line interface for numchuck
 """
 
 __all__ = ["tui", "repl", "parser", "session", "commands"]

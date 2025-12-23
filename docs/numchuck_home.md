@@ -1,11 +1,11 @@
-# pychuck Home Directory
+# numchuck Home Directory
 
-pychuck uses `~/.pychuck/` as its home directory for storing user data, configuration, and resources.
+numchuck uses `~/.numchuck/` as its home directory for storing user data, configuration, and resources.
 
 ## Directory Structure
 
 ```sh
-~/.pychuck/
+~/.numchuck/
 ├── history           # REPL command history
 ├── snippets/         # Reusable ChucK code snippets
 ├── projects/         # Livecoding session versioning (--project <name>)
@@ -16,17 +16,17 @@ pychuck uses `~/.pychuck/` as its home directory for storing user data, configur
 
 ## Current Features
 
-### REPL History (`~/.pychuck/history`)
+### REPL History (`~/.numchuck/history`)
 
-Stores command history from the pychuck REPL:
+Stores command history from the numchuck REPL:
 
 - Persists across sessions
 - Supports Up/Down arrow keys for navigation
 - Maximum 1000 entries (configurable via prompt_toolkit)
 
-**Managed by:** `src/pychuck/tui/repl.py`
+**Managed by:** `src/numchuck/tui/repl.py`
 
-### Code Snippets (`~/.pychuck/snippets/`)
+### Code Snippets (`~/.numchuck/snippets/`)
 
 Directory for storing reusable ChucK code snippets that can be loaded instantly in the REPL.
 
@@ -34,7 +34,7 @@ Directory for storing reusable ChucK code snippets that can be loaded instantly 
 
 ```bash
 # Create a snippet
-echo 'SinOsc s => dac; 440 => s.freq; while(true) { 1::samp => now; }' > ~/.pychuck/snippets/sine.ck
+echo 'SinOsc s => dac; 440 => s.freq; while(true) { 1::samp => now; }' > ~/.numchuck/snippets/sine.ck
 
 # Load it in the REPL
 chuck> @sine
@@ -55,14 +55,14 @@ chuck> @sine
 - `@bass` - Bass line pattern
 - `@reverb` - Reverb effect chain
 
-**Managed by:** `src/pychuck/tui/commands.py`, `src/pychuck/tui/paths.py`
+**Managed by:** `src/numchuck/tui/commands.py`, `src/numchuck/tui/paths.py`
 
-### Projects (`~/.pychuck/projects/`)
+### Projects (`~/.numchuck/projects/`)
 
-Automatic versioning for livecoding sessions. When using `--project <name>`, pychuck saves each spork and replace operation:
+Automatic versioning for livecoding sessions. When using `--project <name>`, numchuck saves each spork and replace operation:
 
 ```sh
-~/.pychuck/projects/mymusic/
+~/.numchuck/projects/mymusic/
 ├── bass.ck           # Original file
 ├── bass-1.ck         # After first spork (shred ID 1)
 ├── bass-1-1.ck       # After first replace of shred 1
@@ -75,10 +75,10 @@ Automatic versioning for livecoding sessions. When using `--project <name>`, pyc
 
 ```bash
 # Editor with project versioning
-python -m pychuck edit --project mymusic
+python -m numchuck edit --project mymusic
 
 # REPL with project versioning
-python -m pychuck repl --project mymusic
+python -m numchuck repl --project mymusic
 ```
 
 **Features:**
@@ -88,11 +88,11 @@ python -m pychuck repl --project mymusic
 - Timeline tracking with modification times
 - Easy recovery of previous versions
 
-**Managed by:** `src/pychuck/tui/project.py`, `src/pychuck/tui/session.py`
+**Managed by:** `src/numchuck/tui/project.py`, `src/numchuck/tui/session.py`
 
 ## Future Features
 
-### Sessions (`~/.pychuck/sessions/`)
+### Sessions (`~/.numchuck/sessions/`)
 
 **Planned feature:** Save and restore REPL sessions
 
@@ -111,7 +111,7 @@ Each session would store:
 - Audio configuration
 - Loaded files
 
-### Logs (`~/.pychuck/logs/`)
+### Logs (`~/.numchuck/logs/`)
 
 **Planned feature:** Store ChucK VM logs and debugging output
 
@@ -122,7 +122,7 @@ Potential logs:
 - `errors.log` - Compilation and runtime errors
 - `repl.log` - REPL command history with timestamps
 
-### Configuration (`~/.pychuck/config.toml`)
+### Configuration (`~/.numchuck/config.toml`)
 
 **Planned feature:** User preferences and defaults
 
@@ -155,32 +155,32 @@ favorite = ["sine", "reverb", "kick"]
 
 ## API Reference
 
-The `src/pychuck/tui/paths.py` module provides utilities for managing the pychuck home directory:
+The `src/numchuck/tui/paths.py` module provides utilities for managing the numchuck home directory:
 
 ### Functions
 
-- **`get_pychuck_home() -> Path`**
-  Returns `~/.pychuck`
+- **`get_numchuck_home() -> Path`**
+  Returns `~/.numchuck`
 
 - **`get_snippets_dir() -> Path`**
-  Returns `~/.pychuck/snippets`
+  Returns `~/.numchuck/snippets`
 
 - **`get_history_file() -> Path`**
-  Returns `~/.pychuck/history`
+  Returns `~/.numchuck/history`
 
 - **`get_sessions_dir() -> Path`**
-  Returns `~/.pychuck/sessions` (future)
+  Returns `~/.numchuck/sessions` (future)
 
 - **`get_logs_dir() -> Path`**
-  Returns `~/.pychuck/logs` (future)
+  Returns `~/.numchuck/logs` (future)
 
 - **`get_config_file() -> Path`**
-  Returns `~/.pychuck/config.toml` (future)
+  Returns `~/.numchuck/config.toml` (future)
 
 - **`get_projects_dir() -> Path`**
-  Returns `~/.pychuck/projects` (future)
+  Returns `~/.numchuck/projects` (future)
 
-- **`ensure_pychuck_directories()`**
+- **`ensure_numchuck_directories()`**
   Creates all standard directories if they don't exist
 
 - **`list_snippets() -> list[str]`**
@@ -192,7 +192,7 @@ The `src/pychuck/tui/paths.py` module provides utilities for managing the pychuc
 ### Usage Example
 
 ```python
-from pychuck.cli.paths import get_snippets_dir, list_snippets
+from numchuck.cli.paths import get_snippets_dir, list_snippets
 
 # Get snippets directory
 snippets = get_snippets_dir()
@@ -205,27 +205,27 @@ for name in list_snippets():
 
 ## Migration from Old Paths
 
-If you have existing pychuck data:
+If you have existing numchuck data:
 
 **Old locations:**
 
-- `~/.chuck_repl_history` → `~/.pychuck/history`
-- `~/.chuck_snippets/` → `~/.pychuck/snippets/`
+- `~/.chuck_repl_history` → `~/.numchuck/history`
+- `~/.chuck_snippets/` → `~/.numchuck/snippets/`
 
 **Migration:**
 
 ```bash
 # Create new directory structure
-mkdir -p ~/.pychuck/snippets
+mkdir -p ~/.numchuck/snippets
 
 # Migrate history (if exists)
 if [ -f ~/.chuck_repl_history ]; then
-    mv ~/.chuck_repl_history ~/.pychuck/history
+    mv ~/.chuck_repl_history ~/.numchuck/history
 fi
 
 # Migrate snippets (if exists)
 if [ -d ~/.chuck_snippets ]; then
-    mv ~/.chuck_snippets/* ~/.pychuck/snippets/
+    mv ~/.chuck_snippets/* ~/.numchuck/snippets/
     rmdir ~/.chuck_snippets
 fi
 ```
@@ -242,7 +242,7 @@ fi
 Example snippet with documentation:
 
 ```chuck
-// ~/.pychuck/snippets/reverb_large.ck
+// ~/.numchuck/snippets/reverb_large.ck
 // Large hall reverb with configurable mix
 
 SinOsc s => JCRev r => dac;
@@ -257,7 +257,7 @@ while(true) { 1::samp => now; }
 Consider subdirectories for complex setups (requires code changes):
 
 ```sg
-~/.pychuck/snippets/
+~/.numchuck/snippets/
 ├── synthesis/
 │   ├── fm.ck
 │   ├── additive.ck
@@ -278,34 +278,34 @@ Consider subdirectories for complex setups (requires code changes):
 
 ```bash
 # Manually create directories
-python3 -c "from pychuck.cli.paths import ensure_pychuck_directories; ensure_pychuck_directories()"
+python3 -c "from numchuck.cli.paths import ensure_numchuck_directories; ensure_numchuck_directories()"
 ```
 
 ### Snippet not found
 
 ```bash
 # Check snippet exists
-ls -la ~/.pychuck/snippets/
+ls -la ~/.numchuck/snippets/
 
 # Verify filename (must end in .ck)
 chuck> @mysound
  snippet 'mysound' not found
-# Should be: ~/.pychuck/snippets/mysound.ck
+# Should be: ~/.numchuck/snippets/mysound.ck
 ```
 
 ### History not saving
 
 ```bash
 # Check permissions
-ls -la ~/.pychuck/history
+ls -la ~/.numchuck/history
 
 # Check if directory is writable
-touch ~/.pychuck/test && rm ~/.pychuck/test
+touch ~/.numchuck/test && rm ~/.numchuck/test
 ```
 
 ## Security Considerations
 
-The `~/.pychuck/` directory may contain:
+The `~/.numchuck/` directory may contain:
 
 - Command history (could include sensitive file paths)
 - Custom ChucK code (intellectual property)
@@ -313,12 +313,12 @@ The `~/.pychuck/` directory may contain:
 
 **Recommendations:**
 
-- Add `~/.pychuck/` to your backup routine
+- Add `~/.numchuck/` to your backup routine
 - Don't share snippets containing hardcoded credentials or paths
-- Consider encrypting `~/.pychuck/` if working with sensitive audio/code
+- Consider encrypting `~/.numchuck/` if working with sensitive audio/code
 
 ## See Also
 
 - [REPL Documentation](dev/REPL_IMPROVEMENTS.md)
 - [ChucK Language Specification](https://chuck.stanford.edu/doc/language/)
-- [Path Management API](../src/pychuck/cli/paths.py)
+- [Path Management API](../src/numchuck/cli/paths.py)

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Simple performance benchmarks for pychuck.
+Simple performance benchmarks for numchuck.
 
 Measures basic operations to establish performance baselines.
 """
 
 import time
 import numpy as np
-import pychuck
+import numchuck
 
 
 def benchmark(name, func, iterations=100):
@@ -31,7 +31,7 @@ def benchmark(name, func, iterations=100):
 
 def main():
     print("=" * 60)
-    print("pychuck Simple Performance Benchmarks")
+    print("numchuck Simple Performance Benchmarks")
     print("=" * 60)
     print()
 
@@ -41,10 +41,10 @@ def main():
     print("1. Code Compilation")
     print("-" * 60)
 
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     code = "SinOsc s => dac; 440 => s.freq;"

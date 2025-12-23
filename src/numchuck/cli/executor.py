@@ -40,7 +40,7 @@ def execute_files(
     Raises:
         ExecutionError: If compilation or execution fails
     """
-    from .._pychuck import ChucK
+    from .._numchuck import ChucK
 
     # Validate files exist
     missing_files = []
@@ -65,7 +65,7 @@ def execute_files(
     audio_started = False
     if not silent:
         try:
-            from .._pychuck import start_audio
+            from .._numchuck import start_audio
 
             start_audio(chuck)
             audio_started = True
@@ -104,7 +104,7 @@ def execute_files(
             print(f"Error compiling {filepath}: {e}", file=sys.stderr)
             # Cleanup
             if audio_started:
-                from .._pychuck import stop_audio
+                from .._numchuck import stop_audio
 
                 stop_audio()
             raise ExecutionError(f"Compilation failed: {e}")
@@ -140,7 +140,7 @@ def execute_files(
         # Stop audio
         if audio_started:
             try:
-                from .._pychuck import stop_audio, shutdown_audio
+                from .._numchuck import stop_audio, shutdown_audio
 
                 stop_audio()
                 shutdown_audio()
@@ -157,4 +157,4 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         execute_files(sys.argv[1:])
     else:
-        print("Usage: python -m pychuck.cli.executor <file.ck> [file2.ck ...]")
+        print("Usage: python -m numchuck.cli.executor <file.ck> [file2.ck ...]")

@@ -1,6 +1,6 @@
 import sys
 import os
-from .._pychuck import (
+from .._numchuck import (
     ChucK,
     stop_audio,
     shutdown_audio,
@@ -12,7 +12,7 @@ from ..chuck_lang import REPL_COMMANDS, ALL_IDENTIFIERS
 from .parser import CommandParser
 from .session import REPLSession
 from .commands import CommandExecutor
-from .paths import get_history_file, ensure_pychuck_directories
+from .paths import get_history_file, ensure_numchuck_directories
 
 
 class ChuckREPL:
@@ -398,8 +398,8 @@ OTHER COMMANDS                          KEYBOARD SHORTCUTS
             """Exit with Ctrl-Q"""
             event.app.exit()
 
-        # Ensure pychuck directories exist
-        ensure_pychuck_directories()
+        # Ensure numchuck directories exist
+        ensure_numchuck_directories()
 
         # Prompt continuation for multiline input
         def get_continuation(width, line_number, is_soft_wrap):
@@ -668,7 +668,7 @@ OTHER COMMANDS                          KEYBOARD SHORTCUTS
 
             # Start audio if requested
             if start_audio:
-                from .._pychuck import start_audio as start_audio_func
+                from .._numchuck import start_audio as start_audio_func
 
                 try:
                     start_audio_func(self.chuck)

@@ -6,13 +6,13 @@ Real-time audio control functions for managing system audio.
 Module Functions
 ----------------
 
-.. autofunction:: pychuck.start_audio
+.. autofunction:: numchuck.start_audio
 
-.. autofunction:: pychuck.stop_audio
+.. autofunction:: numchuck.stop_audio
 
-.. autofunction:: pychuck.shutdown_audio
+.. autofunction:: numchuck.shutdown_audio
 
-.. autofunction:: pychuck.audio_info
+.. autofunction:: numchuck.audio_info
 
 Usage Examples
 --------------
@@ -22,13 +22,13 @@ Start Audio
 
 .. code-block:: python
 
-   import pychuck
+   import numchuck
 
    # Start real-time audio with default device
-   pychuck.start_audio()
+   numchuck.start_audio()
 
    # Now audio will play through speakers
-   chuck = pychuck.ChucK()
+   chuck = numchuck.ChucK()
    chuck.init()
    chuck.compile_code("SinOsc s => dac; 440 => s.freq; 1::second => now;")
 
@@ -38,7 +38,7 @@ Stop Audio
 .. code-block:: python
 
    # Stop audio playback
-   pychuck.stop_audio()
+   numchuck.stop_audio()
 
 Shutdown Audio
 ~~~~~~~~~~~~~~
@@ -46,7 +46,7 @@ Shutdown Audio
 .. code-block:: python
 
    # Shutdown audio system with timeout
-   pychuck.shutdown_audio(500)  # 500ms timeout
+   numchuck.shutdown_audio(500)  # 500ms timeout
 
 Query Audio Info
 ~~~~~~~~~~~~~~~~
@@ -54,7 +54,7 @@ Query Audio Info
 .. code-block:: python
 
    # Get audio system information
-   info = pychuck.audio_info()
+   info = numchuck.audio_info()
    print(info)
 
 Notes

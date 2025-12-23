@@ -40,7 +40,7 @@ This inconsistency made it impossible for users to rely on predictable error beh
 Created comprehensive error handling documentation:
 
 - **File:** `docs/ERROR_HANDLING.md`
-- **Module docstring:** Updated `src/pychuck/__init__.py`
+- **Module docstring:** Updated `src/numchuck/__init__.py`
 - **Covers:** All error types, patterns, examples, best practices
 
 ### Example
@@ -156,7 +156,7 @@ tests/test_global_events.py::test_multiple_event_listeners PASSED         [NEW]
    - Best practices and debugging tips
    - ~400 lines of comprehensive documentation
 
-2. **`src/pychuck/__init__.py`**
+2. **`src/numchuck/__init__.py`**
    - Added module-level docstring
    - Documented error handling strategy
    - Examples of exception usage
@@ -174,7 +174,7 @@ tests/test_global_events.py::test_multiple_event_listeners PASSED         [NEW]
 
 ```bash
 # Install with fixes
-uv sync --reinstall-package pychuck
+uv sync --reinstall-package numchuck
 
 # Run all tests (should show 99 passed)
 uv run pytest
@@ -262,7 +262,7 @@ This ensures Python objects are destroyed **before** the interpreter shuts down,
 
 ### Changes Made
 
-- **File:** `src/_pychuck.cpp`
+- **File:** `src/_numchuck.cpp`
 - **Added:** `_cleanup_callbacks()` function
 - **Added:** Automatic registration with `atexit`
 

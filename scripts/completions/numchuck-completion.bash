@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Bash completion for pychuck CLI
+# Bash completion for numchuck CLI
 # Install: source this file or copy to /etc/bash_completion.d/
 
-_pychuck_completion() {
+_numchuck_completion() {
     local cur prev words cword
     _init_completion || return
 
@@ -25,8 +25,8 @@ _pychuck_completion() {
     # Handle options based on previous word
     case "$prev" in
         --project)
-            # Could list available projects from ~/.pychuck/projects/
-            local projects_dir="$HOME/.pychuck/projects"
+            # Could list available projects from ~/.numchuck/projects/
+            local projects_dir="$HOME/.numchuck/projects"
             if [ -d "$projects_dir" ]; then
                 local projects=$(ls -1 "$projects_dir" 2>/dev/null)
                 COMPREPLY=($(compgen -W "$projects" -- "$cur"))
@@ -92,4 +92,4 @@ _pychuck_completion() {
 }
 
 # Register completion function
-complete -F _pychuck_completion pychuck
+complete -F _numchuck_completion numchuck

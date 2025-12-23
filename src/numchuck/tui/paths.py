@@ -1,5 +1,5 @@
 """
-Path management for pychuck CLI
+Path management for numchuck CLI
 
 Provides centralized management of user directories and files for:
 - REPL history
@@ -12,68 +12,68 @@ Provides centralized management of user directories and files for:
 from pathlib import Path
 
 
-def get_pychuck_home() -> Path:
+def get_numchuck_home() -> Path:
     """
-    Get the pychuck home directory (~/.pychuck).
+    Get the numchuck home directory (~/.numchuck).
 
     Returns:
-        Path to ~/.pychuck directory
+        Path to ~/.numchuck directory
     """
-    return Path.home() / ".pychuck"
+    return Path.home() / ".numchuck"
 
 
 def get_snippets_dir() -> Path:
     """
-    Get the snippets directory (~/.pychuck/snippets).
+    Get the snippets directory (~/.numchuck/snippets).
 
     This directory stores reusable ChucK code snippets that can be
     loaded with the @<name> command in the REPL.
 
     Returns:
-        Path to ~/.pychuck/snippets directory
+        Path to ~/.numchuck/snippets directory
     """
-    return get_pychuck_home() / "snippets"
+    return get_numchuck_home() / "snippets"
 
 
 def get_history_file() -> Path:
     """
-    Get the REPL history file path (~/.pychuck/history).
+    Get the REPL history file path (~/.numchuck/history).
 
     Returns:
-        Path to ~/.pychuck/history file
+        Path to ~/.numchuck/history file
     """
-    return get_pychuck_home() / "history"
+    return get_numchuck_home() / "history"
 
 
 def get_sessions_dir() -> Path:
     """
-    Get the sessions directory (~/.pychuck/sessions).
+    Get the sessions directory (~/.numchuck/sessions).
 
     This directory can store saved REPL sessions, allowing users to
     save and restore their work.
 
     Returns:
-        Path to ~/.pychuck/sessions directory
+        Path to ~/.numchuck/sessions directory
     """
-    return get_pychuck_home() / "sessions"
+    return get_numchuck_home() / "sessions"
 
 
 def get_logs_dir() -> Path:
     """
-    Get the logs directory (~/.pychuck/logs).
+    Get the logs directory (~/.numchuck/logs).
 
     This directory can store ChucK VM logs, audio engine logs,
     and REPL debugging output.
 
     Returns:
-        Path to ~/.pychuck/logs directory
+        Path to ~/.numchuck/logs directory
     """
-    return get_pychuck_home() / "logs"
+    return get_numchuck_home() / "logs"
 
 
 def get_config_file() -> Path:
     """
-    Get the configuration file path (~/.pychuck/config.toml).
+    Get the configuration file path (~/.numchuck/config.toml).
 
     This file can store user preferences like:
     - Default sample rate
@@ -82,14 +82,14 @@ def get_config_file() -> Path:
     - Default chugin paths
 
     Returns:
-        Path to ~/.pychuck/config.toml file
+        Path to ~/.numchuck/config.toml file
     """
-    return get_pychuck_home() / "config.toml"
+    return get_numchuck_home() / "config.toml"
 
 
 def get_projects_dir() -> Path:
     """
-    Get the projects directory (~/.pychuck/projects).
+    Get the projects directory (~/.numchuck/projects).
 
     This directory can store multi-file ChucK projects with:
     - Main .ck files
@@ -98,24 +98,24 @@ def get_projects_dir() -> Path:
     - Project configuration
 
     Returns:
-        Path to ~/.pychuck/projects directory
+        Path to ~/.numchuck/projects directory
     """
-    return get_pychuck_home() / "projects"
+    return get_numchuck_home() / "projects"
 
 
-def ensure_pychuck_directories():
+def ensure_numchuck_directories():
     """
-    Ensure all pychuck directories exist.
+    Ensure all numchuck directories exist.
 
-    Creates ~/.pychuck and standard subdirectories if they don't exist:
+    Creates ~/.numchuck and standard subdirectories if they don't exist:
     - snippets/
     - sessions/
     - logs/
     - projects/
     """
     # Create main directory
-    pychuck_home = get_pychuck_home()
-    pychuck_home.mkdir(parents=True, exist_ok=True)
+    numchuck_home = get_numchuck_home()
+    numchuck_home.mkdir(parents=True, exist_ok=True)
 
     # Create subdirectories
     get_snippets_dir().mkdir(exist_ok=True)
@@ -156,7 +156,7 @@ def list_projects() -> list[str]:
     List all available projects.
 
     Returns:
-        List of project names (directory names in ~/.pychuck/projects/)
+        List of project names (directory names in ~/.numchuck/projects/)
     """
     projects_dir = get_projects_dir()
     if not projects_dir.exists():

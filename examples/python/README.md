@@ -1,10 +1,10 @@
-# PyChuck Python Examples
+# NumChuck Python Examples
 
-This directory contains illustrated Python examples demonstrating how to use `pychuck` to integrate ChucK audio programming into Python applications.
+This directory contains illustrated Python examples demonstrating how to use `numchuck` to integrate ChucK audio programming into Python applications.
 
 ## Overview
 
-These examples progressively demonstrate pychuck features from basic synthesis to advanced techniques, chugin usage, and file loading.
+These examples progressively demonstrate numchuck features from basic synthesis to advanced techniques, chugin usage, and file loading.
 
 ## Examples
 
@@ -151,7 +151,7 @@ python examples/python/09_sequenced_shreds.py
 ### Prerequisites
 
 All examples require:
-- `pychuck` installed (from project root: `pip install .` or `pip install -e .`)
+- `numchuck` installed (from project root: `pip install .` or `pip install -e .`)
 - `numpy`
 
 Some examples have optional dependencies:
@@ -205,11 +205,11 @@ Examples use ChucK code from:
 ### Basic Setup
 
 ```python
-import pychuck
+import numchuck
 
-chuck = pychuck.ChucK()
-chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+chuck = numchuck.ChucK()
+chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 chuck.init()
 ```
 
@@ -220,12 +220,12 @@ chuck.init()
 success, shred_ids = chuck.compile_code(code)
 
 # Start audio
-pychuck.start_audio(chuck)
+numchuck.start_audio(chuck)
 time.sleep(duration)
 
 # Cleanup
-pychuck.stop_audio()
-pychuck.shutdown_audio()
+numchuck.stop_audio()
+numchuck.shutdown_audio()
 ```
 
 ### Offline Rendering
@@ -246,8 +246,8 @@ chuck.run(input_buf, output_buf, num_frames)
 
 ```python
 # Set chugin path and enable
-chuck.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
-chuck.set_param_string(pychuck.PARAM_USER_CHUGINS, "/path/to/chugins")
+chuck.set_param(numchuck.PARAM_CHUGIN_ENABLE, 1)
+chuck.set_param_string(numchuck.PARAM_USER_CHUGINS, "/path/to/chugins")
 chuck.init()
 
 # Use chugin in code
@@ -276,7 +276,7 @@ Call `chuck.init()` before compiling or running audio.
 
 ## Further Reading
 
-- [pychuck README](../../README.md) - Main documentation
+- [numchuck README](../../README.md) - Main documentation
 - [ChucK Documentation](https://chuck.stanford.edu/doc/) - ChucK language reference
 - [ChucK Examples](../../examples/) - Original ChucK example scripts
 - [Architecture Documentation](../../ARCHITECTURE.md) - Technical details
@@ -292,4 +292,4 @@ To add more examples:
 
 ## License
 
-These examples are part of pychuck and follow the same license (GPL v2).
+These examples are part of numchuck and follow the same license (GPL v2).

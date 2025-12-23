@@ -1,14 +1,14 @@
 import pytest
-import pychuck._pychuck as pychuck
+import numchuck._numchuck as numchuck
 import time
 
 
 def test_realtime_audio():
     """Test real-time audio playback"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     # Compile audio code
@@ -22,11 +22,11 @@ def test_realtime_audio():
     assert success
 
     # Start real-time audio
-    audio_started = pychuck.start_audio(chuck, sample_rate=44100, num_dac_channels=2)
+    audio_started = numchuck.start_audio(chuck, sample_rate=44100, num_dac_channels=2)
     assert audio_started
 
     # Check audio info
-    info = pychuck.audio_info()
+    info = numchuck.audio_info()
     assert info['sample_rate'] == 44100
     assert info['num_channels_out'] == 2
     assert info['num_channels_in'] == 0
@@ -36,21 +36,21 @@ def test_realtime_audio():
     time.sleep(0.1)
 
     # Stop audio
-    pychuck.stop_audio()
-    pychuck.shutdown_audio()
+    numchuck.stop_audio()
+    numchuck.shutdown_audio()
 
 
 def test_audio_without_init_fails():
     """Test that audio fails gracefully without proper init"""
-    chuck = pychuck.ChucK()
+    chuck = numchuck.ChucK()
 
     # Try to start audio without initializing ChucK
     # This should fail
     try:
-        audio_started = pychuck.start_audio(chuck)
+        audio_started = numchuck.start_audio(chuck)
         # If it somehow starts, stop it
         if audio_started:
-            pychuck.stop_audio()
-            pychuck.shutdown_audio()
+            numchuck.stop_audio()
+            numchuck.shutdown_audio()
     except:
         pass  # Expected to fail

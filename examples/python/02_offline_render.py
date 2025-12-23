@@ -9,15 +9,15 @@ This example demonstrates:
 - Saving to WAV file (optional)
 """
 
-import pychuck
+import numchuck
 import numpy as np
 import matplotlib.pyplot as plt
 
 # Create and configure ChucK
-chuck = pychuck.ChucK()
-chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+chuck = numchuck.ChucK()
+chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 chuck.init()
 
 # ChucK code: frequency sweep
@@ -86,16 +86,16 @@ if success:
         plt.grid(True, alpha=0.3)
         plt.legend()
         plt.tight_layout()
-        plt.savefig('/tmp/pychuck_sweep.png', dpi=100)
-        print(f"\n✓ Waveform plot saved to /tmp/pychuck_sweep.png")
+        plt.savefig('/tmp/numchuck_sweep.png', dpi=100)
+        print(f"\n✓ Waveform plot saved to /tmp/numchuck_sweep.png")
     except Exception as e:
         print(f"\nNote: Could not create plot (matplotlib not available or no display): {e}")
 
     # Optional: Save to WAV file
     try:
         import scipy.io.wavfile as wav
-        wav.write('/tmp/pychuck_sweep.wav', sample_rate, stereo)
-        print(f"✓ Audio saved to /tmp/pychuck_sweep.wav")
+        wav.write('/tmp/numchuck_sweep.wav', sample_rate, stereo)
+        print(f"✓ Audio saved to /tmp/numchuck_sweep.wav")
     except ImportError:
         print("Note: scipy not available, skipping WAV export")
 

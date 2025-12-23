@@ -1,12 +1,12 @@
 """
-pychuck: Python bindings for ChucK audio programming language
+numchuck: Python bindings for ChucK audio programming language
 
 This module provides comprehensive Python bindings for the ChucK audio
 programming language, enabling real-time audio synthesis, live coding,
 and programmatic control of ChucK from Python.
 
 Example:
-    >>> from pychuck import Chuck
+    >>> from numchuck import Chuck
     >>> chuck = Chuck(sample_rate=48000, output_channels=2)
     >>> chuck.sample_rate
     48000

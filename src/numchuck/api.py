@@ -5,7 +5,7 @@ This module provides a wrapper around the low-level ChucK bindings with
 a more Pythonic interface using properties instead of get/set methods.
 
 Example:
-    >>> from pychuck.api import Chuck
+    >>> from numchuck.api import Chuck
     >>> chuck = Chuck(sample_rate=48000, output_channels=2)
     >>> chuck.sample_rate
     48000
@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from . import _pychuck
+from . import _numchuck
 
 if TYPE_CHECKING:
     from typing import Callable
@@ -71,28 +71,28 @@ class Chuck:
         tty_width_hint: int = 80,
         auto_init: bool = True,
     ):
-        self._chuck = _pychuck.ChucK()
+        self._chuck = _numchuck.ChucK()
 
         # Set parameters before init
-        self._chuck.set_param(_pychuck.PARAM_SAMPLE_RATE, sample_rate)
-        self._chuck.set_param(_pychuck.PARAM_INPUT_CHANNELS, input_channels)
-        self._chuck.set_param(_pychuck.PARAM_OUTPUT_CHANNELS, output_channels)
+        self._chuck.set_param(_numchuck.PARAM_SAMPLE_RATE, sample_rate)
+        self._chuck.set_param(_numchuck.PARAM_INPUT_CHANNELS, input_channels)
+        self._chuck.set_param(_numchuck.PARAM_OUTPUT_CHANNELS, output_channels)
         if working_directory:
             self._chuck.set_param_string(
-                _pychuck.PARAM_WORKING_DIRECTORY, working_directory
+                _numchuck.PARAM_WORKING_DIRECTORY, working_directory
             )
-        self._chuck.set_param(_pychuck.PARAM_CHUGIN_ENABLE, int(chugin_enable))
+        self._chuck.set_param(_numchuck.PARAM_CHUGIN_ENABLE, int(chugin_enable))
         if user_chugins:
-            self._chuck.set_param_string_list(_pychuck.PARAM_USER_CHUGINS, user_chugins)
-        self._chuck.set_param(_pychuck.PARAM_VM_ADAPTIVE, int(vm_adaptive))
-        self._chuck.set_param(_pychuck.PARAM_VM_HALT, int(vm_halt))
-        self._chuck.set_param(_pychuck.PARAM_AUTO_DEPEND, int(auto_depend))
-        self._chuck.set_param(_pychuck.PARAM_DEPRECATE_LEVEL, deprecate_level)
-        self._chuck.set_param(_pychuck.PARAM_DUMP_INSTRUCTIONS, int(dump_instructions))
-        self._chuck.set_param(_pychuck.PARAM_OTF_ENABLE, int(otf_enable))
-        self._chuck.set_param(_pychuck.PARAM_OTF_PORT, otf_port)
-        self._chuck.set_param(_pychuck.PARAM_TTY_COLOR, int(tty_color))
-        self._chuck.set_param(_pychuck.PARAM_TTY_WIDTH_HINT, tty_width_hint)
+            self._chuck.set_param_string_list(_numchuck.PARAM_USER_CHUGINS, user_chugins)
+        self._chuck.set_param(_numchuck.PARAM_VM_ADAPTIVE, int(vm_adaptive))
+        self._chuck.set_param(_numchuck.PARAM_VM_HALT, int(vm_halt))
+        self._chuck.set_param(_numchuck.PARAM_AUTO_DEPEND, int(auto_depend))
+        self._chuck.set_param(_numchuck.PARAM_DEPRECATE_LEVEL, deprecate_level)
+        self._chuck.set_param(_numchuck.PARAM_DUMP_INSTRUCTIONS, int(dump_instructions))
+        self._chuck.set_param(_numchuck.PARAM_OTF_ENABLE, int(otf_enable))
+        self._chuck.set_param(_numchuck.PARAM_OTF_PORT, otf_port)
+        self._chuck.set_param(_numchuck.PARAM_TTY_COLOR, int(tty_color))
+        self._chuck.set_param(_numchuck.PARAM_TTY_WIDTH_HINT, tty_width_hint)
 
         if auto_init:
             self._chuck.init()
@@ -240,99 +240,99 @@ class Chuck:
     @property
     def sample_rate(self) -> int:
         """Audio sample rate in Hz."""
-        return self._chuck.get_param_int(_pychuck.PARAM_SAMPLE_RATE)
+        return self._chuck.get_param_int(_numchuck.PARAM_SAMPLE_RATE)
 
     @property
     def input_channels(self) -> int:
         """Number of audio input channels."""
-        return self._chuck.get_param_int(_pychuck.PARAM_INPUT_CHANNELS)
+        return self._chuck.get_param_int(_numchuck.PARAM_INPUT_CHANNELS)
 
     @property
     def output_channels(self) -> int:
         """Number of audio output channels."""
-        return self._chuck.get_param_int(_pychuck.PARAM_OUTPUT_CHANNELS)
+        return self._chuck.get_param_int(_numchuck.PARAM_OUTPUT_CHANNELS)
 
     @property
     def working_directory(self) -> str:
         """Working directory for file operations."""
-        return self._chuck.get_param_string(_pychuck.PARAM_WORKING_DIRECTORY)
+        return self._chuck.get_param_string(_numchuck.PARAM_WORKING_DIRECTORY)
 
     @property
     def version(self) -> str:
         """ChucK version string (read-only)."""
-        return self._chuck.get_param_string(_pychuck.PARAM_VERSION)
+        return self._chuck.get_param_string(_numchuck.PARAM_VERSION)
 
     @property
     def chugin_enable(self) -> bool:
         """Whether chugin loading is enabled."""
-        return bool(self._chuck.get_param_int(_pychuck.PARAM_CHUGIN_ENABLE))
+        return bool(self._chuck.get_param_int(_numchuck.PARAM_CHUGIN_ENABLE))
 
     @property
     def vm_adaptive(self) -> bool:
         """Whether adaptive VM timing is enabled."""
-        return bool(self._chuck.get_param_int(_pychuck.PARAM_VM_ADAPTIVE))
+        return bool(self._chuck.get_param_int(_numchuck.PARAM_VM_ADAPTIVE))
 
     @property
     def vm_halt(self) -> bool:
         """Whether VM halts when no shreds remain."""
-        return bool(self._chuck.get_param_int(_pychuck.PARAM_VM_HALT))
+        return bool(self._chuck.get_param_int(_numchuck.PARAM_VM_HALT))
 
     @property
     def auto_depend(self) -> bool:
         """Whether automatic dependency resolution is enabled."""
-        return bool(self._chuck.get_param_int(_pychuck.PARAM_AUTO_DEPEND))
+        return bool(self._chuck.get_param_int(_numchuck.PARAM_AUTO_DEPEND))
 
     @property
     def deprecate_level(self) -> int:
         """Deprecation warning level (0=none, 1=warn, 2=error)."""
-        return self._chuck.get_param_int(_pychuck.PARAM_DEPRECATE_LEVEL)
+        return self._chuck.get_param_int(_numchuck.PARAM_DEPRECATE_LEVEL)
 
     @property
     def dump_instructions(self) -> bool:
         """Whether VM instruction dumping is enabled."""
-        return bool(self._chuck.get_param_int(_pychuck.PARAM_DUMP_INSTRUCTIONS))
+        return bool(self._chuck.get_param_int(_numchuck.PARAM_DUMP_INSTRUCTIONS))
 
     @property
     def otf_enable(self) -> bool:
         """Whether on-the-fly programming is enabled."""
-        return bool(self._chuck.get_param_int(_pychuck.PARAM_OTF_ENABLE))
+        return bool(self._chuck.get_param_int(_numchuck.PARAM_OTF_ENABLE))
 
     @property
     def otf_port(self) -> int:
         """Port for on-the-fly programming."""
-        return self._chuck.get_param_int(_pychuck.PARAM_OTF_PORT)
+        return self._chuck.get_param_int(_numchuck.PARAM_OTF_PORT)
 
     @property
     def tty_color(self) -> bool:
         """Whether colored terminal output is enabled."""
-        return bool(self._chuck.get_param_int(_pychuck.PARAM_TTY_COLOR))
+        return bool(self._chuck.get_param_int(_numchuck.PARAM_TTY_COLOR))
 
     @property
     def tty_width_hint(self) -> int:
         """Terminal width hint for formatting."""
-        return self._chuck.get_param_int(_pychuck.PARAM_TTY_WIDTH_HINT)
+        return self._chuck.get_param_int(_numchuck.PARAM_TTY_WIDTH_HINT)
 
     @property
     def user_chugins(self) -> list[str]:
         """List of user chugin paths."""
-        return self._chuck.get_param_string_list(_pychuck.PARAM_USER_CHUGINS)
+        return self._chuck.get_param_string_list(_numchuck.PARAM_USER_CHUGINS)
 
     @property
     def compiler_highlight_on_error(self) -> bool:
         """Whether syntax highlighting in error messages is enabled."""
         return bool(
-            self._chuck.get_param_int(_pychuck.PARAM_COMPILER_HIGHLIGHT_ON_ERROR)
+            self._chuck.get_param_int(_numchuck.PARAM_COMPILER_HIGHLIGHT_ON_ERROR)
         )
 
     @property
     def is_realtime_audio_hint(self) -> bool:
         """Hint for real-time audio mode."""
-        return bool(self._chuck.get_param_int(_pychuck.PARAM_IS_REALTIME_AUDIO_HINT))
+        return bool(self._chuck.get_param_int(_numchuck.PARAM_IS_REALTIME_AUDIO_HINT))
 
     @property
     def otf_print_warnings(self) -> bool:
         """Whether on-the-fly compiler warnings are printed."""
-        return bool(self._chuck.get_param_int(_pychuck.PARAM_OTF_PRINT_WARNINGS))
+        return bool(self._chuck.get_param_int(_numchuck.PARAM_OTF_PRINT_WARNINGS))
 
     # -------------------------------------------------------------------------
     # Shred management
@@ -517,6 +517,6 @@ class Chuck:
     # -------------------------------------------------------------------------
 
     @property
-    def raw(self) -> _pychuck.ChucK:
+    def raw(self) -> _numchuck.ChucK:
         """Access the underlying low-level ChucK instance."""
         return self._chuck

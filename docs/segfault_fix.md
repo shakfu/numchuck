@@ -22,7 +22,7 @@ The segfault occurred **after** all tests completed successfully, during Python 
 The C++ extension stored Python callback objects in a global static map:
 
 ```cpp
-// src/_pychuck.cpp
+// src/_numchuck.cpp
 static std::unordered_map<int, nb::callable> g_callbacks;
 ```
 
@@ -50,7 +50,7 @@ Static C++ objects are destroyed in reverse order of construction, which happens
 Register a cleanup function with Python's `atexit` module to clear callbacks **before** interpreter shutdown:
 
 ```cpp
-// src/_pychuck.cpp (added at end of NB_MODULE)
+// src/_numchuck.cpp (added at end of NB_MODULE)
 
 // Cleanup function to be called during module teardown
 m.def("_cleanup_callbacks",
@@ -143,7 +143,7 @@ g_callbacks.clear();
 
 ### Files Changed
 
-- **`src/_pychuck.cpp`** - Added 9 lines of cleanup code
+- **`src/_numchuck.cpp`** - Added 9 lines of cleanup code
 
 ### Test Results
 

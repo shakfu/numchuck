@@ -2,18 +2,18 @@
 
 ## Overview
 
-pychuck is a Python wrapper for ChucK that uses nanobind to create efficient C++/Python bindings. The project follows a layered architecture with clear separation between the ChucK core library, the C++ binding layer, the Python package interface, and terminal user interfaces for interactive development.
+numchuck is a Python wrapper for ChucK that uses nanobind to create efficient C++/Python bindings. The project follows a layered architecture with clear separation between the ChucK core library, the C++ binding layer, the Python package interface, and terminal user interfaces for interactive development.
 
 ## File Structure
 
 ```text
-pychuck/
+numchuck/
 ├── src/
-│   ├── _pychuck.cpp              # C++ nanobind extension
+│   ├── _numchuck.cpp              # C++ nanobind extension
 │   ├── CMakeLists.txt            # Extension build configuration
-│   └── pychuck/
+│   └── numchuck/
 │       ├── __init__.py           # Public Python API
-│       ├── _pychuck.pyi          # Type stubs
+│       ├── _numchuck.pyi          # Type stubs
 │       ├── cli/
 │       │   ├── main.py           # CLI argument parser & dispatcher
 │       │   └── executor.py       # Non-interactive execution
@@ -26,7 +26,7 @@ pychuck/
 │           ├── commands.py       # REPL commands (@, :)
 │           ├── chuck_lexer.py    # Pygments syntax highlighter
 │           ├── parser.py         # ChucK code parsing
-│           ├── paths.py          # ~/.pychuck/ management
+│           ├── paths.py          # ~/.numchuck/ management
 │           └── common.py         # Shared UI components
 ├── thirdparty/
 │   ├── chuck/                    # ChucK core (git submodule)
@@ -44,7 +44,7 @@ pychuck/
 ├── docs/
 │   ├── dev/
 │   │   └── architecture.md       # This file
-│   └── pychuck_home.md           # ~/.pychuck/ documentation
+│   └── numchuck_home.md           # ~/.numchuck/ documentation
 ├── examples/                     # ChucK example files
 ├── scripts/
 │   ├── update.sh                 # Update ChucK core from upstream
@@ -55,7 +55,7 @@ pychuck/
 ├── CHANGELOG.md
 └── README.md
 
-User Data (~/.pychuck/):
+User Data (~/.numchuck/):
 ├── history                       # REPL command history
 ├── snippets/                     # Reusable ChucK snippets
 │   ├── sine.ck
@@ -81,28 +81,28 @@ User Data (~/.pychuck/):
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                    CLI Entry Point                          │
-│  - pychuck.cli.main: Command dispatcher                     │
+│  - numchuck.cli.main: Command dispatcher                     │
 │  - Subcommands: edit, repl, run, version, info              │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
 │              Terminal User Interfaces (TUI)                 │
-│  - pychuck.tui.editor: Multi-tab editor (prompt_toolkit)    │
-│  - pychuck.tui.repl: Interactive REPL (prompt_toolkit)      │
-│  - pychuck.tui.session: Shred tracking & project versioning │
-│  - pychuck.tui.commands: REPL commands (@snippet, :help)    │
-│  - pychuck.tui.project: File versioning system              │
-│  - pychuck.tui.chuck_lexer: Syntax highlighting (Pygments)  │
+│  - numchuck.tui.editor: Multi-tab editor (prompt_toolkit)    │
+│  - numchuck.tui.repl: Interactive REPL (prompt_toolkit)      │
+│  - numchuck.tui.session: Shred tracking & project versioning │
+│  - numchuck.tui.commands: REPL commands (@snippet, :help)    │
+│  - numchuck.tui.project: File versioning system              │
+│  - numchuck.tui.chuck_lexer: Syntax highlighting (Pygments)  │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│              pychuck Package (Python)                       │
-│  - __init__.py: Public API, imports from _pychuck           │
-│  - _pychuck.pyi: Type stubs for IDE/type checkers           │
+│              numchuck Package (Python)                       │
+│  - __init__.py: Public API, imports from _numchuck           │
+│  - _numchuck.pyi: Type stubs for IDE/type checkers           │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│        _pychuck Extension Module (C++ via nanobind)         │
+│        _numchuck Extension Module (C++ via nanobind)         │
 │  - ChucK class bindings                                     │
 │  - Audio callback infrastructure                            │
 │  - Parameter management                                     │
@@ -128,7 +128,7 @@ User Data (~/.pychuck/):
 
 ## Component Details
 
-### 1. CLI Layer (`src/pychuck/cli/`)
+### 1. CLI Layer (`src/numchuck/cli/`)
 
 **Responsibilities:**
 
@@ -146,11 +146,11 @@ User Data (~/.pychuck/):
 - `edit`: Launch multi-tab editor with optional files and project versioning
 - `repl`: Launch interactive REPL with smart Enter, sidebar, project support
 - `run`: Execute ChucK files headlessly with configurable audio parameters
-- `version`: Display pychuck and ChucK versions
+- `version`: Display numchuck and ChucK versions
 - `info`: Display ChucK VM information
 - `tui`: Backward compatibility alias for `repl`
 
-### 2. TUI Layer (`src/pychuck/tui/`)
+### 2. TUI Layer (`src/numchuck/tui/`)
 
 **Responsibilities:**
 
@@ -175,7 +175,7 @@ User Data (~/.pychuck/):
 - Interactive command-line interface
 - Smart Enter mode (auto-detects multiline ChucK code)
 - Sidebar showing active shreds (toggleable with F2)
-- REPL history with Up/Down arrows (~/.pychuck/history)
+- REPL history with Up/Down arrows (~/.numchuck/history)
 - Support for @snippet loading and :commands
 - Clean shutdown handling (Ctrl+Q, Ctrl+D)
 
@@ -191,12 +191,12 @@ User Data (~/.pychuck/):
 - Automatic file versioning: `file.ck → file-1.ck → file-1-1.ck`
 - Saves on spork (shred ID suffix) and replace (replace counter suffix)
 - Timeline tracking with modification times
-- Stored in `~/.pychuck/projects/<name>/`
+- Stored in `~/.numchuck/projects/<name>/`
 
 #### Commands (`commands.py`)
 
 - REPL command execution (@snippet, :help, :shreds)
-- Snippet loading from `~/.pychuck/snippets/`
+- Snippet loading from `~/.numchuck/snippets/`
 - Tab completion for snippets and files
 
 #### Syntax Highlighting (`chuck_lexer.py`)
@@ -207,9 +207,9 @@ User Data (~/.pychuck/):
 
 #### Path Management (`paths.py`)
 
-- `~/.pychuck/` home directory management
+- `~/.numchuck/` home directory management
 - Subdirectories: history, snippets, projects, sessions, logs
-- Helper functions: `get_pychuck_home()`, `get_snippets_dir()`, etc.
+- Helper functions: `get_numchuck_home()`, `get_snippets_dir()`, etc.
 
 #### Common Utilities (`common.py`)
 
@@ -217,7 +217,7 @@ User Data (~/.pychuck/):
 - App state management across editor/REPL
 - Lexer and syntax highlighting integration
 
-### 3. Python Package Layer (`src/pychuck/`)
+### 3. Python Package Layer (`src/numchuck/`)
 
 **Responsibilities:**
 
@@ -228,14 +228,14 @@ User Data (~/.pychuck/):
 **Key Files:**
 
 - `__init__.py`: Main entry point, imports and exposes all public symbols
-- `_pychuck.pyi`: Type stub file for static type checking
+- `_numchuck.pyi`: Type stub file for static type checking
 
 **Design Pattern:**
 
-- Private module pattern: `_pychuck` (C++ extension) wrapped by `pychuck` (Python package)
+- Private module pattern: `_numchuck` (C++ extension) wrapped by `numchuck` (Python package)
 - Follows Python convention for native extensions
 
-### 4. C++ Binding Layer (`src/_pychuck.cpp`)
+### 4. C++ Binding Layer (`src/_numchuck.cpp`)
 
 **Responsibilities:**
 
@@ -362,55 +362,55 @@ static void validate_audio_buffer(const nb::ndarray<>& array,
 
 ```bash
 # Basic editor
-python -m pychuck edit
+python -m numchuck edit
 
 # Open files in tabs
-python -m pychuck edit melody.ck bass.ck drums.ck
+python -m numchuck edit melody.ck bass.ck drums.ck
 
 # Enable project versioning
-python -m pychuck edit --project myproject
+python -m numchuck edit --project myproject
 
 # Start with audio on
-python -m pychuck edit --start-audio
+python -m numchuck edit --start-audio
 ```
 
 **User Flow:**
 
-1. User runs `python -m pychuck edit`
+1. User runs `python -m numchuck edit`
 2. CLI dispatcher (`cli.main`) invokes `cmd_edit(args)`
 3. `tui.editor.main()` launches prompt_toolkit application
 4. User edits ChucK code with syntax highlighting
 5. User presses Ctrl+R to spork code → creates shred
 6. Editor updates shreds table (F2) with new shred
-7. If project enabled, file saved to `~/.pychuck/projects/<name>/file-1.ck`
+7. If project enabled, file saved to `~/.numchuck/projects/<name>/file-1.ck`
 8. User presses Ctrl+E to replace → replaces shred, saves `file-1-1.ck`
 
 #### Interactive REPL
 
 ```bash
 # Basic REPL
-python -m pychuck repl
+python -m numchuck repl
 
 # With project versioning
-python -m pychuck repl --project liveset
+python -m numchuck repl --project liveset
 
 # Load files on startup
-python -m pychuck repl melody.ck bass.ck
+python -m numchuck repl melody.ck bass.ck
 
 # Configure behavior
-python -m pychuck repl --start-audio --no-smart-enter --no-sidebar
+python -m numchuck repl --start-audio --no-smart-enter --no-sidebar
 ```
 
 **User Flow:**
 
-1. User runs `python -m pychuck repl`
+1. User runs `python -m numchuck repl`
 2. CLI dispatcher invokes `cmd_repl(args)`
 3. `tui.tui.main()` launches REPL with prompt_toolkit
 4. User types ChucK code (smart Enter detects multiline)
 5. User presses Esc+Enter to execute
 6. REPL executor compiles and runs code
 7. Sidebar (F2) shows active shreds with elapsed time
-8. User types `@snippet` to load from `~/.pychuck/snippets/`
+8. User types `@snippet` to load from `~/.numchuck/snippets/`
 9. Tab completion works for snippets and commands
 10. User presses Ctrl+Q to exit (clean shutdown with audio stop)
 
@@ -418,18 +418,18 @@ python -m pychuck repl --start-audio --no-smart-enter --no-sidebar
 
 ```bash
 # Execute files
-python -m pychuck run file1.ck file2.ck
+python -m numchuck run file1.ck file2.ck
 
 # Custom audio configuration
-python -m pychuck run --srate 48000 --channels 1 file.ck
+python -m numchuck run --srate 48000 --channels 1 file.ck
 
 # Silent execution (testing)
-python -m pychuck run --silent --duration 10 file.ck
+python -m numchuck run --silent --duration 10 file.ck
 ```
 
 **User Flow:**
 
-1. User runs `python -m pychuck run`
+1. User runs `python -m numchuck run`
 2. CLI dispatcher invokes `cmd_run(args)`
 3. `cli.executor.execute_files()` creates ChucK instance
 4. Files compiled sequentially
@@ -439,11 +439,11 @@ python -m pychuck run --silent --duration 10 file.ck
 ### Library Usage (Python API)
 
 ```python
-import pychuck
+import numchuck
 import numpy as np
 
 # Create and initialize
-chuck = pychuck.ChucK()
+chuck = numchuck.ChucK()
 chuck.set_param(44100, 2, 0)
 chuck.init()
 
@@ -451,9 +451,9 @@ chuck.init()
 success, ids = chuck.compile_code("SinOsc s => dac; 440 => s.freq; ...")
 
 # Real-time audio
-pychuck.start_audio(chuck)
+numchuck.start_audio(chuck)
 time.sleep(5)
-pychuck.stop_audio()
+numchuck.stop_audio()
 
 # Offline processing
 output = np.zeros(44100, dtype=np.float32)
@@ -535,7 +535,7 @@ session.add_shred(shred_id, filename, content, type='file')
     ↓
 If project enabled: project.save_on_spork(filename, content, shred_id)
     ↓
-Save to ~/.pychuck/projects/<name>/<base>-<shred_id>.ck
+Save to ~/.numchuck/projects/<name>/<base>-<shred_id>.ck
     e.g., melody.ck → melody-1.ck (first spork)
 
 User presses Ctrl+E to replace shred
@@ -547,7 +547,7 @@ session.update_shred(shred_id, content)
 If project enabled: project.save_on_replace(shred_id, content)
     ↓
 Increment replace counter for this shred
-Save to ~/.pychuck/projects/<name>/<base>-<shred_id>-<replace_num>.ck
+Save to ~/.numchuck/projects/<name>/<base>-<shred_id>-<replace_num>.ck
     e.g., melody-1-1.ck (first replace of shred 1)
          melody-1-2.ck (second replace of shred 1)
 
@@ -563,7 +563,7 @@ Result: Complete timeline of all code versions
 
 ### 1. Single Global Audio Context
 
-**Location:** `src/_pychuck.cpp:99`
+**Location:** `src/_numchuck.cpp:99`
 
 ```cpp
 static std::unique_ptr<AudioContext> g_audio_context;
@@ -576,7 +576,7 @@ static std::unique_ptr<AudioContext> g_audio_context;
 - Subsequent `start_audio()` calls replace the previous audio context
 
 **Rationale:**
-This constraint is **acceptable and appropriate** for pychuck because:
+This constraint is **acceptable and appropriate** for numchuck because:
 
 1. **ChucK is inherently multithreaded**: The ChucK VM already handles multiple concurrent audio streams internally via shreds (concurrent execution threads)
 2. **Single audio device**: Most systems use one audio output device at a time
@@ -587,7 +587,7 @@ This constraint is **acceptable and appropriate** for pychuck because:
 
 ```python
 # Good: Multiple concurrent sounds in ONE ChucK instance
-chuck = pychuck.ChucK()
+chuck = numchuck.ChucK()
 chuck.init()
 
 # Spawn multiple shreds (ChucK handles concurrency)
@@ -595,15 +595,15 @@ chuck.compile_code("SinOsc s => dac; 440 => s.freq; ...")  # Shred 1
 chuck.compile_code("SinOsc s => dac; 550 => s.freq; ...")  # Shred 2
 chuck.compile_code("SinOsc s => dac; 660 => s.freq; ...")  # Shred 3
 
-pychuck.start_audio(chuck)  # All shreds play simultaneously
+numchuck.start_audio(chuck)  # All shreds play simultaneously
 ```
 
 **Why Not Multiple Instances:**
 
 ```python
 # Inefficient: Multiple ChucK instances (NOT recommended)
-chuck1 = pychuck.ChucK()
-chuck2 = pychuck.ChucK()  # Unnecessary - use shreds instead!
+chuck1 = numchuck.ChucK()
+chuck2 = numchuck.ChucK()  # Unnecessary - use shreds instead!
 ```
 
 **Technical Implementation:**
@@ -640,7 +640,7 @@ This is a **design choice, not a limitation**. Multiple audio streams should be 
 
 ### 3. Buffer Type Assumptions
 
-**Location:** `src/_pychuck.cpp:52-57`
+**Location:** `src/_numchuck.cpp:52-57`
 
 ```cpp
 if (array.dtype() != nb::dtype<SAMPLE>()) {
@@ -725,7 +725,7 @@ success, ids = chuck.compile_code("invalid syntax!")
 
 **ChucK Instance Ownership:**
 
-- Created in Python: `chuck = pychuck.ChucK()`
+- Created in Python: `chuck = numchuck.ChucK()`
 - Owned by Python (reference counted)
 - C++ binding uses nanobind's automatic lifetime management
 - Destructor called when Python reference count reaches zero
@@ -772,7 +772,7 @@ success, ids = chuck.compile_code("invalid syntax!")
 - Builds ChucK core library (`chuck_lib`)
 - Builds ChucK standalone executable (`chuck`)
 - Builds chugins (plugins)
-- Builds Python extension (`_pychuck`)
+- Builds Python extension (`_numchuck`)
 - Handles platform-specific compilation
 
 **2. scikit-build-core (Python packaging):**
@@ -792,7 +792,7 @@ CMakeLists.txt (root)
 ├── thirdparty/chugins/CMakeLists.txt
 │   └── [individual chugin libraries]
 └── src/CMakeLists.txt
-    └── _pychuck (Python extension)
+    └── _numchuck (Python extension)
 ```
 
 ### Dependencies
@@ -820,9 +820,9 @@ CMakeLists.txt (root)
 ### 1. Private Module Pattern
 
 ```python
-# _pychuck: C++ extension (private)
-# pychuck: Python package (public)
-from ._pychuck import ChucK, version, ...
+# _numchuck: C++ extension (private)
+# numchuck: Python package (public)
+from ._numchuck import ChucK, version, ...
 ```
 
 **Benefits:**
@@ -1052,7 +1052,7 @@ static std::unique_ptr<AudioContext> g_audio_context;
 
 1. **README.md** - Separated highlights into "Library Features" and "User Interface"
 2. **CHANGELOG.md** - Documented all bug fixes and improvements
-3. **docs/pychuck_home.md** - Updated paths from `cli/` to `tui/`, moved projects to current features
+3. **docs/numchuck_home.md** - Updated paths from `cli/` to `tui/`, moved projects to current features
 4. **docs/dev/architecture.md** - Comprehensive architecture documentation (this file)
 
 ## Future Improvements

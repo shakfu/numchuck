@@ -1,6 +1,6 @@
 # ChucK Pygments Lexer
 
-pychuck includes a custom Pygments lexer for ChucK syntax highlighting in the REPL.
+numchuck includes a custom Pygments lexer for ChucK syntax highlighting in the REPL.
 
 ## Features
 
@@ -19,10 +19,10 @@ The ChucK lexer provides syntax highlighting for:
 
 ### In the REPL
 
-The lexer is automatically used in the pychuck REPL when both `prompt_toolkit` and `pygments` are installed:
+The lexer is automatically used in the numchuck REPL when both `prompt_toolkit` and `pygments` are installed:
 
 ```bash
-python -m pychuck tui
+python -m numchuck tui
 ```
 
 If Pygments is not available, the REPL falls back to a C lexer for basic syntax highlighting.
@@ -34,7 +34,7 @@ You can use the ChucK lexer directly with Pygments:
 ```python
 from pygments import highlight
 from pygments.formatters import TerminalFormatter
-from pychuck.cli.chuck_lexer import ChuckLexer
+from numchuck.cli.chuck_lexer import ChuckLexer
 
 code = '''
 SinOsc s => dac;
@@ -55,7 +55,7 @@ print(result)
 ```python
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
-from pychuck.cli.chuck_lexer import ChuckLexer
+from numchuck.cli.chuck_lexer import ChuckLexer
 
 code = 'SinOsc s => dac; 440 => s.freq;'
 lexer = ChuckLexer()
@@ -112,10 +112,10 @@ The lexer is implemented as a `RegexLexer` subclass, following Pygments best pra
 
 To add or improve syntax highlighting:
 
-1. Update patterns in `src/pychuck/cli/chuck_lexer.py`
+1. Update patterns in `src/numchuck/cli/chuck_lexer.py`
 2. Add test cases in `tests/test_chuck_lexer.py`
 3. Test with `pytest tests/test_chuck_lexer.py`
-4. Verify in REPL: `python -m pychuck tui`
+4. Verify in REPL: `python -m numchuck tui`
 
 Common additions:
 

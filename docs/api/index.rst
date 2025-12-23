@@ -1,4 +1,4 @@
-pychuck API Reference
+numchuck API Reference
 =====================
 
 .. toctree::
@@ -16,7 +16,7 @@ pychuck API Reference
 Introduction
 ------------
 
-pychuck provides Python bindings for the ChucK audio programming language,
+numchuck provides Python bindings for the ChucK audio programming language,
 enabling real-time audio synthesis, live coding, and programmatic control
 of ChucK from Python.
 
@@ -25,13 +25,13 @@ Quick Start
 
 .. code-block:: python
 
-   import pychuck
+   import numchuck
 
    # Create and initialize ChucK instance
-   chuck = pychuck.ChucK()
-   chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-   chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-   chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+   chuck = numchuck.ChucK()
+   chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+   chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+   chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
    chuck.init()
    chuck.start()
 
@@ -50,14 +50,14 @@ Installation
 
 .. code-block:: bash
 
-   pip install pychuck
+   pip install numchuck
 
 Or from source:
 
 .. code-block:: bash
 
-   git clone --recursive https://github.com/shakfu/pychuck
-   cd pychuck
+   git clone --recursive https://github.com/shakfu/numchuck
+   cd numchuck
    pip install -e .
 
 Key Features
@@ -92,7 +92,7 @@ Main Classes
    :toctree: _autosummary
    :recursive:
 
-   pychuck.ChucK
+   numchuck.ChucK
 
 Core Functions
 ~~~~~~~~~~~~~~
@@ -100,16 +100,16 @@ Core Functions
 .. autosummary::
    :toctree: _autosummary
 
-   pychuck.version
-   pychuck.start_audio
-   pychuck.stop_audio
-   pychuck.shutdown_audio
-   pychuck.audio_info
+   numchuck.version
+   numchuck.start_audio
+   numchuck.stop_audio
+   numchuck.shutdown_audio
+   numchuck.audio_info
 
 Error Handling
 --------------
 
-pychuck uses exception-based error handling:
+numchuck uses exception-based error handling:
 
 * ``ValueError``: Invalid input parameters
 * ``RuntimeError``: Operational failures

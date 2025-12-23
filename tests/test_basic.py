@@ -1,10 +1,10 @@
-import pychuck._pychuck as pychuck
+import numchuck._numchuck as numchuck
 import numpy as np
 
 
 def test_version():
     """Test that we can get ChucK version"""
-    version = pychuck.version()
+    version = numchuck.version()
     assert version is not None
     assert isinstance(version, str)
     assert "chuck" in version.lower() or len(version) > 0
@@ -12,35 +12,35 @@ def test_version():
 
 def test_chuck_create():
     """Test creating a ChucK instance"""
-    chuck = pychuck.ChucK()
+    chuck = numchuck.ChucK()
     assert chuck is not None
     assert not chuck.is_init()
 
 
 def test_chuck_init():
     """Test initializing ChucK"""
-    chuck = pychuck.ChucK()
+    chuck = numchuck.ChucK()
 
     # Set parameters
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 
     # Initialize
     assert chuck.init()
     assert chuck.is_init()
 
     # Check parameters were set
-    assert chuck.get_param_int(pychuck.PARAM_SAMPLE_RATE) == 44100
-    assert chuck.get_param_int(pychuck.PARAM_OUTPUT_CHANNELS) == 2
+    assert chuck.get_param_int(numchuck.PARAM_SAMPLE_RATE) == 44100
+    assert chuck.get_param_int(numchuck.PARAM_OUTPUT_CHANNELS) == 2
 
 
 def test_chuck_compile_code():
     """Test compiling ChucK code"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     # Simple ChucK code that generates a sine wave
@@ -58,14 +58,14 @@ def test_chuck_compile_code():
 
 def test_chuck_audio_processing():
     """Test running ChucK audio processing"""
-    chuck = pychuck.ChucK()
+    chuck = numchuck.ChucK()
     sample_rate = 44100
     num_channels = 2
     num_frames = 512
 
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, sample_rate)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, num_channels)
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, sample_rate)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, num_channels)
     chuck.init()
 
     # Compile simple sine wave generator
@@ -91,10 +91,10 @@ def test_chuck_audio_processing():
 
 def test_chuck_now():
     """Test getting current ChucK time"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     # Initially should be at or near 0
@@ -112,7 +112,7 @@ def test_chuck_now():
 
 def test_parameters():
     """Test parameter constants are defined"""
-    assert hasattr(pychuck, 'PARAM_SAMPLE_RATE')
-    assert hasattr(pychuck, 'PARAM_INPUT_CHANNELS')
-    assert hasattr(pychuck, 'PARAM_OUTPUT_CHANNELS')
-    assert pychuck.PARAM_SAMPLE_RATE == "SAMPLE_RATE"
+    assert hasattr(numchuck, 'PARAM_SAMPLE_RATE')
+    assert hasattr(numchuck, 'PARAM_INPUT_CHANNELS')
+    assert hasattr(numchuck, 'PARAM_OUTPUT_CHANNELS')
+    assert numchuck.PARAM_SAMPLE_RATE == "SAMPLE_RATE"

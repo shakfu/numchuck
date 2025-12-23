@@ -1,7 +1,7 @@
 ChucK Class
 ===========
 
-.. currentmodule:: pychuck
+.. currentmodule:: numchuck
 
 .. autoclass:: ChucK
    :members:

@@ -9,7 +9,7 @@ This example demonstrates:
 - Real-time audio processing with effects
 """
 
-import pychuck
+import numchuck
 import time
 import os
 
@@ -21,13 +21,13 @@ print(f"Chugins directory: {chugins_dir}")
 print(f"Exists: {os.path.exists(chugins_dir)}")
 
 # Create and configure ChucK
-chuck = pychuck.ChucK()
-chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+chuck = numchuck.ChucK()
+chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 
 # Enable chugins and set search path
-chuck.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
-chuck.set_param_string(pychuck.PARAM_USER_CHUGINS, chugins_dir)
+chuck.set_param(numchuck.PARAM_CHUGIN_ENABLE, 1)
+chuck.set_param_string(numchuck.PARAM_USER_CHUGINS, chugins_dir)
 
 chuck.init()
 
@@ -67,7 +67,7 @@ if success:
 
     # Start real-time audio
     print("\nStarting audio playback...")
-    pychuck.start_audio(chuck)
+    numchuck.start_audio(chuck)
 
     # Play for 8 seconds to hear the full sweep
     print("Playing for 8 seconds...")
@@ -77,8 +77,8 @@ if success:
 
     # Clean up
     print("\nStopping audio...")
-    pychuck.stop_audio()
-    pychuck.shutdown_audio()
+    numchuck.stop_audio()
+    numchuck.shutdown_audio()
     print("Done!")
 else:
     print("✗ Compilation failed!")

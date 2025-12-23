@@ -2,7 +2,7 @@
 
 ## Summary
 
-Static chugin linking was investigated as a way to embed chugins directly into the `_pychuck` extension, eliminating the need for separate `.chug` dynamic library files. **This approach does not work** with the current ChucK architecture.
+Static chugin linking was investigated as a way to embed chugins directly into the `_numchuck` extension, eliminating the need for separate `.chug` dynamic library files. **This approach does not work** with the current ChucK architecture.
 
 ## What Was Attempted
 
@@ -14,7 +14,7 @@ Static chugin linking was investigated as a way to embed chugins directly into t
 
 ### Registration Attempt
 
-Added code to `_pychuck.cpp` to register static chugins after ChucK initialization:
+Added code to `_numchuck.cpp` to register static chugins after ChucK initialization:
 
 ```cpp
 #ifdef CM_STATIC_CHUGINS
@@ -67,7 +67,7 @@ To properly support static chugins would require:
 
 2. **Registration before init**: Static chugins need to be registered before the compiler finalizes its type system, not after
 
-3. **Upstream coordination**: This would ideally be an upstream ChucK feature, not a pychuck-specific hack
+3. **Upstream coordination**: This would ideally be an upstream ChucK feature, not a numchuck-specific hack
 
 ## Naming Convention Gotchas
 
@@ -93,7 +93,7 @@ Use dynamic chugins (`.chug` files) which work correctly:
 The following changes were made and subsequently removed:
 
 - `src/CMakeLists.txt`: Static chugin linking logic
-- `src/_pychuck.cpp`: Static chugin registration code
+- `src/_numchuck.cpp`: Static chugin registration code
 - `scripts/cmake/fn_add_chugin.cmake`: `__CK_DLL_STATIC__` define
 - `pyproject.toml`: `cmake.args = ["-DCM_STATIC_CHUGINS=ON"]`
 

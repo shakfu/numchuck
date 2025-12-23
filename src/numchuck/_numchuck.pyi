@@ -1,4 +1,4 @@
-"""Type stubs for pychuck module."""
+"""Type stubs for numchuck module."""
 
 from typing import Callable, List, Tuple, Dict, Any
 import numpy as np

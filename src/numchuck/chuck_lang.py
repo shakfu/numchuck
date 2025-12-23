@@ -4,7 +4,7 @@ ChucK Language Constants
 This module provides the single source of truth for ChucK language elements:
 keywords, operators, built-in types, UGens, standard library, REPL commands, etc.
 
-All components of pychuck that need to reference ChucK language elements should
+All components of numchuck that need to reference ChucK language elements should
 import from this module to ensure consistency across:
 - Syntax highlighting (chuck_lexer.py)
 - REPL command completion (repl.py)
@@ -412,7 +412,7 @@ MACHINE_METHODS = {
     "crash",
 }
 
-# REPL Commands (pychuck-specific)
+# REPL Commands (numchuck-specific)
 REPL_COMMANDS = {
     # Shred management
     "+",

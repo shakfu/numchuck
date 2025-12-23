@@ -42,7 +42,7 @@ def fix_file(filepath):
 
 def main():
     """Fix all TUI files."""
-    tui_dir = Path(__file__).parent.parent / "src" / "pychuck" / "tui"
+    tui_dir = Path(__file__).parent.parent / "src" / "numchuck" / "tui"
 
     fixed_count = 0
     for py_file in tui_dir.glob("*.py"):

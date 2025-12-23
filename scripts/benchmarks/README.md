@@ -1,10 +1,10 @@
-# pychuck Performance Benchmarks
+# numchuck Performance Benchmarks
 
-This directory contains performance benchmarks for the pychuck library.
+This directory contains performance benchmarks for the numchuck library.
 
 ## Overview
 
-The benchmarks measure performance across core aspects of pychuck:
+The benchmarks measure performance across core aspects of numchuck:
 
 1. **Code Compilation** - Speed of compiling ChucK code
 2. **Audio Rendering** - Throughput of audio buffer processing
@@ -29,7 +29,7 @@ uv run python benchmarks/benchmark_simple.py
 
 ```
 ============================================================
-pychuck Simple Performance Benchmarks
+numchuck Simple Performance Benchmarks
 ============================================================
 
 1. Code Compilation
@@ -183,7 +183,7 @@ For real-time audio at 44100 Hz with 512-frame buffers:
 ```python
 def benchmark_new_feature():
     """Benchmark description."""
-    chuck = pychuck.ChucK()
+    chuck = numchuck.ChucK()
     chuck.init(44100, 2)
 
     # Setup code
@@ -295,4 +295,4 @@ When contributing performance improvements:
 
 ## License
 
-Same as pychuck project.
+Same as numchuck project.

@@ -1,7 +1,7 @@
 Quick Start Guide
 =================
 
-This guide will help you get started with pychuck quickly.
+This guide will help you get started with numchuck quickly.
 
 Installation
 ------------
@@ -10,14 +10,14 @@ From PyPI (when available):
 
 .. code-block:: bash
 
-   pip install pychuck
+   pip install numchuck
 
 From source:
 
 .. code-block:: bash
 
-   git clone --recursive https://github.com/shakfu/pychuck
-   cd pychuck
+   git clone --recursive https://github.com/shakfu/numchuck
+   cd numchuck
    pip install -e .
 
 Basic Usage
@@ -28,15 +28,15 @@ Initialize ChucK
 
 .. code-block:: python
 
-   import pychuck
+   import numchuck
 
    # Create ChucK instance
-   chuck = pychuck.ChucK()
+   chuck = numchuck.ChucK()
 
    # Configure audio parameters
-   chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-   chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 0)
-   chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+   chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+   chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 0)
+   chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 
    # Initialize and start
    chuck.init()
@@ -149,26 +149,26 @@ Interactive REPL
 
 .. code-block:: bash
 
-   pychuck repl
+   numchuck repl
 
    # Or with files
-   pychuck repl file1.ck file2.ck
+   numchuck repl file1.ck file2.ck
 
    # With project versioning
-   pychuck repl --project my-project
+   numchuck repl --project my-project
 
 Multi-Tab Editor
 ~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
-   pychuck edit
+   numchuck edit
 
    # Or open files
-   pychuck edit file1.ck file2.ck
+   numchuck edit file1.ck file2.ck
 
    # With project versioning
-   pychuck edit --project live-session
+   numchuck edit --project live-session
 
 Run Files
 ~~~~~~~~~
@@ -176,21 +176,21 @@ Run Files
 .. code-block:: bash
 
    # Execute ChucK files
-   pychuck run file1.ck file2.ck
+   numchuck run file1.ck file2.ck
 
    # With custom settings
-   pychuck run file.ck --srate 48000 --channels 2
+   numchuck run file.ck --srate 48000 --channels 2
 
    # Run for specific duration
-   pychuck run file.ck --duration 10
+   numchuck run file.ck --duration 10
 
 Version Info
 ~~~~~~~~~~~~
 
 .. code-block:: bash
 
-   pychuck version  # Show pychuck and ChucK versions
-   pychuck info     # Show detailed system info
+   numchuck version  # Show numchuck and ChucK versions
+   numchuck info     # Show detailed system info
 
 Next Steps
 ----------
@@ -198,4 +198,4 @@ Next Steps
 * Read the :doc:`api/chuck` for complete API reference
 * Check :doc:`error_handling` for error handling guide
 * Browse :doc:`examples` for more code samples
-* Try the interactive REPL: ``pychuck repl``
+* Try the interactive REPL: ``numchuck repl``

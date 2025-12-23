@@ -1,14 +1,14 @@
 import pytest
-import pychuck._pychuck as pychuck
+import numchuck._numchuck as numchuck
 import os
 import time
 
 
 def test_compile_from_file():
     """Test compiling ChucK code from a file"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     # Path to a basic example file
@@ -31,13 +31,13 @@ def test_compile_from_file():
 
 def test_file_with_working_directory():
     """Test that working directory parameter works correctly"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 
     # Set working directory to examples folder
     examples_dir = os.path.join(os.path.dirname(__file__), '../examples/basic')
-    chuck.set_param_string(pychuck.PARAM_WORKING_DIRECTORY, examples_dir)
+    chuck.set_param_string(numchuck.PARAM_WORKING_DIRECTORY, examples_dir)
     chuck.init()
 
     # Now we can reference files relative to working directory
@@ -53,14 +53,14 @@ def test_chugin_loading():
 
     chugins_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/chugins'))
 
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_CHUGIN_ENABLE, 1)
 
     # Only set import path if using dynamic chugins
     if not is_static and os.path.exists(chugins_dir):
-        chuck.set_param_string_list(pychuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
+        chuck.set_param_string_list(numchuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
 
     chuck.init()
 
@@ -95,9 +95,9 @@ def test_chugin_loading():
 
 def test_realtime_file_playback():
     """Test real-time playback of a file"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     # Create a simple test file
@@ -115,10 +115,10 @@ while(true) { 1::samp => now; }
     assert success
 
     # Start real-time audio
-    if pychuck.start_audio(chuck):
+    if numchuck.start_audio(chuck):
         time.sleep(0.1)  # Play briefly
-        pychuck.stop_audio()
-        pychuck.shutdown_audio()
+        numchuck.stop_audio()
+        numchuck.shutdown_audio()
 
     # Clean up
     os.remove(test_file)
@@ -126,9 +126,9 @@ while(true) { 1::samp => now; }
 
 def test_multiple_file_compilation():
     """Test compiling multiple files"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     # Create two simple files
@@ -157,9 +157,9 @@ def test_multiple_file_compilation():
 
 def test_file_with_syntax_error():
     """Test that file with syntax error fails gracefully"""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
     # Create a file with syntax error
@@ -193,10 +193,10 @@ def _check_chugin_available(chugin_name: str) -> tuple[bool, bool]:
         (is_available, is_static): Whether chugin is available and if it's statically linked
     """
     # First, try without any import path (static linking)
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_CHUGIN_ENABLE, 1)
     chuck.init()
 
     code = f'@import "{chugin_name}"; {chugin_name} test;'
@@ -209,11 +209,11 @@ def _check_chugin_available(chugin_name: str) -> tuple[bool, bool]:
     if not os.path.exists(chugins_dir):
         return (False, False)
 
-    chuck2 = pychuck.ChucK()
-    chuck2.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck2.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
-    chuck2.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
-    chuck2.set_param_string_list(pychuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
+    chuck2 = numchuck.ChucK()
+    chuck2.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck2.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck2.set_param(numchuck.PARAM_CHUGIN_ENABLE, 1)
+    chuck2.set_param_string_list(numchuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
     chuck2.init()
 
     success, _ = chuck2.compile_code(code)
@@ -233,13 +233,13 @@ def test_chugin_bitcrusher_strict():
 
     chugins_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/chugins'))
 
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_CHUGIN_ENABLE, 1)
     if not is_static:
-        chuck.set_param_string_list(pychuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
+        chuck.set_param_string_list(numchuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
     chuck.init()
 
     # Code using Bitcrusher chugin
@@ -280,13 +280,13 @@ def test_chugin_gverb_strict():
 
     chugins_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/chugins'))
 
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_CHUGIN_ENABLE, 1)
     if not is_static:
-        chuck.set_param_string_list(pychuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
+        chuck.set_param_string_list(numchuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
     chuck.init()
 
     # Code using GVerb chugin
@@ -331,17 +331,17 @@ def test_chugin_convrev_example():
     if not os.path.exists(ir_file):
         pytest.skip("IR file not found")
 
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_CHUGIN_ENABLE, 1)
     if not is_static:
-        chuck.set_param_string_list(pychuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
+        chuck.set_param_string_list(numchuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
 
     # Set working directory so me.dir() works correctly
     examples_convrev_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/convrev'))
-    chuck.set_param_string(pychuck.PARAM_WORKING_DIRECTORY, examples_convrev_dir)
+    chuck.set_param_string(numchuck.PARAM_WORKING_DIRECTORY, examples_convrev_dir)
 
     chuck.init()
 

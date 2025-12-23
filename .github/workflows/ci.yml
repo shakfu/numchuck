@@ -63,7 +63,7 @@ jobs:
 
       - name: Build and install package
         run: |
-          uv sync --reinstall-package pychuck
+          uv sync --reinstall-package numchuck
 
       - name: Run tests
         run: |
@@ -102,12 +102,12 @@ jobs:
 
       - name: Run ruff check
         run: |
-          ruff check src/pychuck --select E,F,W,I --ignore E501
+          ruff check src/numchuck --select E,F,W,I --ignore E501
         continue-on-error: true
 
       - name: Run ruff format check
         run: |
-          ruff format --check src/pychuck
+          ruff format --check src/numchuck
         continue-on-error: true
 
   coverage:
@@ -140,12 +140,12 @@ jobs:
 
       - name: Install package with coverage
         run: |
-          uv sync --reinstall-package pychuck
+          uv sync --reinstall-package numchuck
           uv pip install --system pytest-cov
 
       - name: Run tests with coverage
         run: |
-          uv run pytest --cov=pychuck --cov-report=xml --cov-report=term
+          uv run pytest --cov=numchuck --cov-report=xml --cov-report=term
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

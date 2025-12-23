@@ -3,13 +3,13 @@ Tests for ChucK global event management.
 """
 
 import pytest
-import pychuck._pychuck as pychuck
+import numchuck._numchuck as numchuck
 import numpy as np
 
 
 def run_audio_cycles(chuck, cycles=5):
     """Helper to run audio processing cycles to allow VM to process messages."""
-    num_channels = chuck.get_param_int(pychuck.PARAM_OUTPUT_CHANNELS)
+    num_channels = chuck.get_param_int(numchuck.PARAM_OUTPUT_CHANNELS)
     frames = 512
     input_buf = np.zeros(frames * num_channels, dtype=np.float32)
     output_buf = np.zeros(frames * num_channels, dtype=np.float32)
@@ -19,10 +19,10 @@ def run_audio_cycles(chuck, cycles=5):
 
 def test_signal_global_event():
     """Test signaling a global event."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
     chuck.start()
 
@@ -41,10 +41,10 @@ def test_signal_global_event():
 
 def test_broadcast_global_event():
     """Test broadcasting a global event."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
     chuck.start()
 
@@ -61,10 +61,10 @@ def test_broadcast_global_event():
 
 def test_event_nonexistent():
     """Test that signaling non-existent event doesn't crash."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
     chuck.start()
 
@@ -82,10 +82,10 @@ def test_event_nonexistent():
 
 def test_listen_for_event():
     """Test listening for global events with callback."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
     chuck.start()
 
@@ -116,10 +116,10 @@ def test_listen_for_event():
 
 def test_stop_listening_for_event():
     """Test stopping event listener to prevent memory leaks."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
     chuck.start()
 
@@ -158,10 +158,10 @@ def test_stop_listening_for_event():
 
 def test_multiple_event_listeners():
     """Test that listener cleanup API exists and works."""
-    chuck = pychuck.ChucK()
-    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
-    chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
-    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck = numchuck.ChucK()
+    chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(numchuck.PARAM_INPUT_CHANNELS, 2)
+    chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
     chuck.start()
 
