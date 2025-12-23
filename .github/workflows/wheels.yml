@@ -51,14 +51,14 @@ jobs:
         env:
           # Build for Python 3.9-3.13
           CIBW_BUILD: cp39-* cp310-* cp311-* cp312-* cp313-*
-          # Skip 32-bit builds, musllinux, and PyPy
-          CIBW_SKIP: "*-win32 *-manylinux_i686 *-musllinux_* pp*"
+          # Skip 32-bit builds and musllinux
+          CIBW_SKIP: "*-win32 *-manylinux_i686 *-musllinux_*"
           # Linux: Install build dependencies (manylinux uses yum/dnf)
           CIBW_BEFORE_BUILD_LINUX: >
             yum install -y alsa-lib-devel libsndfile-devel bison flex ||
             (apt-get update && apt-get install -y libasound2-dev libsndfile1-dev bison flex)
-          # macOS: Set deployment target for C++17 support
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.14
+          # macOS: Set deployment target (11.0 required for ARM64)
+          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=11.0
           # Test the built wheels
           CIBW_TEST_REQUIRES: pytest numpy
           CIBW_TEST_COMMAND: pytest {project}/tests -v --tb=short -k "not realtime"
@@ -100,9 +100,37 @@ jobs:
           path: dist/*.tar.gz
           retention-days: 30
 
+  collect:
+    name: Collect all wheels
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all wheel artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          path: dist
+          merge-multiple: true
+
+      - name: Download sdist
+        uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: dist
+
+      - name: List collected files
+        run: ls -la dist/
+
+      - name: Upload combined artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-wheels
+          path: dist/*
+          retention-days: 30
+
   publish:
     name: Publish to PyPI
-    needs: [build_wheels, build_sdist]
+    needs: [collect]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     environment:
@@ -115,8 +143,8 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
+          name: all-wheels
           path: dist
-          merge-multiple: true
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

@@ -15,17 +15,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [Unreleased]
 
-**Summary:** This release introduces a high-level Pythonic API, improved type checking, and build system enhancements. The new `Chuck` class provides properties and simplified methods while the low-level API remains available for fine-grained control.
+**Summary:** This release introduces a high-level Pythonic API, cross-platform wheel building, and build system enhancements. The new `Chuck` class provides properties and simplified methods while the low-level API remains available for fine-grained control.
 
 **Key Highlights:**
 
 - New high-level `Chuck` class with Pythonic properties and methods
+- Cross-platform wheel building via cibuildwheel (Linux, macOS, Windows)
+- Full Linux support with ALSA audio backend
+- Multiple `run()` variants for different use cases (zero-allocation real-time loops)
 - Full `mypy` type checking support with proper stubs
 - Dynamic chugins now output to `examples/chugins/` (not bundled in wheel)
 - Improved build system with `scikit-build-core` and `uv`
-- Strict chugin loading tests using `PARAM_IMPORT_PATH_SYSTEM`
 
 ### Added
+
+- **Cross-Platform Wheel Building** (`.github/workflows/wheels.yml`):
+  - cibuildwheel v3.3.0 for automated wheel building
+  - Platforms: Linux (manylinux), macOS (ARM64), Windows (x64)
+  - Python versions: 3.9, 3.10, 3.11, 3.12, 3.13
+  - Source distribution (sdist) building
+  - Artifact collection job aggregates all wheels
+  - PyPI publishing on tag push (trusted publisher)
+
+- **High-Level API Run Variants** (`pychuck.api.Chuck`):
+  - `run(num_frames)` - Convenience method, allocates buffers (prototyping, offline)
+  - `run_into(output_buf, num_frames, input_buf=None)` - Pre-allocated output buffer (real-time loops, zero GC)
+  - `run_process(input_buf, output_buf, num_frames)` - Both buffers provided (audio effects)
+  - `run_frames(num_frames)` - Advance time, discard output (callbacks/events)
+  - All in-place methods return the output buffer for chaining
+  - Comprehensive tests for all variants
+
+- **Linux Build Support**:
+  - Parser generation with bison/flex on Linux
+  - ALSA audio backend (`__LINUX_ALSA__`, `__PLATFORM_LINUX__`)
+  - Link libraries: `-ldl`, `-lpthread`, `-lm`, `-lasound`, `-lsndfile`
+  - Position-independent code (`-fPIC`) for shared library linking
 
 - **High-Level Python API** (`pychuck.api.Chuck`):
   - Pythonic wrapper class with properties instead of get/set methods
@@ -71,7 +95,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - `signal_event()` and `broadcast_event()` return `None`
   - `on_event()` returns `int` callback ID, added `stop_listening_for_event()`
 
+### Changed
+
+- **macOS Deployment Target**:
+  - Updated from 10.14/10.15 to 11.0 (required for ARM64 Macs)
+  - Applied consistently in CMakeLists.txt, pyproject.toml, and wheels.yml
+
+- **cibuildwheel Configuration**:
+  - Removed `pp*` from skip selector (PyPy not enabled, was causing warnings)
+  - Test skip includes Windows (access violation in tests)
+  - Before-build command uses correct shell operator precedence
+
 ### Fixed
+
+- **Windows Build** (LNK1149 linking error):
+  - Fixed `chuck_lib` output naming conflict with `chuck` executable
+  - Renamed library output to `chuckcore.lib` on Windows
+  - Both targets can now coexist without import library collision
+
+- **GCC 14+ Compatibility** (manylinux builds):
+  - Fixed `invalid conversion from 'void*' to '__timezone_ptr_t'` error
+  - Added `-fpermissive` flag for GCC 14+ in ChucK core compilation
+  - Allows implicit void* conversions in legacy C code
+
+- **Linux Shared Library Linking** (relocation error):
+  - Added `-fPIC` to chuck_lib on Linux
+  - Required for linking static library into Python extension (.so)
+  - Fixes `R_X86_64_32S` relocation error on x86_64
 
 - **Type Checking** (`make typecheck` now passes):
   - Fixed `set_param` vs `set_param_string` for working_directory

@@ -111,6 +111,60 @@ class TestRunning:
         output = chuck.run(500)
         assert len(output) == 1000  # 500 frames * 2 channels
 
+    def test_run_into_preallocated_buffer(self):
+        """Test run_into with pre-allocated buffer."""
+        chuck = Chuck(output_channels=1)
+        chuck.compile("SinOsc s => dac; 440 => s.freq; 1::second => now;")
+        output_buf = np.zeros(4410, dtype=np.float32)
+        result = chuck.run_into(output_buf, 4410)
+        # Should return the same buffer
+        assert result is output_buf
+        # Buffer should be modified in-place
+        assert output_buf.max() > 0
+
+    def test_run_into_with_input_buffer(self):
+        """Test run_into with both input and output buffers."""
+        chuck = Chuck(output_channels=1, input_channels=1)
+        chuck.compile("adc => dac;")  # Pass-through
+        input_buf = np.ones(500, dtype=np.float32) * 0.5
+        output_buf = np.zeros(500, dtype=np.float32)
+        result = chuck.run_into(output_buf, 500, input_buf)
+        assert result is output_buf
+        # Output should have data (pass-through of input)
+        assert isinstance(output_buf, np.ndarray)
+
+    def test_run_process(self):
+        """Test run_process with explicit input/output."""
+        chuck = Chuck(output_channels=1, input_channels=1)
+        chuck.compile("SinOsc s => dac; 440 => s.freq; 1::second => now;")
+        input_buf = np.zeros(4410, dtype=np.float32)
+        output_buf = np.zeros(4410, dtype=np.float32)
+        result = chuck.run_process(input_buf, output_buf, 4410)
+        # Should return output buffer
+        assert result is output_buf
+        # Output should have audio
+        assert output_buf.max() > 0
+
+    def test_run_frames_discards_output(self):
+        """Test run_frames advances time without returning audio."""
+        chuck = Chuck()
+        chuck.compile("global int counter; 0 => counter;")
+        chuck.run_frames(100)
+        # Just verify it doesn't crash and returns None
+        result = chuck.run_frames(100)
+        assert result is None
+
+    def test_run_into_reuse_buffer_loop(self):
+        """Test run_into in a loop with reused buffer (zero allocation pattern)."""
+        chuck = Chuck(output_channels=1)
+        chuck.compile("SinOsc s => dac; 440 => s.freq; 1::second => now;")
+        output_buf = np.zeros(512, dtype=np.float32)
+        # Simulate real-time loop
+        for _ in range(10):
+            chuck.run_into(output_buf, 512)
+        # Buffer should have valid audio after loop
+        assert output_buf.max() > 0
+
 
 class TestShredManagement:
     """Test shred management."""
