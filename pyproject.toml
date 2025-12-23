@@ -56,9 +56,6 @@ build-dir = "build/{wheel_tag}"
 # Build stable ABI wheels for CPython 3.12+
 wheel.py-api = "cp312"
 
-# set cmake arguments
-# cmake.args = ["-DCM_STATIC_CHUGINS=ON"]
-
 [tool.cibuildwheel]
 # Necessary to see build output from the actual compilation
 build-verbosity = 1

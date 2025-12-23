@@ -25,7 +25,6 @@ endif()
 option(CM_MACOS_HOMEBREW "On MacOS, build using Homebrew dependencies")
 option(CM_MACOS_UNIVERSAL "On MacOS, build universal architecture externals")
 option(CM_HOST_EMBED_EXAMPLE "Build embedded host example")
-option(CM_STATIC_CHUGINS "Build and link to static chugins")
 
 # use ccache if available
 find_program(CCACHE_PROGRAM ccache)

@@ -70,21 +70,12 @@ function(add_chugin)
         )
     endif()
 
-    if (CM_STATIC_CHUGINS)
-        add_library( 
-            ${CHUGIN_NAME} 
-            STATIC
-            ${CHUGIN_SOURCES}
-            ${CHUGIN_OTHER_SOURCES}
-        )
-    else()
-        add_library( 
-            ${CHUGIN_NAME} 
-            MODULE
-            ${CHUGIN_SOURCES}
-            ${CHUGIN_OTHER_SOURCES}
-        )
-    endif()
+    add_library(
+        ${CHUGIN_NAME}
+        MODULE
+        ${CHUGIN_SOURCES}
+        ${CHUGIN_OTHER_SOURCES}
+    )
 
     if (CMAKE_HOST_APPLE AND CM_SKIP_WARNINGS)
         set_source_files_properties(
@@ -95,23 +86,16 @@ function(add_chugin)
         )
     endif()
 
-    if (CM_STATIC_CHUGINS)
-        set_target_properties(${CHUGIN_NAME}
-            PROPERTIES
-            POSITION_INDEPENDENT_CODE ON
-        )
-    else()
-        # Output dynamic chugins to examples/chugins directory
-        set_target_properties(${CHUGIN_NAME}
-            PROPERTIES
-            PREFIX ""
-            SUFFIX ".chug"
-            POSITION_INDEPENDENT_CODE ON
-            LIBRARY_OUTPUT_DIRECTORY "${CHUGINS_DIR}"
-            LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CHUGINS_DIR}"
-            LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CHUGINS_DIR}"
-        )
-    endif()
+    # Output dynamic chugins to examples/chugins directory
+    set_target_properties(${CHUGIN_NAME}
+        PROPERTIES
+        PREFIX ""
+        SUFFIX ".chug"
+        POSITION_INDEPENDENT_CODE ON
+        LIBRARY_OUTPUT_DIRECTORY "${CHUGINS_DIR}"
+        LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CHUGINS_DIR}"
+        LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CHUGINS_DIR}"
+    )
 
     target_include_directories(
         ${CHUGIN_NAME}
@@ -128,7 +112,6 @@ function(add_chugin)
         HAVE_CONFIG_H
         $<$<CONFIG:Release>:NDEBUG>
         $<$<PLATFORM_ID:Darwin>:__MACOSX_CORE__>
-        $<$<BOOL:${CM_STATIC_CHUGINS}>:__CK_DLL_STATIC__>
     )
 
     target_compile_options(
@@ -139,7 +122,7 @@ function(add_chugin)
     )
 
     target_link_directories(
-        ${CHUGIN_NAME} 
+        ${CHUGIN_NAME}
         PRIVATE
         ${CHUGIN_LINK_DIRS}
     )
@@ -152,13 +135,13 @@ function(add_chugin)
     )
 
     target_link_libraries(
-        ${CHUGIN_NAME} 
+        ${CHUGIN_NAME}
         PRIVATE
         ${CHUGIN_LINK_LIBS}
     )
 
-    # Codesign on macOS if requested (chugins are output to CHUGINS_DIR, not installed to wheel)
-    if(NOT CM_STATIC_CHUGINS AND CMAKE_HOST_APPLE AND CHUGIN_CODESIGN)
+    # Codesign on macOS if requested
+    if(CMAKE_HOST_APPLE AND CHUGIN_CODESIGN)
         add_custom_command(TARGET ${CHUGIN_NAME} POST_BUILD
             COMMAND codesign -vf -s - "${CHUGINS_DIR}/${CHUGIN_NAME}.chug"
             COMMENT "Codesigning ${CHUGIN_NAME}.chug"

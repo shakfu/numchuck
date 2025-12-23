@@ -1030,25 +1030,6 @@ make test
 make clean
 ```
 
-### Build Options
-
-#### Static Chugin Linking
-
-By default, chugins are built as dynamic libraries (`.chug` files) and output to `examples/chugins/`. To embed chugins statically into the extension:
-
-1. Edit `pyproject.toml` and uncomment the cmake.args line:
-   ```toml
-   [tool.scikit-build]
-   cmake.args = ["-DCM_STATIC_CHUGINS=ON"]
-   ```
-
-2. Rebuild the package:
-   ```bash
-   pip install -e .
-   ```
-
-This links 30+ chugins directly into `_pychuck`, eliminating the need for external `.chug` files. Note: PitchTrack and Spectacle chugins are excluded due to symbol conflicts with Sigmund and Multicomb respectively.
-
 ## License
 
 ChucK is licensed under the GNU General Public License v2.0.

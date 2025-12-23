@@ -15,16 +15,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [Unreleased]
 
-**Summary:** This release introduces a high-level Pythonic API, static chugin linking, improved type checking, and build system enhancements. The new `Chuck` class provides properties and simplified methods while the low-level API remains available for fine-grained control.
+**Summary:** This release introduces a high-level Pythonic API, improved type checking, and build system enhancements. The new `Chuck` class provides properties and simplified methods while the low-level API remains available for fine-grained control.
 
 **Key Highlights:**
 - New high-level `Chuck` class with Pythonic properties and methods
-- Optional static chugin linking (embeds chugins in extension)
 - Full `mypy` type checking support with proper stubs
 - Dynamic chugins now output to `examples/chugins/` (not bundled in wheel)
 - Improved build system with `scikit-build-core` and `uv`
 - Strict chugin loading tests using `PARAM_IMPORT_PATH_SYSTEM`
-- 136 tests, all passing
 
 ### Added
 
@@ -36,13 +34,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Constructor with all parameters as kwargs with sensible defaults
   - Access low-level API via `chuck.raw` property
   - Exported directly from `pychuck` package: `from pychuck import Chuck`
-
-- **Static Chugin Linking** (optional build flag):
-  - `cmake.args = ["-DCM_STATIC_CHUGINS=ON"]` in pyproject.toml
-  - Embeds 33 chugins directly into `_pychuck` extension
-  - Uses `-force_load` (macOS) / `--whole-archive` (Linux)
-  - Excludes conflicting chugins (PitchTrack/Sigmund, Multicomb/Spectacle have symbol conflicts)
-  - Results in single self-contained extension (~3.8MB vs ~3.4MB)
 
 - **Type Stub Improvements** (`_pychuck.pyi`):
   - Added 8 missing PARAM_* constants (TTY_COLOR, TTY_WIDTH_HINT, COMPILER_HIGHLIGHT_ON_ERROR, etc.)

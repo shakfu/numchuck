@@ -47,17 +47,19 @@ def test_file_with_working_directory():
 
 
 def test_chugin_loading():
-    """Test loading and using chugins"""
+    """Test loading and using chugins (lenient - works with static or dynamic)"""
+    # Check if Bitcrusher is available (static or dynamic)
+    is_available, is_static = _check_chugin_available("Bitcrusher")
+
+    chugins_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/chugins'))
+
     chuck = pychuck.ChucK()
     chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
     chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
-
-    # Enable chugins
     chuck.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
 
-    # Set chugin search path to examples/chugins
-    chugins_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/chugins'))
-    if os.path.exists(chugins_dir):
+    # Only set import path if using dynamic chugins
+    if not is_static and os.path.exists(chugins_dir):
         chuck.set_param_string_list(pychuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
 
     chuck.init()
@@ -174,8 +176,8 @@ def test_file_with_syntax_error():
     os.remove(error_file)
 
 
-# Helper to check if chugins are available
-def _chugins_available():
+# Helper to check if dynamic chugins are available
+def _dynamic_chugins_available():
     """Check if chugins directory exists and has .chug files"""
     chugins_dir = os.path.join(os.path.dirname(__file__), '../examples/chugins')
     if not os.path.exists(chugins_dir):
@@ -184,24 +186,60 @@ def _chugins_available():
     return len(chug_files) > 0
 
 
-@pytest.mark.skipif(not _chugins_available(), reason="Chugins not built")
+def _check_chugin_available(chugin_name: str) -> tuple[bool, bool]:
+    """Check if a chugin is available (static or dynamic).
+
+    Returns:
+        (is_available, is_static): Whether chugin is available and if it's statically linked
+    """
+    # First, try without any import path (static linking)
+    chuck = pychuck.ChucK()
+    chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
+    chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
+    chuck.init()
+
+    code = f'@import "{chugin_name}"; {chugin_name} test;'
+    success, _ = chuck.compile_code(code)
+    if success:
+        return (True, True)  # Available via static linking
+
+    # Try with dynamic chugins path
+    chugins_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/chugins'))
+    if not os.path.exists(chugins_dir):
+        return (False, False)
+
+    chuck2 = pychuck.ChucK()
+    chuck2.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
+    chuck2.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
+    chuck2.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
+    chuck2.set_param_string_list(pychuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
+    chuck2.init()
+
+    success, _ = chuck2.compile_code(code)
+    if success:
+        return (True, False)  # Available via dynamic loading
+
+    return (False, False)
+
+
 def test_chugin_bitcrusher_strict():
     """Strict test: Bitcrusher chugin must load and produce audio output"""
     import numpy as np
 
-    chugins_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/chugins'))
-    bitcrusher_path = os.path.join(chugins_dir, 'Bitcrusher.chug')
+    is_available, is_static = _check_chugin_available("Bitcrusher")
+    if not is_available:
+        pytest.skip("Bitcrusher chugin not available (neither static nor dynamic)")
 
-    # Skip if Bitcrusher specifically isn't available
-    if not os.path.exists(bitcrusher_path):
-        pytest.skip("Bitcrusher.chug not found")
+    chugins_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/chugins'))
 
     chuck = pychuck.ChucK()
     chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
     chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
     chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
-    chuck.set_param_string_list(pychuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
+    if not is_static:
+        chuck.set_param_string_list(pychuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
     chuck.init()
 
     # Code using Bitcrusher chugin
@@ -232,23 +270,23 @@ def test_chugin_bitcrusher_strict():
     chuck.remove_all_shreds()
 
 
-@pytest.mark.skipif(not _chugins_available(), reason="Chugins not built")
 def test_chugin_gverb_strict():
     """Strict test: GVerb chugin must load and process audio"""
     import numpy as np
 
-    chugins_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/chugins'))
-    gverb_path = os.path.join(chugins_dir, 'GVerb.chug')
+    is_available, is_static = _check_chugin_available("GVerb")
+    if not is_available:
+        pytest.skip("GVerb chugin not available (neither static nor dynamic)")
 
-    if not os.path.exists(gverb_path):
-        pytest.skip("GVerb.chug not found")
+    chugins_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/chugins'))
 
     chuck = pychuck.ChucK()
     chuck.set_param(pychuck.PARAM_SAMPLE_RATE, 44100)
     chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
     chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
-    chuck.set_param_string_list(pychuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
+    if not is_static:
+        chuck.set_param_string_list(pychuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
     chuck.init()
 
     # Code using GVerb chugin
@@ -276,18 +314,18 @@ def test_chugin_gverb_strict():
     chuck.remove_all_shreds()
 
 
-@pytest.mark.skipif(not _chugins_available(), reason="Chugins not built")
 def test_chugin_convrev_example():
     """Test loading the ConvRev.ck example file that uses ConvRev chugin"""
     import numpy as np
 
+    is_available, is_static = _check_chugin_available("ConvRev")
+    if not is_available:
+        pytest.skip("ConvRev chugin not available (neither static nor dynamic)")
+
     chugins_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/chugins'))
-    convrev_path = os.path.join(chugins_dir, 'ConvRev.chug')
     example_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/convrev/ConvRev.ck'))
     ir_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/convrev/IRs/hagia-sophia.wav'))
 
-    if not os.path.exists(convrev_path):
-        pytest.skip("ConvRev.chug not found")
     if not os.path.exists(example_file):
         pytest.skip("ConvRev.ck example not found")
     if not os.path.exists(ir_file):
@@ -298,7 +336,8 @@ def test_chugin_convrev_example():
     chuck.set_param(pychuck.PARAM_INPUT_CHANNELS, 2)
     chuck.set_param(pychuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.set_param(pychuck.PARAM_CHUGIN_ENABLE, 1)
-    chuck.set_param_string_list(pychuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
+    if not is_static:
+        chuck.set_param_string_list(pychuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
 
     # Set working directory so me.dir() works correctly
     examples_convrev_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/convrev'))
