@@ -39,15 +39,9 @@ jobs:
           print(f'numchuck version: {numchuck.__version__}')
           "
 
-      - name: Run tests (Unix)
-        if: runner.os != 'Windows'
+      - name: Run tests
         run: |
           # Run from tests/ dir to avoid importing local src/
+          # Skip: realtime (no audio device), wavfile (WvOut timing), chugin (not bundled)
           cd tests
-          pytest . -v --tb=short -k "not realtime"
-
-      - name: Run tests (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          cd tests
-          pytest . -v --tb=short -k "not realtime"
+          pytest . -v --tb=short -k "not realtime and not wavfile and not chugin"

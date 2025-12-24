@@ -2,10 +2,17 @@
 
 import os
 import tempfile
+from pathlib import Path
 
 import pytest
 
 from numchuck import Chuck
+
+
+def normalize_path(path: str) -> str:
+    """Normalize path for ChucK (use forward slashes on all platforms)."""
+    # ChucK expects forward slashes and can't handle Windows backslashes
+    return str(Path(path).resolve()).replace('\\', '/')
 
 
 class TestWvOut:
@@ -14,7 +21,8 @@ class TestWvOut:
     def test_render_sine_to_wav(self):
         """Test rendering a sine wave to a WAV file."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            output_path = os.path.join(tmpdir, "sine_output.wav")
+            # Normalize path for Windows compatibility (ChucK needs forward slashes)
+            output_path = normalize_path(os.path.join(tmpdir, "sine_output.wav"))
 
             chuck = Chuck(sample_rate=44100, output_channels=2)
 
@@ -51,7 +59,8 @@ class TestWvOut:
     def test_render_stereo_to_wav(self):
         """Test rendering stereo audio to a WAV file using WvOut2."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            output_path = os.path.join(tmpdir, "stereo_output.wav")
+            # Normalize path for Windows compatibility
+            output_path = normalize_path(os.path.join(tmpdir, "stereo_output.wav"))
 
             chuck = Chuck(sample_rate=44100, output_channels=2)
 
@@ -89,8 +98,10 @@ class TestWvOut:
         """Test using me.dir() style path construction."""
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = os.path.join(tmpdir, "medir_output.wav")
+            # Normalize working directory for Windows compatibility
+            working_dir = normalize_path(tmpdir)
 
-            chuck = Chuck(sample_rate=44100, output_channels=2, working_directory=tmpdir)
+            chuck = Chuck(sample_rate=44100, output_channels=2, working_directory=working_dir)
 
             code = '''
             SinOsc s => WvOut w => blackhole;
