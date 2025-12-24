@@ -40,5 +40,6 @@ Remaining tasks from recent code review.
 
 ### Build / CI
 
-- [ ] **Investigate skipped platform tests** (`pyproject.toml`)
-  - `test-skip = "*-macosx_arm64 *-manylinux_aarch64 *-win_amd64"`
+- [x] **Investigate skipped platform tests** (`wheels.yml`)
+  - Restored testing on macosx_arm64 and win_amd64
+  - Only manylinux_aarch64 skipped (cross-compiled, no native runner)
