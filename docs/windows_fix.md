@@ -306,20 +306,57 @@ void cleanup_all_instances() {
 
 ### Solution 6: Upstream ChucK Fix
 
-Modify ChucK's destructor in the core library to include proper Windows cleanup:
+Modify ChucK's shutdown() method in the core library to include proper Windows cleanup:
 
 ```cpp
-// In ChucK's destructor (chuck.cpp)
-ChucK::~ChucK() {
-#ifdef _WIN32
-    if (m_vm) {
-        m_vm->shutdown();
-        ck_usleep(50 * 1000);
-    }
+//-----------------------------------------------------------------------------
+// name: shutdown()
+// desc: shutdown ChucK instance
+//-----------------------------------------------------------------------------
+t_CKBOOL ChucK::shutdown()
+{
+// ...
+
+    // stop VM
+    if( m_carrier != NULL && m_carrier->vm != NULL  )
+    {
+        m_carrier->vm->stop();
+
+        // wait for it to stop...
+        while( m_carrier->vm->running() )
+        {
+            ck_usleep(1000);
+        }
+
+// ======================================================================
+#ifdef __PLATFORM_WINDOWS__
+        // Windows audio threads (WASAPI/DirectSound) need additional time
+        // to fully terminate after VM reports stopped
+        ck_usleep( 50000 ); // 50ms delay
 #endif
-    // ... existing cleanup
+// ======================================================================
+    }
+
+    // free vm, compiler, friends
+    // first, otf
+    // REFACTOR-2017 TODO: le_cb?
+
+    // STK-specific
+    stk_detach( m_carrier );
+
+// ...
 }
 ```
+
+Also made `shutdown()` public in chuck.h
+
+```cpp
+public:
+    // shutdown ChucK instance (can be called explicitly before destruction)
+    t_CKBOOL shutdown();
+```
+
+
 
 **Pros:**
 - Fixes the problem at the source
