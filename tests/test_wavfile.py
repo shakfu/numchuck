@@ -19,17 +19,16 @@ class TestWvOut:
             chuck = Chuck(sample_rate=44100, output_channels=2)
 
             # ChucK code that records to WAV using WvOut
+            # WvOut records automatically when samples flow through
             code = f'''
             SinOsc s => dac;
             440 => s.freq;
             0.5 => s.gain;
 
-            s => WvOut w => blackhole;
+            dac => WvOut w => blackhole;
             "{output_path}" => w.wavFilename;
 
-            1 => w.record;
             1::second => now;
-            0 => w.record;
             w.closeFile();
             '''
 
@@ -64,9 +63,7 @@ class TestWvOut:
             dac => WvOut w => blackhole;
             "{output_path}" => w.wavFilename;
 
-            1 => w.record;
             1::second => now;
-            0 => w.record;
             w.closeFile();
             '''
 
@@ -102,9 +99,7 @@ class TestWvOut:
             dac => WvOut w => blackhole;
             "{output_path}" => w.wavFilename;
 
-            1 => w.record;
             3::second => now;
-            0 => w.record;
             w.closeFile();
             '''
 
@@ -130,12 +125,10 @@ class TestWvOut:
             SinOsc s => dac;
             440 => s.freq;
 
-            s => WvOut w => blackhole;
+            dac => WvOut w => blackhole;
             me.dir() + "/medir_output.wav" => w.wavFilename;
 
-            1 => w.record;
             0.5::second => now;
-            0 => w.record;
             w.closeFile();
             '''
 
