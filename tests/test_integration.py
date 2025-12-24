@@ -13,6 +13,12 @@ from pathlib import Path
 import tempfile
 
 
+def normalize_path(path: str) -> str:
+    """Normalize path for ChucK (use forward slashes on all platforms)."""
+    # ChucK expects forward slashes and can't handle Windows backslashes
+    return str(Path(path).resolve()).replace('\\', '/')
+
+
 def init_chuck(sample_rate=44100, input_channels=0, output_channels=2):
     """Helper to initialize ChucK with standard settings."""
     chuck = numchuck.ChucK()
@@ -333,8 +339,8 @@ class TestFileWorkflows:
             temp_file = f.name
 
         try:
-            # Compile file
-            success, shred_ids = chuck.compile_file(temp_file)
+            # Compile file (normalize path for Windows compatibility)
+            success, shred_ids = chuck.compile_file(normalize_path(temp_file))
             assert success
             assert len(shred_ids) > 0
 
@@ -373,9 +379,9 @@ class TestFileWorkflows:
             file2 = f2.name
 
         try:
-            # Compile both files
-            success1, ids1 = chuck.compile_file(file1)
-            success2, ids2 = chuck.compile_file(file2)
+            # Compile both files (normalize paths for Windows compatibility)
+            success1, ids1 = chuck.compile_file(normalize_path(file1))
+            success2, ids2 = chuck.compile_file(normalize_path(file2))
 
             assert success1 and success2
             assert len(ids1) > 0 and len(ids2) > 0

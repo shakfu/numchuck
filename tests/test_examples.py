@@ -1,7 +1,15 @@
 import pytest
 import numchuck._numchuck as numchuck
 import os
+import tempfile
 import time
+from pathlib import Path
+
+
+def normalize_path(path: str) -> str:
+    """Normalize path for ChucK (use forward slashes on all platforms)."""
+    # ChucK expects forward slashes and can't handle Windows backslashes
+    return str(Path(path).resolve()).replace('\\', '/')
 
 
 def test_compile_from_file():
@@ -11,11 +19,11 @@ def test_compile_from_file():
     chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
-    # Path to a basic example file
-    example_file = os.path.join(
+    # Path to a basic example file (normalize for Windows compatibility)
+    example_file = normalize_path(os.path.join(
         os.path.dirname(__file__),
         '../examples/basic/blit2.ck'
-    )
+    ))
 
     # Check if file exists
     assert os.path.exists(example_file), f"Example file not found: {example_file}"
@@ -35,13 +43,13 @@ def test_file_with_working_directory():
     chuck.set_param(numchuck.PARAM_SAMPLE_RATE, 44100)
     chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
 
-    # Set working directory to examples folder
-    examples_dir = os.path.join(os.path.dirname(__file__), '../examples/basic')
+    # Set working directory to examples folder (normalize for Windows compatibility)
+    examples_dir = normalize_path(os.path.join(os.path.dirname(__file__), '../examples/basic'))
     chuck.set_param_string(numchuck.PARAM_WORKING_DIRECTORY, examples_dir)
     chuck.init()
 
     # Now we can reference files relative to working directory
-    full_path = os.path.join(examples_dir, 'blit2.ck')
+    full_path = normalize_path(os.path.join(examples_dir, 'blit2.ck'))
     success, _ = chuck.compile_file(full_path)
     assert success
 
@@ -100,8 +108,8 @@ def test_realtime_file_playback():
     chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
-    # Create a simple test file
-    test_file = '/tmp/test_chuck.ck'
+    # Create a simple test file (use tempfile for cross-platform compatibility)
+    test_file = os.path.join(tempfile.gettempdir(), 'test_chuck.ck')
     with open(test_file, 'w') as f:
         f.write('''
 SinOsc s => dac;
@@ -110,8 +118,8 @@ SinOsc s => dac;
 while(true) { 1::samp => now; }
 ''')
 
-    # Compile and play
-    success, _ = chuck.compile_file(test_file)
+    # Compile and play (normalize path for Windows compatibility)
+    success, _ = chuck.compile_file(normalize_path(test_file))
     assert success
 
     # Start real-time audio
@@ -131,9 +139,9 @@ def test_multiple_file_compilation():
     chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
-    # Create two simple files
-    file1 = '/tmp/test1.ck'
-    file2 = '/tmp/test2.ck'
+    # Create two simple files (use tempfile for cross-platform compatibility)
+    file1 = os.path.join(tempfile.gettempdir(), 'test1.ck')
+    file2 = os.path.join(tempfile.gettempdir(), 'test2.ck')
 
     with open(file1, 'w') as f:
         f.write('SinOsc s1 => dac; 440 => s1.freq; 0.1 => s1.gain; while(true) { 1::samp => now; }')
@@ -141,9 +149,9 @@ def test_multiple_file_compilation():
     with open(file2, 'w') as f:
         f.write('SinOsc s2 => dac; 550 => s2.freq; 0.1 => s2.gain; while(true) { 1::samp => now; }')
 
-    # Compile both
-    success1, ids1 = chuck.compile_file(file1)
-    success2, ids2 = chuck.compile_file(file2)
+    # Compile both (normalize paths for Windows compatibility)
+    success1, ids1 = chuck.compile_file(normalize_path(file1))
+    success2, ids2 = chuck.compile_file(normalize_path(file2))
 
     assert success1 and success2
     assert len(ids1) > 0 and len(ids2) > 0
@@ -162,13 +170,13 @@ def test_file_with_syntax_error():
     chuck.set_param(numchuck.PARAM_OUTPUT_CHANNELS, 2)
     chuck.init()
 
-    # Create a file with syntax error
-    error_file = '/tmp/error.ck'
+    # Create a file with syntax error (use tempfile for cross-platform compatibility)
+    error_file = os.path.join(tempfile.gettempdir(), 'error.ck')
     with open(error_file, 'w') as f:
         f.write('this is not valid chuck code!')
 
-    # Should fail to compile
-    success, shred_ids = chuck.compile_file(error_file)
+    # Should fail to compile (normalize path for Windows compatibility)
+    success, shred_ids = chuck.compile_file(normalize_path(error_file))
     assert not success, "Should fail to compile invalid code"
     assert len(shred_ids) == 0, "Should not create any shreds"
 
@@ -322,9 +330,9 @@ def test_chugin_convrev_example():
     if not is_available:
         pytest.skip("ConvRev chugin not available (neither static nor dynamic)")
 
-    chugins_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/chugins'))
-    example_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/convrev/ConvRev.ck'))
-    ir_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/convrev/IRs/hagia-sophia.wav'))
+    chugins_dir = normalize_path(os.path.join(os.path.dirname(__file__), '../examples/chugins'))
+    example_file = normalize_path(os.path.join(os.path.dirname(__file__), '../examples/convrev/ConvRev.ck'))
+    ir_file = normalize_path(os.path.join(os.path.dirname(__file__), '../examples/convrev/IRs/hagia-sophia.wav'))
 
     if not os.path.exists(example_file):
         pytest.skip("ConvRev.ck example not found")
@@ -340,7 +348,7 @@ def test_chugin_convrev_example():
         chuck.set_param_string_list(numchuck.PARAM_IMPORT_PATH_SYSTEM, [chugins_dir])
 
     # Set working directory so me.dir() works correctly
-    examples_convrev_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../examples/convrev'))
+    examples_convrev_dir = normalize_path(os.path.join(os.path.dirname(__file__), '../examples/convrev'))
     chuck.set_param_string(numchuck.PARAM_WORKING_DIRECTORY, examples_convrev_dir)
 
     chuck.init()
