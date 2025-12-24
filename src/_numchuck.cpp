@@ -10,6 +10,7 @@
 #include "chuck_audio.h"
 #include "chuck_globals.h"
 #include "chuck_vm.h"
+#include "util_platforms.h"  // For ck_usleep
 
 #include <mutex>
 #include <stdexcept>
@@ -95,6 +96,15 @@ public:
     void cleanup(t_CKUINT msWait = 0) {
         if (m_started) {
             ChuckAudio::stop();
+#ifdef _WIN32
+            // Windows audio threads (WASAPI/DirectSound) need time to cleanly exit
+            // after stop() before we can safely shutdown and release resources
+            if (msWait > 0) {
+                ck_usleep(msWait * 1000);  // Convert ms to us
+            } else {
+                ck_usleep(100 * 1000);  // Default 100ms wait on Windows
+            }
+#endif
             m_started = false;
         }
         if (m_initialized) {
@@ -144,6 +154,36 @@ static nb::callable get_callback(int id) {
         return it->second;
     }
     return nb::callable();
+}
+
+// Helper: Clean up all callbacks for a specific ChucK instance
+// Must be called before instance destruction to prevent dangling pointers
+static void cleanup_instance_callbacks(ChucK* chuck) {
+    std::uintptr_t key = reinterpret_cast<std::uintptr_t>(chuck);
+
+    // Lock VM objects to prevent access during cleanup (Windows thread safety)
+    Chuck_VM_Object::unlock_all();
+
+    {
+        std::lock_guard<std::mutex> lock(g_output_callback_mutex);
+
+        // Clean up chout callback
+        auto chout_it = g_chout_callbacks.find(key);
+        if (chout_it != g_chout_callbacks.end()) {
+            remove_callback(chout_it->second);
+            g_chout_callbacks.erase(chout_it);
+        }
+
+        // Clean up cherr callback
+        auto cherr_it = g_cherr_callbacks.find(key);
+        if (cherr_it != g_cherr_callbacks.end()) {
+            remove_callback(cherr_it->second);
+            g_cherr_callbacks.erase(cherr_it);
+        }
+    }
+
+    // Restore VM object locking
+    Chuck_VM_Object::lock_all();
 }
 
 // Global variable callback wrappers
@@ -458,6 +498,33 @@ NB_MODULE(_numchuck, m) {
         .def("now",
             &ChucK::now,
             "Get current ChucK time")
+
+        // Explicit shutdown method for proper cleanup (especially on Windows)
+        .def("shutdown",
+            [](ChucK& self) {
+                if (!self.isInit()) {
+                    return;  // Already shut down or never initialized
+                }
+
+                // Clean up instance-specific callbacks before VM shutdown
+                cleanup_instance_callbacks(&self);
+
+                // Clear chout/cherr callbacks on the ChucK instance itself
+                self.setChoutCallback(nullptr);
+                self.setCherrCallback(nullptr);
+
+                // Explicitly shutdown the VM
+                // This ensures proper thread termination on Windows
+                if (self.vm()) {
+                    self.vm()->shutdown();
+
+#ifdef _WIN32
+                    // Give Windows threads time to terminate cleanly
+                    ck_usleep(50 * 1000);  // 50ms
+#endif
+                }
+            },
+            "Explicitly shutdown ChucK instance (call before destruction on Windows)")
 
         // Color/display methods
         .def("toggle_global_color_textoutput",

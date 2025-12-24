@@ -127,6 +127,16 @@ class Chuck:
         """Initialize the ChucK instance. Usually called automatically."""
         return self._chuck.init()
 
+    def close(self) -> None:
+        """Explicitly shutdown the ChucK instance.
+
+        This method should be called before the instance is destroyed,
+        especially on Windows where it ensures proper thread cleanup.
+
+        Safe to call multiple times.
+        """
+        self._chuck.shutdown()
+
     def compile(
         self,
         code: str,

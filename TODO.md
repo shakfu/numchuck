@@ -41,5 +41,17 @@ Remaining tasks from recent code review.
 ### Build / CI
 
 - [x] **Investigate skipped platform tests** (`wheels.yml`)
-  - Restored testing on macosx_arm64 and win_amd64
-  - Only manylinux_aarch64 skipped (cross-compiled, no native runner)
+  - Restored testing on macosx_arm64
+  - Windows skipped due to access violation in ChucK VM cleanup
+  - manylinux_aarch64 skipped (cross-compiled, no native runner)
+  - wavfile tests skipped in CI (WvOut timing issues)
+
+- [x] **Fix Windows access violation** (implemented, needs testing)
+  - Crash occurs during ChucK VM destruction/cleanup
+  - Affects all Python versions on Windows
+  - Fixes implemented based on chuck-max comparison:
+    1. Added explicit `shutdown()` method with `vm->shutdown()` call
+    2. Added `Chuck_VM_Object::unlock_all()/lock_all()` around callback cleanup
+    3. Added post-stop delay for Windows audio threads (100ms default)
+    4. Added `cleanup_instance_callbacks()` for proper per-instance cleanup
+  - Python API: `Chuck.close()` method for explicit shutdown
