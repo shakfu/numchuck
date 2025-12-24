@@ -15,6 +15,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [Unreleased]
 
+### Added
+
+- **Pip Install Test Workflow** (`.github/workflows/pip-test.yml`):
+  - Installs numchuck from PyPI and runs full test suite
+  - Verifies installed package comes from site-packages (not local src/)
+  - Tests on Linux and macOS with Python 3.9-3.12
+
+- **WAV File Rendering Tests** (`tests/test_wavfile.py`):
+  - `test_render_sine_to_wav` - mono recording with `WvOut`
+  - `test_render_stereo_to_wav` - stereo recording with `WvOut2`
+  - `test_me_dir_path` - tests `me.dir()` path construction
+
+### Fixed
+
+- **Duplicate macOS wheel builds** (`.github/workflows/wheels.yml`):
+  - Removed redundant `macos-15` runner (same ARM64 arch as `macos-14`)
+  - Added `CIBW_ARCHS_MACOS: "x86_64 arm64"` for cross-compilation
+  - Now builds both Intel and Apple Silicon wheels from single runner
+
+### Changed
+
+- **Restored platform testing in wheels.yml**:
+  - Re-enabled tests on `macosx_arm64` and `win_amd64`
+  - Only `manylinux_aarch64` skipped (cross-compiled, no native runner)
+
+### Removed
+
+- **install-test.yml** - consolidated into pip-test.yml
+- **render-test.yml** - functionality covered by test_wavfile.py
+
 ## [0.1.6]
 
 - version bump due to corrupted wheel: `numchuck-0.1.5-cp310-cp310-macosx_11_0_arm64.whl`
