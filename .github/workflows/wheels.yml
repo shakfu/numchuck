@@ -63,8 +63,8 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=11.0
           # Test the built wheels
           CIBW_TEST_REQUIRES: pytest numpy
-          # Skip realtime audio tests (no audio device) and wavfile tests (WvOut timing issues in CI)
-          CIBW_TEST_COMMAND: pytest {project}/tests -v --tb=short -k "not realtime and not wavfile"
+          # Skip: realtime (no audio device), wavfile (WvOut timing), chugin (not bundled in wheel)
+          CIBW_TEST_COMMAND: pytest {project}/tests -v --tb=short -k "not realtime and not wavfile and not chugin"
           # Skip: aarch64 Linux (cross-compiled, no native runner)
           CIBW_TEST_SKIP: "*-manylinux_aarch64"
 

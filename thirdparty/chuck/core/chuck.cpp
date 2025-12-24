@@ -1024,6 +1024,12 @@ t_CKBOOL ChucK::shutdown()
         {
             ck_usleep(1000);
         }
+
+#ifdef __PLATFORM_WINDOWS__
+        // Windows audio threads (WASAPI/DirectSound) need additional time
+        // to fully terminate after VM reports stopped
+        ck_usleep( 50000 ); // 50ms delay
+#endif
     }
 
     // free vm, compiler, friends

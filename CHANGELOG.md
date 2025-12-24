@@ -36,12 +36,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Added `CIBW_ARCHS_MACOS: "x86_64 arm64"` for cross-compilation
   - Now builds both Intel and Apple Silicon wheels from single runner
 
-- **Windows access violation during VM cleanup** (`src/_numchuck.cpp`):
-  - Fixed crash during ChucK VM destruction on Windows
-  - Added explicit `shutdown()` method with proper `vm->shutdown()` call
-  - Added `Chuck_VM_Object::unlock_all()/lock_all()` around callback cleanup
-  - Added post-stop delay (100ms) for Windows audio threads (WASAPI/DirectSound)
-  - Added `cleanup_instance_callbacks()` for proper per-instance cleanup
+- **Windows access violation during VM cleanup** (upstream fix in `thirdparty/chuck`):
+  - Added 50ms delay after VM stop on Windows in `ChucK::shutdown()` (`chuck.cpp`)
+  - Allows WASAPI/DirectSound audio threads to fully terminate before cleanup
+  - Made `ChucK::shutdown()` public in `chuck.h` for explicit cleanup from bindings
   - Python API: `Chuck.close()` method for explicit shutdown
 
 ### Changed
@@ -50,6 +48,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Re-enabled tests on `macosx_arm64` and Windows
   - `manylinux_aarch64` skipped (cross-compiled, no native runner)
   - `wavfile` tests skipped in CI (WvOut timing issues)
+  - `chugin` tests skipped in CI (not bundled in wheel)
 
 ### Removed
 

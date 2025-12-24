@@ -161,29 +161,21 @@ static nb::callable get_callback(int id) {
 static void cleanup_instance_callbacks(ChucK* chuck) {
     std::uintptr_t key = reinterpret_cast<std::uintptr_t>(chuck);
 
-    // Lock VM objects to prevent access during cleanup (Windows thread safety)
-    Chuck_VM_Object::unlock_all();
+    std::lock_guard<std::mutex> lock(g_output_callback_mutex);
 
-    {
-        std::lock_guard<std::mutex> lock(g_output_callback_mutex);
-
-        // Clean up chout callback
-        auto chout_it = g_chout_callbacks.find(key);
-        if (chout_it != g_chout_callbacks.end()) {
-            remove_callback(chout_it->second);
-            g_chout_callbacks.erase(chout_it);
-        }
-
-        // Clean up cherr callback
-        auto cherr_it = g_cherr_callbacks.find(key);
-        if (cherr_it != g_cherr_callbacks.end()) {
-            remove_callback(cherr_it->second);
-            g_cherr_callbacks.erase(cherr_it);
-        }
+    // Clean up chout callback
+    auto chout_it = g_chout_callbacks.find(key);
+    if (chout_it != g_chout_callbacks.end()) {
+        remove_callback(chout_it->second);
+        g_chout_callbacks.erase(chout_it);
     }
 
-    // Restore VM object locking
-    Chuck_VM_Object::lock_all();
+    // Clean up cherr callback
+    auto cherr_it = g_cherr_callbacks.find(key);
+    if (cherr_it != g_cherr_callbacks.end()) {
+        remove_callback(cherr_it->second);
+        g_cherr_callbacks.erase(cherr_it);
+    }
 }
 
 // Global variable callback wrappers
@@ -513,18 +505,10 @@ NB_MODULE(_numchuck, m) {
                 self.setChoutCallback(nullptr);
                 self.setCherrCallback(nullptr);
 
-                // Explicitly shutdown the VM
-                // This ensures proper thread termination on Windows
-                if (self.vm()) {
-                    self.vm()->shutdown();
-
-#ifdef _WIN32
-                    // Give Windows threads time to terminate cleanly
-                    ck_usleep(50 * 1000);  // 50ms
-#endif
-                }
+                // Call ChucK's shutdown which includes Windows-specific delays
+                self.shutdown();
             },
-            "Explicitly shutdown ChucK instance (call before destruction on Windows)")
+            "Explicitly shutdown ChucK instance")
 
         // Color/display methods
         .def("toggle_global_color_textoutput",

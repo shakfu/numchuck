@@ -44,12 +44,13 @@ Remaining tasks from recent code review.
   - Restored testing on macosx_arm64 and Windows
   - manylinux_aarch64 skipped (cross-compiled, no native runner)
   - wavfile tests skipped in CI (WvOut timing issues)
+  - chugin tests skipped in CI (not bundled in wheel)
 
 - [x] **Fix Windows access violation**
   - Fixed: Crash during ChucK VM destruction/cleanup
-  - Fixes implemented based on chuck-max comparison:
-    1. Added explicit `shutdown()` method with `vm->shutdown()` call
-    2. Added `Chuck_VM_Object::unlock_all()/lock_all()` around callback cleanup
-    3. Added post-stop delay for Windows audio threads (100ms default)
-    4. Added `cleanup_instance_callbacks()` for proper per-instance cleanup
+  - Upstream fix in `thirdparty/chuck/core/chuck.cpp`:
+    - Added 50ms delay after VM stop on Windows (`__PLATFORM_WINDOWS__`)
+    - Allows WASAPI/DirectSound audio threads to fully terminate
+  - Made `ChucK::shutdown()` public in `chuck.h` for explicit cleanup
   - Python API: `Chuck.close()` method for explicit shutdown
+  - Windows tests re-enabled in CI
