@@ -65,8 +65,8 @@ jobs:
           CIBW_TEST_REQUIRES: pytest numpy
           # Skip realtime audio tests (no audio device) and wavfile tests (WvOut timing issues in CI)
           CIBW_TEST_COMMAND: pytest {project}/tests -v --tb=short -k "not realtime and not wavfile"
-          # Skip: aarch64 Linux (cross-compiled), Windows (access violation in VM cleanup)
-          CIBW_TEST_SKIP: "*-manylinux_aarch64 *-win_amd64"
+          # Skip: aarch64 Linux (cross-compiled, no native runner)
+          CIBW_TEST_SKIP: "*-manylinux_aarch64"
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
