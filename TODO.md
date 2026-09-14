@@ -1,36 +1,10 @@
 # TODO
 
-- [ ] enable advanced chugins {faust, warpbuf, fluidsynth}
-- [x] evaluate and bundle additional chugins from https://github.com/shakfu/my-chugins:
-  - **CLAP** -- load CLAP (CLever Audio Plugin) format plugins as ChucK UGens. Requires CLAP SDK.
-  - **PdPatch** -- embed Pure Data patches as ChucK UGens. Requires libpd.
-  - **VST3** -- load VST3 format plugins as ChucK UGens. Requires VST3 SDK.
-  - Note: AbletonLink and AudioUnit from that repo are already bundled.
+## Critical
 
----
+## High
 
-## Known Crashes
-
-### High Priority
-
-- [x] **Intermittent SIGSEGV on a background thread during ConvRev playback**
-  (`tests/test_examples.py::test_chugin_convrev_example`) -- FIXED
-  - Root cause: chugins were `dlopen`ed without `RTLD_NODELETE`, so
-    `~Chuck_DLL()` unmapped `ConvRev.chug` while the `std::thread` that
-    `ConvRev::tick()` spawns per FFT block was still inside
-    `FFTConvolver::process()`. See the CHANGELOG entry and
-    `scripts/patches/0004-chugin-rtld-nodelete.patch`
-  - Measured 7/152 before the fix, 0/400 after
-  - Two notes for future crash hunts, both of which cost time here:
-    - The `0x03e80002964c` address in the old ASAN report was never a corrupted
-      pointer. `faulthandler` re-raises fatal signals with `raise()`, which glibc
-      implements as `tgkill()`, so downstream handlers see `si_code == SI_TKILL`
-      and an `si_addr` that is really the `si_pid`/`si_uid` pair sharing that
-      union -- `0x3e8` is uid 1000, `0x2964c` is pid 169548. Run with
-      `-p no:faulthandler` to see the actual fault
-    - "Does not reproduce with `test_examples.py` alone (0/25)" did not support
-      the conclusion that state from `test_api.py` was required: at the measured
-      rate, 0/25 has ~43% probability. It was never an ordering dependency
+### Known Crashes
 
 - [ ] **Stack over-read in the GVerb chugin** (`thirdparty/chugins/GVerb/gverbdefs.h:114`)
   - AddressSanitizer reports `stack-buffer-overflow`, an 8-byte READ of the 4-byte
@@ -40,11 +14,7 @@
     it is not a plausible cause of a segfault and was left alone rather than guessed at
   - Fixing it needs a `scripts/patches/chugins/` patch, as GVerb is vendored upstream
 
----
-
-## Memory Leaks
-
-### High Priority
+### Memory Leaks
 
 - [ ] **Chugin objects are never destroyed when a VM is shut down with live shreds**
   (`thirdparty/chuck/core/chuck_vm.cpp`, `Chuck_VM::shutdown()` / `removeAll()`)
@@ -79,11 +49,7 @@
     hits it because `examples/convrev/ConvRev.ck` ends in `while(true)`, so its
     shred is always live at teardown
 
----
-
-## Real-time Audio: Global UGen Taps
-
-### High Priority
+### Real-time Audio: Global UGen Taps
 
 - [ ] **Remove the audio-thread allocation in tap capture** (`src/_numchuck.cpp`, `capture_taps`)
   - ChucK keeps `m_global_ugens` private (`chuck_globals.h:356`) and exposes only
@@ -97,6 +63,109 @@
     `Chuck_UGen *` once in `add_tap()`, then read the buffer directly per block.
     `apply_patches()` in `scripts/update.sh` re-applies it after a chuck update
 
+## Medium
+
+- [ ] enable advanced chugins {faust, warpbuf, fluidsynth}
+
+### REPL Issues
+
+- [ ] **Fix multiline detection for string literals/comments** (`repl.py:387-437`)
+  - Substring checks (`"=>" in text`) false-trigger on string literals and comments
+  - Use a ChucK-aware lexer pass or at minimum skip strings/comments
+
+- [ ] **Fix completer `start_position` for `?`/`::` suffixes** (`completer.py:203-215`)
+  - `start_position=-len(text)` should be `-len(prefix)`, causing incorrect replacement
+
+- [ ] **Fix history file setup order** (`repl.py:377, 440`)
+  - `FileHistory(get_history_file())` called before `ensure_numchuck_directories()`
+  - Parent directory may not exist yet
+
+- [ ] **Validate `EDITOR` env var in `edit_shred`** (`commands.py:351-389`)
+  - Editor binary used directly with no validation or error handling
+  - Temp file cleanup is best-effort
+
+- [ ] **Deduplicate window visibility state** (`repl.py:217-225`, `common.py:292-295`)
+  - Two independent sets of flags (`show_help_window` vs `show_help`) not synchronized
+  - Risks UI state desync
+
+- [ ] **Cap autocomplete results** (`completer.py:165-259`)
+  - No result limit; single-character prefix yields all matching ChucK identifiers
+  - Cap at ~50 results
+
+## Low
+
+### REPL Issues
+
+- [ ] **Use `deque` for log trimming** (`repl.py:545-561`, `common.py:534-537`)
+  - `list.pop(0)` is O(n) per message; `collections.deque(maxlen=N)` is O(1)
+
+- [ ] **Allow error bar to wrap or grow** (`repl.py:486-493`)
+  - `height=D.exact(1)` truncates long compilation errors
+
+- [ ] **Update session source after `edit_shred`** (`session.py:48-85`, `commands.py:351-389`)
+  - Replaced shred code not reflected in `session.shreds[id]["source"]`
+
+- [ ] **Document smart enter rules** (`repl.py:383-437`)
+  - Multiline logic undocumented; help text and `--no-smart-enter` don't explain actual behavior
+
+- [ ] **Add `--strict` mode for stdin REPL** (`repl.py:84-133`)
+  - Currently fail-soft: errors set exit code but processing continues
+
+- [ ] **Break reference cycle in log callbacks** (`common.py:401-413`)
+  - `log_callback` closure captures `self`, ChucK holds reference back; use `weakref`
+
+### Future Enhancements: Tooling
+
+- [ ] **LSP server for IDE integration**
+  - Language Server Protocol implementation for ChucK
+  - Would enable VS Code, Neovim, etc. integration
+  - Features: syntax errors, completions, hover docs
+
+### Future Enhancements: Documentation
+
+- [ ] **Interactive tutorial**
+  - Step-by-step livecoding introduction
+  - Could be a guided REPL mode or web-based
+
+- [ ] **Cookbook**
+  - Common patterns and recipes
+  - Examples: FM synthesis, drum machines, effects chains
+
+- [ ] **Video documentation**
+  - Screen recordings of livecoding sessions
+  - Tutorial videos showing REPL/editor workflows
+
+## Done
+
+- [x] evaluate and bundle additional chugins from https://github.com/shakfu/my-chugins:
+  - **CLAP** -- load CLAP (CLever Audio Plugin) format plugins as ChucK UGens. Requires CLAP SDK.
+  - **PdPatch** -- embed Pure Data patches as ChucK UGens. Requires libpd.
+  - **VST3** -- load VST3 format plugins as ChucK UGens. Requires VST3 SDK.
+  - Note: AbletonLink and AudioUnit from that repo are already bundled.
+
+### Known Crashes
+
+- [x] **Intermittent SIGSEGV on a background thread during ConvRev playback**
+  (`tests/test_examples.py::test_chugin_convrev_example`) -- FIXED
+  - Root cause: chugins were `dlopen`ed without `RTLD_NODELETE`, so
+    `~Chuck_DLL()` unmapped `ConvRev.chug` while the `std::thread` that
+    `ConvRev::tick()` spawns per FFT block was still inside
+    `FFTConvolver::process()`. See the CHANGELOG entry and
+    `scripts/patches/0004-chugin-rtld-nodelete.patch`
+  - Measured 7/152 before the fix, 0/400 after
+  - Two notes for future crash hunts, both of which cost time here:
+    - The `0x03e80002964c` address in the old ASAN report was never a corrupted
+      pointer. `faulthandler` re-raises fatal signals with `raise()`, which glibc
+      implements as `tgkill()`, so downstream handlers see `si_code == SI_TKILL`
+      and an `si_addr` that is really the `si_pid`/`si_uid` pair sharing that
+      union -- `0x3e8` is uid 1000, `0x2964c` is pid 169548. Run with
+      `-p no:faulthandler` to see the actual fault
+    - "Does not reproduce with `test_examples.py` alone (0/25)" did not support
+      the conclusion that state from `test_api.py` was required: at the measured
+      rate, 0/25 has ~43% probability. It was never an ordering dependency
+
+### Real-time Audio: Global UGen Taps
+
 - [x] **Run the tap tearing regression test in CI**
   (`tests/test_ugen_tap.py::test_realtime_tap_reads_are_never_torn`)
   - A dedicated `realtime` job in `.github/workflows/ci.yml` loads `snd-dummy`
@@ -105,8 +174,6 @@
   - The other jobs still filter `-k "not realtime"`; that is now a division of
     labour rather than a gap
 
-### Notes
-
 - [x] **Seqlock reader must back off, not spin** (`src/_numchuck.cpp`, `read_tap_snapshot`)
   - The first version retried 256 times with no delay and timed out spuriously: the
     collision check is so cheap that all attempts fit inside the single publish window
@@ -114,19 +181,13 @@
   - Now waits 200 us between attempts, with the GIL released, over 64 attempts.
     Worth remembering for any future lock-free reader in this codebase
 
----
-
-## REPL Issues
-
-### Resolved in the review pass
+### REPL Issues
 
 - [x] **`clear` failed with no audio running** (`services/shreds.py`)
   - `clear_vm()` posts a CLEARVM message the VM only collects while it is being
     driven, so an offline session got a bare "Failed to clear VM"
   - Now falls back to removing the shreds directly, and
     `test_repl_stdin.py::test_clear_command` is no longer skipped
-
-### High Priority
 
 - [x] **Implement 23 command handlers** (`commands.py`)
   - Waveform: `wave`, `wave on`, `wave off` toggle `session.show_waveform`
@@ -144,8 +205,6 @@
   - `_cmd_shell` now uses `capture_output=True`, `text=True`, 30s timeout
   - Returns stdout/stderr via `_log()`, reports nonzero exit codes as errors
   - Catches `TimeoutExpired` and `OSError`
-
-### Medium Priority
 
 - [x] **Guard `get_all_globals()` against segfault** (`completer.py:65-70`, `commands.py:215-226`)
   - The stated cause was wrong: the trigger is not "no audio running" but "the
@@ -174,61 +233,7 @@
   - `tests/test_globals_preconditions.py` exercises all 27 reachable bindings in
     both states, plus the started path to show the guard cost nothing
 
-- [ ] **Fix multiline detection for string literals/comments** (`repl.py:387-437`)
-  - Substring checks (`"=>" in text`) false-trigger on string literals and comments
-  - Use a ChucK-aware lexer pass or at minimum skip strings/comments
-
-- [ ] **Fix completer `start_position` for `?`/`::` suffixes** (`completer.py:203-215`)
-  - `start_position=-len(text)` should be `-len(prefix)`, causing incorrect replacement
-
-- [ ] **Fix history file setup order** (`repl.py:377, 440`)
-  - `FileHistory(get_history_file())` called before `ensure_numchuck_directories()`
-  - Parent directory may not exist yet
-
-- [ ] **Validate `EDITOR` env var in `edit_shred`** (`commands.py:351-389`)
-  - Editor binary used directly with no validation or error handling
-  - Temp file cleanup is best-effort
-
-- [ ] **Deduplicate window visibility state** (`repl.py:217-225`, `common.py:292-295`)
-  - Two independent sets of flags (`show_help_window` vs `show_help`) not synchronized
-  - Risks UI state desync
-
-- [ ] **Cap autocomplete results** (`completer.py:165-259`)
-  - No result limit; single-character prefix yields all matching ChucK identifiers
-  - Cap at ~50 results
-
-### Low Priority
-
-- [ ] **Use `deque` for log trimming** (`repl.py:545-561`, `common.py:534-537`)
-  - `list.pop(0)` is O(n) per message; `collections.deque(maxlen=N)` is O(1)
-
-- [ ] **Allow error bar to wrap or grow** (`repl.py:486-493`)
-  - `height=D.exact(1)` truncates long compilation errors
-
-- [ ] **Update session source after `edit_shred`** (`session.py:48-85`, `commands.py:351-389`)
-  - Replaced shred code not reflected in `session.shreds[id]["source"]`
-
-- [ ] **Document smart enter rules** (`repl.py:383-437`)
-  - Multiline logic undocumented; help text and `--no-smart-enter` don't explain actual behavior
-
-- [ ] **Add `--strict` mode for stdin REPL** (`repl.py:84-133`)
-  - Currently fail-soft: errors set exit code but processing continues
-
-- [ ] **Break reference cycle in log callbacks** (`common.py:401-413`)
-  - `log_callback` closure captures `self`, ChucK holds reference back; use `weakref`
-
----
-
-## Future Enhancements
-
-### Tooling
-
-- [ ] **LSP server for IDE integration**
-  - Language Server Protocol implementation for ChucK
-  - Would enable VS Code, Neovim, etc. integration
-  - Features: syntax errors, completions, hover docs
-
-### Documentation
+### Future Enhancements: Documentation
 
 - [x] **Documentation build** (`mkdocs.yml`, `Makefile`, `.github/workflows/ci.yml`)
   - The Sphinx tree had no build wiring and had drifted to documenting an API
@@ -237,15 +242,3 @@
   - Remaining: publish it. `make docs-deploy` runs `mkdocs gh-deploy`, but
     GitHub Pages is not enabled for the repository and no workflow publishes on
     a tag
-
-- [ ] **Interactive tutorial**
-  - Step-by-step livecoding introduction
-  - Could be a guided REPL mode or web-based
-
-- [ ] **Cookbook**
-  - Common patterns and recipes
-  - Examples: FM synthesis, drum machines, effects chains
-
-- [ ] **Video documentation**
-  - Screen recordings of livecoding sessions
-  - Tutorial videos showing REPL/editor workflows
