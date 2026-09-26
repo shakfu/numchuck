@@ -300,11 +300,3 @@ jobs:
         run: |
           # Skip: realtime (no audio device), wavfile (WvOut timing), chugin (not bundled), tui (requires console)
           uv run pytest --cov=numchuck --cov-report=xml --cov-report=term -k "not realtime and not wavfile and not chugin and not tui"
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
