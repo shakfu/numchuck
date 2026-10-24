@@ -1005,6 +1005,80 @@ class Chuck:
         self._chuck.stop_listening_for_global_event(name, callback_id)
 
     # -------------------------------------------------------------------------
+    # Host classes (Host, HostBuffer, HostBufPlay)
+    # -------------------------------------------------------------------------
+
+    def on_send(self, callback: Callable[[str, float], None] | None) -> None:
+        """Call callback(name, value) for each Host.send(name, value) in ChucK.
+
+        The callback runs on whichever thread drives the VM, at the shred's
+        logical time. During real-time audio that is the audio thread -- keep
+        it short. Pass None to clear.
+        """
+        self._chuck.set_host_send_callback(callback)
+
+    def on_receive(
+        self,
+        name: str,
+        callback: Callable[[None | float | str | list[float]], None],
+    ) -> int:
+        """Call callback(value) for each Host.send* to name, as [receive name] would.
+
+        value is None for Host.sendBang, a float for sendFloat, a str for
+        sendSymbol and a list of floats, whole, for sendList. The callback
+        always takes one argument, so it accepts whatever ChucK sends to the
+        name. Several callbacks may share a name; they run in registration
+        order. Receivers belong to this instance. Like on_send, the callback
+        runs on whichever thread drives the VM.
+
+        Returns:
+            Callback ID for use with remove_receiver
+        """
+        return self._chuck.add_host_receiver(name, callback)
+
+    def remove_receiver(self, name: str, callback_id: int) -> bool:
+        """Remove a callback registered with on_receive.
+
+        Returns:
+            True if it was registered
+        """
+        return self._chuck.remove_host_receiver(name, callback_id)
+
+    def set_buffer(
+        self,
+        name: str,
+        array: NDArray[np.float32],
+        sample_rate: float | None = None,
+    ) -> None:
+        """Let HostBuffer and HostBufPlay read and write array under name.
+
+        ChucK uses the array in place, so pokes are visible to Python and
+        Python writes are visible to ChucK. Registering a name again replaces
+        its array.
+
+        Args:
+            name: Name ChucK passes to HostBuffer.name() / HostBufPlay.name()
+            array: Writable, C-contiguous float32, shape (frames,) or
+                (frames, channels)
+            sample_rate: Rate HostBufPlay plays the array at; defaults to the
+                VM's
+
+        Raises:
+            TypeError: array is not a writable, C-contiguous float32 array
+            ValueError: array is empty or has more than 2 dimensions
+            RuntimeError: 64 buffer names are already in use
+        """
+        self._chuck.set_buffer(name, array, sample_rate or 0.0)
+
+    def remove_buffer(self, name: str) -> bool:
+        """Detach the array registered under name.
+
+        Returns:
+            True if an array was registered
+        """
+        return self._chuck.remove_buffer(name)
+
+    # -------------------------------------------------------------------------
     # Console output
     # -------------------------------------------------------------------------
 

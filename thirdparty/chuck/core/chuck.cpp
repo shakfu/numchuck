@@ -1053,30 +1053,19 @@ t_CKBOOL ChucK::shutdown()
         // stop otf thread
         if( m_carrier->otf_thread )
         {
-            // numchuck local patch: the OTF listener was cancelled and then
-            // abandoned. pthread_cancel() only takes effect at a cancellation
-            // point, so otf_recv_cb() kept running while the code below freed
-            // otf_socket and the teardown that follows freed the VM, the
-            // compiler and the carrier -- all of which that thread
-            // dereferences. Observed as an intermittent SIGSEGV in ck_accept()
-            // (carrier->otf_socket read back as NULL) and as heap corruption
-            // surfacing on the main thread in a later, unrelated test.
-            CHUCK_THREAD thread = m_carrier->otf_thread;
-            // signal shutdown before waking the thread, so otf_recv_cb() sees
-            // the cleared flag on its next loop check and leaves the loop
-            m_carrier->otf_thread = 0;
-
 #if !defined(__PLATFORM_WINDOWS__) || defined(__WINDOWS_PTHREAD__)
-            // accept() is a POSIX cancellation point, so this unblocks the
-            // thread whether it is waiting for a connection or between calls
-            pthread_cancel( thread );
-            // then wait for it to actually be gone before freeing anything it
-            // can still reach; the thread is joinable (created with a NULL
-            // attr), and joining one that already exited returns immediately
-            pthread_join( thread, NULL );
+            // sends cancel request to OTF thread (but does not necessarily terminate it at this point)
+            pthread_cancel( m_carrier->otf_thread );
+            // wait for the thread to actually exit;
+            // NOTE: specically in this case, before freeing the otf_socket
+            // it may be about to use (see below); otherwise a short-lived VM
+            // can shut down before the otf thread reaches accept() and it then
+            // dereferences a freed or NULL socket, crashing on exit | 1.5.5.9 (@barak)
+            pthread_join( m_carrier->otf_thread, NULL );
 #else
-            CloseHandle( thread ); // doesn't cancel thread
+            CloseHandle( m_carrier->otf_thread ); // doesn't cancel thread
 #endif
+            m_carrier->otf_thread = 0; // signals thread shutdown
         }
 
         // close otf socket

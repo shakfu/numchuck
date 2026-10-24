@@ -17,17 +17,16 @@ That is what this file is for. Keep it current when running `scripts/update.sh`
 
 | Tree | Upstream | Version | Ref / commit | Notes |
 | --- | --- | --- | --- | --- |
-| `chuck/` | https://github.com/ccrma/chuck | 1.5.5.9-dev (chai) | *unrecorded* | A development snapshot, not a tagged release. Version read from `core/chuck_def.h`. |
-| `chugins/` | https://github.com/ccrma/chugins | — | *unrecorded* | 49 chugins. AbletonLink, AudioUnit, CLAP, Fauck, PdPatch and VST3 come from https://github.com/shakfu/my-chugins, not from ccrma. |
+| `chuck/` | https://github.com/ccrma/chuck | 1.5.5.9-dev (chai) | `35977f6` | A development snapshot, not a tagged release. Version read from `core/chuck_def.h`. |
+| `chugins/` | https://github.com/ccrma/chugins | — | `16d8ab2` | 49 chugins. AbletonLink, AudioUnit, CLAP, Fauck, PdPatch and VST3 come from https://github.com/shakfu/my-chugins, not from ccrma. |
 | `nanobind/` | https://github.com/wjakob/nanobind | 2.9.3-dev1 | *unrecorded* | Version read from `pyproject.toml`. |
 | `mongoose/` | https://github.com/cesanta/mongoose | 7.9 | *unrecorded* | Two files (`mongoose.c`, `mongoose.h`). This is the component exposed to the network by the web IDE — see below. |
 
 ## Open items
 
-- **The `ref / commit` column is unrecorded for every tree.** These were vendored
-  before this file existed, so the upstream commits are not recoverable from the
-  repository. Fill each row in on the next `scripts/update.sh` run, which prints
-  `upstream <tree> at <sha>` for every clone.
+- **The `ref / commit` column is unrecorded for nanobind and mongoose.** These
+  were vendored before this file existed, so the upstream commits are not
+  recoverable from the repository.
 - **mongoose 7.9 is several years behind upstream.** It serves the web IDE, so
   it is the only vendored component that parses untrusted input from a socket.
   Worth reviewing against upstream's release notes before the next release.
@@ -44,3 +43,7 @@ loudly if one no longer applies.
 | Patch | Applies to | Purpose |
 | --- | --- | --- |
 | `0001-windows-shutdown-delay.patch` | `chuck/` | See `docs/windows_fix.md`. |
+| `0003-audio-buffer-delete-array.patch` | `chuck/` | `delete[]` for the RtAudio host buffers. |
+| `0004-chugin-rtld-nodelete.patch` | `chuck/` | Keep chugins mapped after `dlclose()`. |
+| `chugins/0001-nhhall-cstdint.patch` | `chugins/` | Missing `<cstdint>` in NHHall. |
+| `chugins/0002-convrev-thread-include.patch` | `chugins/` | Inverted `<thread>` guard in ConvRev. |

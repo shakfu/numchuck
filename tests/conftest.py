@@ -25,3 +25,21 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "tui" in item.keywords:
                 item.add_marker(skip_tui)
+
+
+@pytest.fixture
+def free_port() -> int:
+    """A loopback TCP port that was free when the test started."""
+    import socket
+
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        return int(s.getsockname()[1])
+
+
+@pytest.fixture
+def unraisable(monkeypatch):
+    """Exceptions reported to sys.unraisablehook during the test."""
+    seen = []
+    monkeypatch.setattr(sys, "unraisablehook", seen.append)
+    return seen

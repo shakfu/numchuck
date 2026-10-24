@@ -54,14 +54,14 @@ class TestWebServer:
             chuck.close()
             gc.collect()
 
-    def test_server_start_stop(self):
+    def test_server_start_stop(self, free_port):
         """Test server start and stop."""
         import gc
         from numchuck import Chuck
         from numchuck.web import WebChuckServer
 
         chuck = Chuck()
-        server = WebChuckServer(chuck, port=8083)
+        server = WebChuckServer(chuck, port=free_port)
 
         try:
             server.start()
@@ -78,7 +78,7 @@ class TestWebServer:
             chuck.close()
             gc.collect()
 
-    def test_server_context_manager(self):
+    def test_server_context_manager(self, free_port):
         """Test server as context manager."""
         import gc
         from numchuck import Chuck
@@ -86,7 +86,7 @@ class TestWebServer:
 
         chuck = Chuck()
         try:
-            with WebChuckServer(chuck, port=8084) as server:
+            with WebChuckServer(chuck, port=free_port) as server:
                 assert server.is_running is True
                 time.sleep(0.1)
 
@@ -95,7 +95,7 @@ class TestWebServer:
             chuck.close()
             gc.collect()
 
-    def test_server_http_response(self):
+    def test_server_http_response(self, free_port):
         """Test server serves HTTP content."""
         import gc
         import urllib.request
@@ -104,10 +104,10 @@ class TestWebServer:
 
         chuck = Chuck()
         try:
-            with WebChuckServer(chuck, port=8085) as server:
+            with WebChuckServer(chuck, port=free_port) as server:
                 time.sleep(0.2)  # Give server time to start
 
-                response = urllib.request.urlopen("http://localhost:8085/")
+                response = urllib.request.urlopen(f"http://localhost:{free_port}/")
                 html = response.read().decode("utf-8")
 
                 assert len(html) > 0
@@ -116,7 +116,7 @@ class TestWebServer:
             chuck.close()
             gc.collect()
 
-    def test_server_api_status(self):
+    def test_server_api_status(self, free_port):
         """Test server API status endpoint."""
         import gc
         import json
@@ -126,11 +126,11 @@ class TestWebServer:
 
         chuck = Chuck()
         try:
-            with WebChuckServer(chuck, port=8086) as server:
+            with WebChuckServer(chuck, port=free_port) as server:
                 time.sleep(0.2)
 
                 req = urllib.request.Request(
-                    "http://localhost:8086/api/status",
+                    f"http://localhost:{free_port}/api/status",
                     headers={"Authorization": f"Bearer {server.auth_token}"},
                     method="GET",
                 )
@@ -144,7 +144,7 @@ class TestWebServer:
             chuck.close()
             gc.collect()
 
-    def test_server_api_compile(self):
+    def test_server_api_compile(self, free_port):
         """Test server API compile endpoint."""
         import gc
         import json
@@ -154,13 +154,13 @@ class TestWebServer:
 
         chuck = Chuck()
         try:
-            with WebChuckServer(chuck, port=8087) as server:
+            with WebChuckServer(chuck, port=free_port) as server:
                 time.sleep(0.2)
 
                 # Compile simple code
                 code = "SinOsc s => dac; 100::ms => now;"
                 req = urllib.request.Request(
-                    "http://localhost:8087/api/compile",
+                    f"http://localhost:{free_port}/api/compile",
                     data=json.dumps({"code": code}).encode("utf-8"),
                     headers={
                         "Content-Type": "application/json",
@@ -198,13 +198,13 @@ class TestLowLevelWebServer:
             del server
             gc.collect()
 
-    def test_raw_server_start_stop(self):
+    def test_raw_server_start_stop(self, free_port):
         """Test raw server start/stop without API handler."""
         import gc
         from numchuck._web import WebServer
 
         server = WebServer()
-        server.port = 8088
+        server.port = free_port
 
         try:
             result = server.start()
@@ -282,7 +282,7 @@ class TestAudioMeters:
 class TestGlobalsSync:
     """Tests for globals synchronization via WebSocket."""
 
-    def test_globals_api_endpoint(self):
+    def test_globals_api_endpoint(self, free_port):
         """Test the /api/globals REST endpoint."""
         import gc
         import json
@@ -292,13 +292,13 @@ class TestGlobalsSync:
 
         chuck = Chuck()
         try:
-            with WebChuckServer(chuck, port=8089) as server:
+            with WebChuckServer(chuck, port=free_port) as server:
                 time.sleep(0.2)
 
                 # First compile code with global variables
                 code = "global float GAIN; 0.5 => GAIN;"
                 req = urllib.request.Request(
-                    "http://localhost:8089/api/compile",
+                    f"http://localhost:{free_port}/api/compile",
                     data=json.dumps({"code": code}).encode("utf-8"),
                     headers={
                         "Content-Type": "application/json",
@@ -313,7 +313,7 @@ class TestGlobalsSync:
 
                 # Now fetch globals
                 req = urllib.request.Request(
-                    "http://localhost:8089/api/globals",
+                    f"http://localhost:{free_port}/api/globals",
                     headers={"Authorization": f"Bearer {server.auth_token}"},
                     method="GET",
                 )

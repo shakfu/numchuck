@@ -23,7 +23,13 @@
 #include <iostream>
 #include <mutex>
 #include <string>
+
+// numchuck local patch: upstream guards this with `#if __EMSCRIPTEN__`, but
+// std::thread is used only when __EMSCRIPTEN__ is undefined.
+#ifndef __EMSCRIPTEN__
 #include <thread>
+#endif
+
 #include <vector>
 
 #ifdef __EMSCRIPTEN__

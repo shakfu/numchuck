@@ -17,6 +17,7 @@
 #include "chuck_vm.h"
 #include "util_platforms.h"  // For ck_usleep
 #include "constants.h"
+#include "hostbuffer.h"
 
 #include <algorithm>
 #include <atomic>
@@ -348,8 +349,10 @@ public:
 static std::unique_ptr<AudioContext> g_audio_context;
 
 // Global callback storage for get/listen operations
-// Maps callback ID to Python callable
-static std::unordered_map<int, nb::callable> g_callbacks;
+// Maps callback ID to Python callable. Every access copies or drops a
+// reference, so the GIL must be held. Never destroyed: static destruction
+// runs after Python finalizes.
+static auto& g_callbacks = *new std::unordered_map<int, nb::callable>();
 static std::mutex g_callback_mutex;
 static int g_next_callback_id = 1;
 
@@ -374,13 +377,19 @@ static int store_callback(nb::callable callback) {
     return id;
 }
 
-// Helper: Remove stored callback
+// Helper: Remove stored callback. Releases it after unlocking, since the
+// release can run arbitrary Python (__del__) that registers a callback.
 static void remove_callback(int id) {
+    nb::callable released;
     std::lock_guard<std::mutex> lock(g_callback_mutex);
-    g_callbacks.erase(id);
+    auto it = g_callbacks.find(id);
+    if (it != g_callbacks.end()) {
+        released = std::move(it->second);
+        g_callbacks.erase(it);
+    }
 }
 
-// Helper: Get stored callback
+// Helper: Get stored callback; the copy takes a reference, so hold the GIL
 static nb::callable get_callback(int id) {
     std::lock_guard<std::mutex> lock(g_callback_mutex);
     auto it = g_callbacks.find(id);
@@ -390,9 +399,171 @@ static nb::callable get_callback(int id) {
     return nb::callable();
 }
 
+// Call a Python callback from the VM with the GIL held. An exception must not
+// unwind through the VM: offline it escaped run() mid-shred, and on the audio
+// thread it hung stop_audio(). Report it to sys.unraisablehook instead.
+template <typename... Args>
+static void call_from_vm(nb::handle callback, const char* context, Args&&... args) {
+    try {
+        callback(std::forward<Args>(args)...);
+    } catch (nb::python_error& e) {
+        e.discard_as_unraisable(context);
+    } catch (const std::exception& e) {
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        nb::python_error().discard_as_unraisable(context);
+    }
+}
+
 // Forward declaration: registered with the VM, so it must be a plain function
 static void CK_DLL_CALL cb_shred_watcher_wrapper(Chuck_VM_Shred* shred, t_CKINT code,
                                                  t_CKINT param, Chuck_VM* vm, void* bindle);
+
+// Host classes bound into every VM at init (see docs/bind.md).
+//
+// A HostState lives until a new instance claims its ChucK's address, never
+// before: the VM caches the buffer state in objects that can outlive
+// shutdown(), and only a destroyed instance is sure to have no VM left.
+using HostArray = nb::ndarray<float, nb::c_contig, nb::device::cpu>;
+
+struct HostState {
+    HostBufferState* buffers = hostbuffer_new();
+    // keeps each registered array alive; GIL-guarded
+    std::unordered_map<std::string, HostArray> arrays;
+    std::atomic<int> send_callback_id{0};
+    // Host.send* receiver name -> callback ids, in registration order.
+    // Guarded by the GIL: Python mutates it, and delivery takes the GIL before
+    // reading it. A free-threaded build would need a mutex here. receiver_count
+    // lets the VM thread skip the GIL when empty
+    std::unordered_map<std::string, std::vector<int>> receivers;
+    std::atomic<int> receiver_count{0};
+    ~HostState() { hostbuffer_free(buffers); }
+};
+
+// GIL held: drop every receiver callback
+static void clear_receivers(HostState* host) {
+    for (auto& entry : host->receivers) {
+        for (int id : entry.second) remove_callback(id);
+    }
+    host->receivers.clear();
+    host->receiver_count.store(0, std::memory_order_release);
+}
+
+static std::mutex g_host_mutex;
+// Never destroyed: static destruction runs after Python finalizes, and
+// releasing a still-registered array then crashes.
+static auto& g_host_states =
+    *new std::unordered_map<ChucK*, std::unique_ptr<HostState>>();
+
+static HostState* host_state_of(ChucK* chuck) {
+    std::lock_guard<std::mutex> lock(g_host_mutex);
+    auto it = g_host_states.find(chuck);
+    return it == g_host_states.end() ? nullptr : it->second.get();
+}
+
+static HostState* host_state_of(Chuck_VM* vm) {
+    return (vm && vm->carrier()) ? host_state_of(vm->carrier()->chuck) : nullptr;
+}
+
+static HostBufferState* host_buffers_of(Chuck_VM* vm) {
+    HostState* st = host_state_of(vm);
+    return st ? st->buffers : nullptr;
+}
+
+// Host.send(string name, float value); runs on the VM thread, at the shred's
+// logical time
+CK_DLL_SFUN(host_send) {
+    Chuck_String* name = GET_NEXT_STRING(ARGS);
+    t_CKFLOAT value = GET_NEXT_FLOAT(ARGS);
+    HostState* st = host_state_of(VM);
+    if (!st || !name) return;
+    int id = st->send_callback_id.load(std::memory_order_acquire);
+    if (id == 0) return;
+
+    nb::gil_scoped_acquire acquire;
+    nb::callable callback = get_callback(id);
+    if (!callback.is_valid()) return;
+    call_from_vm(callback, "Host.send callback", name->str(), value);
+}
+
+// Host.send*(receiver, value): call every on_receive callback for receiver
+// with one argument, whatever the call, as a [receive] accepts any message; a
+// name with none is skipped, as [send] skips it. The ids are copied first, so a
+// callback may add or remove receivers
+template <typename Value>
+static void host_deliver(Chuck_VM* vm, Chuck_String* receiver, const Value& value) {
+    HostState* st = host_state_of(vm);
+    if (!st || !receiver || st->receiver_count.load(std::memory_order_acquire) == 0) {
+        return;
+    }
+    nb::gil_scoped_acquire acquire;
+    auto it = st->receivers.find(receiver->str());
+    if (it == st->receivers.end()) return;
+    std::vector<int> ids = it->second;
+    for (int id : ids) {
+        nb::callable callback = get_callback(id);
+        if (callback.is_valid()) {
+            call_from_vm(callback, "Host.send* receiver", value);
+        }
+    }
+}
+
+CK_DLL_SFUN(host_send_bang) {
+    Chuck_String* receiver = GET_NEXT_STRING(ARGS);
+    // a non-owning handle: no reference count changes before the GIL is held
+    host_deliver(VM, receiver, nb::handle(Py_None));
+}
+
+CK_DLL_SFUN(host_send_float) {
+    Chuck_String* receiver = GET_NEXT_STRING(ARGS);
+    t_CKFLOAT value = GET_NEXT_FLOAT(ARGS);
+    host_deliver(VM, receiver, value);
+}
+
+CK_DLL_SFUN(host_send_symbol) {
+    Chuck_String* receiver = GET_NEXT_STRING(ARGS);
+    Chuck_String* symbol = GET_NEXT_STRING(ARGS);
+    host_deliver(VM, receiver, symbol ? symbol->str() : std::string());
+}
+
+// whole lists: unlike Pd and Max, Python has no message size to fit
+CK_DLL_SFUN(host_send_list) {
+    Chuck_String* receiver = GET_NEXT_STRING(ARGS);
+    Chuck_ArrayFloat* values = (Chuck_ArrayFloat*)GET_NEXT_OBJECT(ARGS);
+    std::vector<t_CKFLOAT> list;
+    if (values) {
+        list.resize(values->size());
+        for (t_CKINT i = 0; i < (t_CKINT)list.size(); i++) {
+            values->get(i, &list[i]);
+        }
+    }
+    host_deliver(VM, receiver, list);
+}
+
+static t_CKBOOL CK_DLL_CALL host_query(Chuck_DL_Query* QUERY) {
+    QUERY->begin_class(QUERY, "Host", "Object");
+    QUERY->doc_class(QUERY, "messages from ChucK to the host program");
+    QUERY->add_sfun(QUERY, host_send, "void", "send");
+    QUERY->add_arg(QUERY, "string", "name");
+    QUERY->add_arg(QUERY, "float", "value");
+    QUERY->doc_func(QUERY, "pass name and value to the host's send callback");
+    QUERY->add_sfun(QUERY, host_send_bang, "void", "sendBang");
+    QUERY->add_arg(QUERY, "string", "receiver");
+    QUERY->doc_func(QUERY, "call each receiver callback with None");
+    QUERY->add_sfun(QUERY, host_send_float, "void", "sendFloat");
+    QUERY->add_arg(QUERY, "string", "receiver");
+    QUERY->add_arg(QUERY, "float", "value");
+    QUERY->doc_func(QUERY, "call each receiver callback with value");
+    QUERY->add_sfun(QUERY, host_send_symbol, "void", "sendSymbol");
+    QUERY->add_arg(QUERY, "string", "receiver");
+    QUERY->add_arg(QUERY, "string", "symbol");
+    QUERY->doc_func(QUERY, "call each receiver callback with symbol, as a str");
+    QUERY->add_sfun(QUERY, host_send_list, "void", "sendList");
+    QUERY->add_arg(QUERY, "string", "receiver");
+    QUERY->add_arg(QUERY, "float[]", "values");
+    QUERY->doc_func(QUERY, "call each receiver callback with values, as a list");
+    QUERY->end_class(QUERY);
+    return hostbuffer_query(QUERY);
+}
 
 // Drop every registration keyed to this address.
 //
@@ -402,6 +573,22 @@ static void CK_DLL_CALL cb_shred_watcher_wrapper(Chuck_VM_Shred* shred, t_CKINT 
 // away through garbage collection never run the shutdown path, so the release
 // has to happen when a new object claims the address instead.
 static void release_instance_state(ChucK* chuck) {
+    std::unique_ptr<HostState> host;
+    {
+        std::lock_guard<std::mutex> lock(g_host_mutex);
+        auto it = g_host_states.find(chuck);
+        if (it != g_host_states.end()) {
+            host = std::move(it->second);
+            g_host_states.erase(it);
+        }
+    }
+    if (host) {
+        int id = host->send_callback_id.load(std::memory_order_relaxed);
+        if (id != 0) remove_callback(id);
+        clear_receivers(host.get());
+    }
+    // the arrays drop here, outside g_host_mutex
+
     {
         std::lock_guard<std::mutex> lock(g_tap_mutex);
         for (TapSlot& slot : g_taps) {
@@ -509,58 +696,58 @@ static Chuck_Globals_Manager* require_globals(ChucK& chuck) {
 }
 
 static void cb_get_int_wrapper(t_CKINT callback_id, t_CKINT value) {
+    nb::gil_scoped_acquire acquire;
     nb::callable callback = get_callback(callback_id);
     if (callback.is_valid()) {
-        nb::gil_scoped_acquire acquire;
-        callback(value);
+        call_from_vm(callback, "global variable callback", value);
     }
     remove_callback(callback_id);
 }
 
 static void cb_get_float_wrapper(t_CKINT callback_id, t_CKFLOAT value) {
+    nb::gil_scoped_acquire acquire;
     nb::callable callback = get_callback(callback_id);
     if (callback.is_valid()) {
-        nb::gil_scoped_acquire acquire;
-        callback(value);
+        call_from_vm(callback, "global variable callback", value);
     }
     remove_callback(callback_id);
 }
 
 static void cb_get_string_wrapper(t_CKINT callback_id, const char* value) {
+    nb::gil_scoped_acquire acquire;
     nb::callable callback = get_callback(callback_id);
     if (callback.is_valid()) {
-        nb::gil_scoped_acquire acquire;
-        callback(std::string(value));
+        call_from_vm(callback, "global variable callback", std::string(value));
     }
     remove_callback(callback_id);
 }
 
 static void cb_get_int_array_wrapper(t_CKINT callback_id, t_CKINT array[], t_CKUINT size) {
+    nb::gil_scoped_acquire acquire;
     nb::callable callback = get_callback(callback_id);
     if (callback.is_valid()) {
-        nb::gil_scoped_acquire acquire;
         std::vector<t_CKINT> vec(array, array + size);
-        callback(vec);
+        call_from_vm(callback, "global array callback", vec);
     }
     remove_callback(callback_id);
 }
 
 static void cb_get_float_array_wrapper(t_CKINT callback_id, t_CKFLOAT array[], t_CKUINT size) {
+    nb::gil_scoped_acquire acquire;
     nb::callable callback = get_callback(callback_id);
     if (callback.is_valid()) {
-        nb::gil_scoped_acquire acquire;
         std::vector<t_CKFLOAT> vec(array, array + size);
-        callback(vec);
+        call_from_vm(callback, "global array callback", vec);
     }
     remove_callback(callback_id);
 }
 
 // Event listener callback wrapper (persistent callbacks)
 static void cb_event_wrapper(t_CKINT callback_id) {
+    nb::gil_scoped_acquire acquire;
     nb::callable callback = get_callback(callback_id);
     if (callback.is_valid()) {
-        nb::gil_scoped_acquire acquire;
-        callback();
+        call_from_vm(callback, "global event callback");
     }
     // Note: Don't remove callback for events - they're persistent
 }
@@ -584,12 +771,13 @@ static void CK_DLL_CALL cb_shred_watcher_wrapper(Chuck_VM_Shred* shred, t_CKINT 
     }
     if (callback_id == 0) return;
 
+    nb::gil_scoped_acquire acquire;
     nb::callable callback = get_callback(callback_id);
     if (callback.is_valid()) {
-        nb::gil_scoped_acquire acquire;
         t_CKUINT shred_id = shred ? shred->get_id() : 0;
         std::string name = shred ? shred->name : std::string();
-        callback(static_cast<t_CKINT>(code), shred_id, name);
+        call_from_vm(callback, "shred watcher callback",
+                     static_cast<t_CKINT>(code), shred_id, name);
     }
 }
 
@@ -608,10 +796,10 @@ static void cb_chout_wrapper(const char* msg) {
     }
 
     if (callback_id > 0) {
+        nb::gil_scoped_acquire acquire;
         nb::callable callback = get_callback(callback_id);
         if (callback.is_valid()) {
-            nb::gil_scoped_acquire acquire;
-            callback(msg);
+            call_from_vm(callback, "chout/cherr callback", msg);
         }
     }
 }
@@ -631,10 +819,10 @@ static void cb_cherr_wrapper(const char* msg) {
     }
 
     if (callback_id > 0) {
+        nb::gil_scoped_acquire acquire;
         nb::callable callback = get_callback(callback_id);
         if (callback.is_valid()) {
-            nb::gil_scoped_acquire acquire;
-            callback(msg);
+            call_from_vm(callback, "chout/cherr callback", msg);
         }
     }
 }
@@ -677,6 +865,8 @@ static void validate_audio_buffer(const T& array, const char* name,
 
 NB_MODULE(_numchuck, m) {
     m.doc() = "Python bindings for ChucK audio programming language";
+
+    hostbuffer_set_lookup(host_buffers_of);
 
     // ChucK parameter constants
     m.attr("PARAM_AUTO_DEPEND") = CHUCK_PARAM_AUTO_DEPEND;
@@ -773,6 +963,14 @@ NB_MODULE(_numchuck, m) {
         .def("init",
             [](ChucK& self) {
                 bool ok = self.init();
+                if (ok) {
+                    {
+                        std::lock_guard<std::mutex> lock(g_host_mutex);
+                        std::unique_ptr<HostState>& st = g_host_states[&self];
+                        if (!st) st = std::make_unique<HostState>();
+                    }
+                    ok = self.bind(host_query, "Host");
+                }
                 // the VM is created here, and its address is just as reusable
                 // as the instance's, so drop any watcher left over from a VM
                 // that previously lived at this address
@@ -898,6 +1096,15 @@ NB_MODULE(_numchuck, m) {
 
                 // Clean up instance-specific callbacks before VM shutdown
                 cleanup_instance_callbacks(&self);
+
+                // the VM outlives this call, so detach rather than free
+                if (HostState* host = host_state_of(&self)) {
+                    int id = host->send_callback_id.exchange(0);
+                    if (id != 0) remove_callback(id);
+                    clear_receivers(host);
+                    hostbuffer_clear_all(host->buffers);
+                    host->arrays.clear();
+                }
 
                 // Clear chout/cherr callbacks on the ChucK instance itself
                 self.setChoutCallback(nullptr);
@@ -1445,6 +1652,105 @@ NB_MODULE(_numchuck, m) {
             "cannot reach). Only has a target while the VM is inside a compute "
             "cycle, so call it from another thread during real-time audio; "
             "returns False when there is nothing to abort")
+        // Host classes
+        .def("set_host_send_callback",
+            [](ChucK& self, nb::object callback) {
+                HostState* host = host_state_of(&self);
+                if (!host) {
+                    throw std::runtime_error(
+                        "ChucK instance not initialized. Call init() first.");
+                }
+                if (!callback.is_none() && !PyCallable_Check(callback.ptr())) {
+                    throw nb::type_error("callback must be callable or None");
+                }
+                int id = callback.is_none()
+                    ? 0 : store_callback(nb::borrow<nb::callable>(callback));
+                int old = host->send_callback_id.exchange(id);
+                if (old != 0) remove_callback(old);
+            },
+            "callback"_a.none(),
+            "Call callback(name, value) for each Host.send(name, value) in "
+            "ChucK. The callback runs on whichever thread drives the VM. "
+            "None clears it")
+        .def("add_host_receiver",
+            [](ChucK& self, const std::string& name, nb::callable callback) {
+                HostState* host = host_state_of(&self);
+                if (!host) {
+                    throw std::runtime_error(
+                        "ChucK instance not initialized. Call init() first.");
+                }
+                int id = store_callback(callback);
+                host->receivers[name].push_back(id);
+                host->receiver_count.fetch_add(1, std::memory_order_release);
+                return id;
+            },
+            "name"_a, "callback"_a,
+            "Call callback(value) for each Host.sendBang/sendFloat/sendSymbol/"
+            "sendList to name; value is None, a float, a str or a list of floats. "
+            "Runs on whichever thread drives the VM. Returns an id for "
+            "remove_host_receiver")
+        .def("remove_host_receiver",
+            [](ChucK& self, const std::string& name, int callback_id) {
+                HostState* host = host_state_of(&self);
+                if (!host) return false;
+                auto it = host->receivers.find(name);
+                if (it == host->receivers.end()) return false;
+                std::vector<int>& ids = it->second;
+                auto pos = std::find(ids.begin(), ids.end(), callback_id);
+                if (pos == ids.end()) return false;
+                ids.erase(pos);
+                if (ids.empty()) host->receivers.erase(it);
+                host->receiver_count.fetch_sub(1, std::memory_order_release);
+                remove_callback(callback_id);
+                return true;
+            },
+            "name"_a, "callback_id"_a,
+            "Remove a receiver callback. Returns True if it was registered")
+        .def("set_buffer",
+            [](ChucK& self, const std::string& name, HostArray array,
+               double sample_rate) {
+                HostState* host = host_state_of(&self);
+                if (!host) {
+                    throw std::runtime_error(
+                        "ChucK instance not initialized. Call init() first.");
+                }
+                if (array.ndim() != 1 && array.ndim() != 2) {
+                    throw std::invalid_argument(
+                        "buffer must be 1-D (frames) or 2-D (frames, channels)");
+                }
+                long frames = (long)array.shape(0);
+                long chans = array.ndim() == 2 ? (long)array.shape(1) : 1;
+                if (frames == 0 || chans == 0) {
+                    throw std::invalid_argument("buffer must not be empty");
+                }
+                if (sample_rate <= 0) {
+                    sample_rate = (double)self.getParamInt(CHUCK_PARAM_SAMPLE_RATE);
+                }
+                if (!hostbuffer_set(host->buffers, name.c_str(), array.data(),
+                                    frames, chans, sample_rate)) {
+                    throw std::runtime_error(
+                        "no free buffer slots: " + std::to_string(HOSTBUFFER_MAX_SLOTS)
+                        + " names are in use");
+                }
+                // the VM has let go of any previous array under this name
+                host->arrays[name] = array;
+            },
+            "name"_a, "array"_a.noconvert(), "sample_rate"_a = 0.0,
+            "Let HostBuffer and HostBufPlay read and write array under name. "
+            "array must be a writable, C-contiguous float32 array of shape "
+            "(frames,) or (frames, channels); ChucK uses it in place. "
+            "sample_rate defaults to the VM's")
+        .def("remove_buffer",
+            [](ChucK& self, const std::string& name) {
+                HostState* host = host_state_of(&self);
+                if (!host) return false;
+                bool had = hostbuffer_clear(host->buffers, name.c_str());
+                host->arrays.erase(name);
+                return had;
+            },
+            "name"_a,
+            "Detach the array registered under name. Returns True if there was one")
+
         .def("subscribe_shred_watcher",
             [](ChucK& self, nb::callable callback, t_CKUINT options) {
                 if (!self.vm()) {
@@ -1639,7 +1945,8 @@ NB_MODULE(_numchuck, m) {
             "ChucK poop compatibility")
         .def_static("set_stdout_callback",
             [](nb::handle callback) {
-                static nb::object stored_callback;
+                // never destroyed: static destruction runs after Python finalizes
+                static nb::object& stored_callback = *new nb::object();
                 if (callback.is_none()) {
                     stored_callback = nb::object();
                     ChucK::setStdoutCallback(nullptr);
@@ -1648,7 +1955,7 @@ NB_MODULE(_numchuck, m) {
                     ChucK::setStdoutCallback([](const char* msg) {
                         nb::gil_scoped_acquire acquire;
                         if (stored_callback.is_valid() && !stored_callback.is_none()) {
-                            stored_callback(msg);
+                            call_from_vm(stored_callback, "stdout/stderr callback", msg);
                         }
                     });
                 }
@@ -1657,7 +1964,8 @@ NB_MODULE(_numchuck, m) {
             "Set global stdout callback (pass None to clear)")
         .def_static("set_stderr_callback",
             [](nb::handle callback) {
-                static nb::object stored_callback;
+                // never destroyed: static destruction runs after Python finalizes
+                static nb::object& stored_callback = *new nb::object();
                 if (callback.is_none()) {
                     stored_callback = nb::object();
                     ChucK::setStderrCallback(nullptr);
@@ -1666,7 +1974,7 @@ NB_MODULE(_numchuck, m) {
                     ChucK::setStderrCallback([](const char* msg) {
                         nb::gil_scoped_acquire acquire;
                         if (stored_callback.is_valid() && !stored_callback.is_none()) {
-                            stored_callback(msg);
+                            call_from_vm(stored_callback, "stdout/stderr callback", msg);
                         }
                     });
                 }

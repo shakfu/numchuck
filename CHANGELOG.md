@@ -15,6 +15,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [Unreleased]
 
+### Added
+
+- **Host classes bound into every VM** (`src/hostbuffer.cpp`, `docs/api/host.md`): `Host.send(name, value)` calls the Python callback set with `Chuck.on_send`, at the shred's logical time. `HostBuffer` reads and writes, in place, a numpy array registered with `Chuck.set_buffer`; `HostBufPlay` is a UGen that plays one. `Host.sendBang`, `sendFloat`, `sendSymbol` and `sendList` call the callbacks registered for a name with `Chuck.on_receive`, the Python counterpart of `[receive]`. Each callback takes one argument, `None`, `float`, `str` or `list[float]`, so like a `[receive]` it accepts whatever the `.ck` file sends; lists arrive whole, and receivers are per instance rather than process-wide. chuck-max and pd-chuck bind the same names, so one `.ck` file can run in each host. `set_buffer` refuses arrays it would have to copy, since ChucK's writes would then be lost. Design notes: `docs/bind.md`.
+
+### Changed
+
+- **Vendored chuck and chugins refreshed** (`thirdparty/chuck/`, `thirdparty/chugins/`, `examples/`): to ccrma/chuck `35977f6` and ccrma/chugins `16d8ab2`. `scripts/patches/0002-otf-thread-join.patch` is removed: upstream 1.5.5.9 now joins the OTF thread before freeing its socket, so the patch no longer applied and `scripts/update.sh` stopped half way. The patch's `ck_accept()` NULL guard goes with it, since the join removes the case it covered.
+
+### Fixed
+
+- **An exception in a VM callback unwound through the VM** (`src/_numchuck.cpp`): event listeners, async getters, the shred watcher, chout/cherr and the global stdout/stderr callbacks let a Python exception propagate into ChucK. Offline it escaped `run()` part way through a shred; during real-time audio it killed the audio callback, and `stop_audio()` then hung. Each is now reported to `sys.unraisablehook` and the VM continues, as `Host.send` already did. Raising from `run()` instead would leave the VM mid-shred, and the audio thread has no caller to raise to. `tests/test_callback_exceptions.py` covers each callback.
+
+- **Stored Python callbacks were touched without the GIL** (`src/_numchuck.cpp`): the callback wrappers copied the stored callable before taking the GIL and released it after dropping the GIL, and the one-shot getters removed it from the registry with no GIL at all. During real-time audio these run on the audio thread, so the registry's last reference to a callback passed to `get_float_async` and the like was dropped there; with a `__del__`, Python aborted (`PyThreadState_Get: the function must be called with the GIL held`). Separately, removal freed the callable inside the registry lock, so a `__del__` that registered a callback deadlocked, and the registry and the global `set_stdout_callback`/`set_stderr_callback` holders were static objects whose destructors ran after Python finalized, segfaulting at exit. The wrappers now take the GIL first, removal releases outside the lock, and the holders are never destroyed. `tests/test_callback_gil.py` reproduces all three against the previous binding.
+
+- **ConvRev did not compile on macOS** (`scripts/patches/chugins/0002-convrev-thread-include.patch`): upstream guards `#include <thread>` with `#if __EMSCRIPTEN__`, but uses `std::thread` only when `__EMSCRIPTEN__` is undefined. The current Apple libc++ no longer pulls `<thread>` in through `<mutex>`, so the error surfaced. The patch inverts the guard.
+
+- **`tests/test_web.py` bound fixed ports 8083-8089**: any other local listener on one of them failed the suite. Those tests now take a `free_port` fixture from `tests/conftest.py`.
+
 ## [0.3.0]
 
 ### Security

@@ -386,11 +386,13 @@ function update_chugins() {
 	# Prune before the overlay so that local files sharing these names (the
 	# AudioUnit and Fauck makefiles, for instance) are restored afterwards.
 	# chuck/ is the chugin SDK and chuginate/ is a project template: their
-	# makefiles are payload, not this project's build system.
+	# makefiles are payload, not this project's build system. The WarpBuf
+	# assets .gitignore keeps test audio other than the fixtures untracked.
 	for glob in "${PRUNE_CHUGINS_GLOBS[@]}"; do
 		find "${staged}" \
 			-path "${staged}/chuck" -prune -o \
 			-path "${staged}/chuginate" -prune -o \
+			-path "${staged}/WarpBuf/tests/assets/.gitignore" -prune -o \
 			-name "${glob}" -prune -exec rm -rf {} +
 	done
 

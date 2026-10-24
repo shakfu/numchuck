@@ -88,11 +88,13 @@ nav:
       - Rendering: api/rendering.md
       - Audio: api/audio.md
       - Events: api/events.md
+      - Host classes: api/host.md
       - Low-level ChucK: api/lowlevel.md
       - Constants: api/constants.md
   - Development:
       - Architecture: architecture.md
       - Chugins: chugins.md
+      - Host classes: bind.md
       - Static chugins: static_chugins.md
       - ChucK lexer: chuck_lexer.md
       - Model/view: model_view.md

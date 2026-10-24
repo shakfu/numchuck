@@ -20,6 +20,7 @@ nanobind_add_module(
 
   # Source code goes here
   ${CMAKE_SOURCE_DIR}/src/_numchuck.cpp
+  ${CMAKE_SOURCE_DIR}/src/hostbuffer.cpp
   ${CMAKE_SOURCE_DIR}/thirdparty/chuck/host/chuck_audio.cpp
   ${CMAKE_SOURCE_DIR}/thirdparty/chuck/host/RtAudio/RtAudio.cpp
 )
