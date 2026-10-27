@@ -53,7 +53,7 @@ that id — so keep it if you intend to unsubscribe.
 
 !!! note "Exceptions do not reach the caller"
     An exception raised in any callback the VM calls (events, async getters,
-    shred watchers, output callbacks, `Host.send`) goes to
+    shred watchers, output callbacks, `Host.msg`) goes to
     `sys.unraisablehook`. `run()` does not raise it, and the VM keeps running.
 
 !!! note "The VM has to advance for a callback to fire"

@@ -1,6 +1,6 @@
 # Host classes via `ChucK::bind()`
 
-User documentation: [api/host.md](api/host.md). This page records design
+User documentation: [api/host.md](../api/host.md). This page records design
 decisions.
 
 `ChucK::bind(queryFunc, name)` declares native classes in a VM's global
@@ -14,12 +14,19 @@ three hosts.
 
 - `src/hostbuffer.{h,cpp}`: `HostBuffer`, `HostBufPlay`. No Python
   dependency; another host can reuse them.
-- `src/_numchuck.cpp`: `Host.send`, the per-instance `HostState` registry,
+- `src/_numchuck.cpp`: `Host.msg`, `Host.send*`, the per-instance `HostState` registry,
   and the Python methods.
 
-## `Host.send` and `Host.send*` delivery
+## `Host.msg` and `Host.send*` delivery
 
-Synchronous: the callback runs inside the `Host.send` call, on the VM thread.
+`Host.msg(name, ...)` goes to the one `on_msg` callback; `Host.send*` goes to
+the `on_receive` callbacks for a name. The name `msg` is the outlet message
+`msg <name> <args>` that chuck-max and pd-chuck emit, and mirrors their
+`HostIn` receiving `msg`; `send*` keeps the `[send]`/`[receive]` idiom. It was
+`Host.send(name, float)` until 2026-10-27; the bang, string and `float[]`
+overloads came with the rename.
+
+Synchronous: the callback runs inside the `Host.msg` call, on the VM thread.
 chuck-max queues instead, because Max forbids outlet calls from the audio
 thread. Python has no such rule, and numchuck's event and shred-watcher
 callbacks already take the GIL on the VM thread. In offline `run()` the caller
@@ -29,6 +36,11 @@ thread switch.
 `Host.sendBang`/`sendFloat`/`sendSymbol`/`sendList` follow the same rule.
 With nothing queued, Pd's and Max's queue and message size give no reason
 to cut lists, so lists arrive whole.
+
+`sendList` takes `float[]` in all three hosts. ChucK arrays are homogeneous,
+so a mixed list has no ChucK type; in Max and Pd the queue entry is also a
+fixed array of 32 floats, so the audio thread allocates nothing. A `string[]`
+overload is the next step if one host needs it.
 
 - The callback always takes one argument: `None`, a `float`, a `str` or a
   `list[float]`. Passing a bang with no argument was rejected: a callback

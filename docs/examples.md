@@ -195,6 +195,32 @@ with Chuck(input_channels=0) as chuck:
     During real-time audio that is the audio thread, so keep them brief — queue
     the work instead of doing it inline.
 
+### Sending values with `Host.msg`
+
+The same round trip without a global, an event and a getter. The callback
+runs at the shred's logical time, so `chuck.raw.now()` inside it returns the
+time of the `Host.msg` call.
+
+```python
+CODE = """
+    while (true) {
+        Host.msg("result", 42);
+        1::second => now;
+    }
+"""
+
+with Chuck(input_channels=0) as chuck:
+    got = []
+    chuck.on_msg(lambda name, value: got.append((name, value, chuck.raw.now())))
+    chuck.compile(CODE)
+    chuck.run(chuck.sample_rate * 2)
+    # got == [("result", 42.0, 0.0), ("result", 42.0, 44100.0)]
+```
+
+`Host.sendBang`/`sendFloat`/`sendSymbol`/`sendList` reach callbacks registered
+per name with `on_receive`, the Python counterpart of a Pd or Max `[receive]`.
+See [Host classes](api/host.md).
+
 ## Audio processing
 
 ### Rendering in chunks
@@ -395,6 +421,7 @@ for freq in (220, 440, 880):
 
 - [Quickstart](quickstart.md) — the guided introduction
 - [Error handling](error_handling.md) — what raises, and when
+- [Host classes](api/host.md) — `Host.msg`, `Host.send*`, `HostBuffer`, `HostBufPlay`
 - [API reference](api/chuck.md) — generated from the source
 - The [`examples/`](https://github.com/shakfu/numchuck/tree/main/examples)
   directory in the repository holds 500+ ChucK programs from the upstream

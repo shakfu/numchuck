@@ -25,7 +25,7 @@ Thread Safety:
     - Event signaling (signal_event, broadcast_event)
     - Read-only queries (shreds property, shred_info)
 
-    See docs/architecture.md for detailed thread safety documentation.
+    See docs/dev/architecture.md for detailed thread safety documentation.
 """
 
 from __future__ import annotations
@@ -1008,14 +1008,19 @@ class Chuck:
     # Host classes (Host, HostBuffer, HostBufPlay)
     # -------------------------------------------------------------------------
 
-    def on_send(self, callback: Callable[[str, float], None] | None) -> None:
-        """Call callback(name, value) for each Host.send(name, value) in ChucK.
+    def on_msg(
+        self,
+        callback: Callable[[str, None | float | str | list[float]], None] | None,
+    ) -> None:
+        """Call callback(name, value) for each Host.msg(name, ...) in ChucK.
 
-        The callback runs on whichever thread drives the VM, at the shred's
-        logical time. During real-time audio that is the audio thread -- keep
-        it short. Pass None to clear.
+        value is None for Host.msg(name), a float for msg(name, float), a str
+        for msg(name, string) and a list of floats, whole, for
+        msg(name, float[]). The callback runs on whichever thread drives the
+        VM, at the shred's logical time. During real-time audio that is the
+        audio thread -- keep it short. Pass None to clear.
         """
-        self._chuck.set_host_send_callback(callback)
+        self._chuck.set_host_msg_callback(callback)
 
     def on_receive(
         self,
@@ -1028,7 +1033,7 @@ class Chuck:
         sendSymbol and a list of floats, whole, for sendList. The callback
         always takes one argument, so it accepts whatever ChucK sends to the
         name. Several callbacks may share a name; they run in registration
-        order. Receivers belong to this instance. Like on_send, the callback
+        order. Receivers belong to this instance. Like on_msg, the callback
         runs on whichever thread drives the VM.
 
         Returns:

@@ -198,6 +198,46 @@ chuck.broadcast_event("trigger")    # wake all of them
 chuck.stop_listening_for_event("trigger", callback_id)
 ```
 
+## Host messages and shared buffers
+
+Every VM binds `Host`, `HostBuffer` and `HostBufPlay`. `Host.msg` sends a
+value to Python without a global, an event and a getter:
+
+```python
+chuck.on_msg(lambda name, value: print(name, value))
+chuck.compile("""
+    while (true) {
+        Host.msg("freq", Math.random2f(200, 800));
+        250::ms => now;
+    }
+""")
+chuck.run(chuck.sample_rate)    # one second: prints 4 lines
+```
+
+`Host.sendBang`/`sendFloat`/`sendSymbol`/`sendList` reach the callbacks
+registered for a name with `on_receive`, as `[send]` reaches `[receive]` in Pd
+and Max. `set_buffer` hands ChucK a NumPy array to read, write and play in
+place:
+
+```python
+import numpy as np
+
+buf = np.zeros((48000, 2), dtype=np.float32)
+chuck.set_buffer("rec", buf)
+chuck.compile("""
+    HostBuffer b;
+    b.name("rec");
+    for (0 => int i; i < b.frames(); i++) {
+        b.poke(i, 0, Math.sin(2 * pi * 440 * i / b.sampleRate()));
+    }
+""")
+chuck.run(1)                    # buf[:, 0] now holds a 440 Hz sine
+```
+
+The array must be writable, C-contiguous `float32`; anything that would need
+a copy raises. See [Host classes](api/host.md) for `HostBufPlay` and the
+limits.
+
 ## Reading audio mid-graph
 
 `dac` output is what `run()` returns. To read a signal from the middle of the
@@ -252,4 +292,5 @@ see [User directory](numchuck_home.md) for why that is opt-in.
 
 - [Examples](examples.md) — worked patterns
 - [Error handling](error_handling.md) — what raises, and when
+- [Host classes](api/host.md) — `Host`, `HostBuffer`, `HostBufPlay`
 - [API reference](api/chuck.md) — generated from the source

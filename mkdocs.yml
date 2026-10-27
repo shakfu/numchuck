@@ -92,16 +92,16 @@ nav:
       - Low-level ChucK: api/lowlevel.md
       - Constants: api/constants.md
   - Development:
-      - Architecture: architecture.md
-      - Chugins: chugins.md
-      - Host classes: bind.md
-      - Static chugins: static_chugins.md
-      - ChucK lexer: chuck_lexer.md
-      - Model/view: model_view.md
+      - Architecture: dev/architecture.md
+      - Chugins: dev/chugins.md
+      - Host classes: dev/bind.md
+      - Static chugins: dev/static_chugins.md
+      - ChucK lexer: dev/chuck_lexer.md
+      - Model/view: dev/model_view.md
       - Fix notes:
-          - Critical fixes: critical_fixes.md
-          - Segfault fix: segfault_fix.md
-          - Windows fix: windows_fix.md
+          - Critical fixes: dev/critical_fixes.md
+          - Segfault fix: dev/segfault_fix.md
+          - Windows fix: dev/windows_fix.md
 
 watch:
   - src/numchuck

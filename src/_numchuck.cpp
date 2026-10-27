@@ -418,7 +418,7 @@ static void call_from_vm(nb::handle callback, const char* context, Args&&... arg
 static void CK_DLL_CALL cb_shred_watcher_wrapper(Chuck_VM_Shred* shred, t_CKINT code,
                                                  t_CKINT param, Chuck_VM* vm, void* bindle);
 
-// Host classes bound into every VM at init (see docs/bind.md).
+// Host classes bound into every VM at init (see docs/dev/bind.md).
 //
 // A HostState lives until a new instance claims its ChucK's address, never
 // before: the VM caches the buffer state in objects that can outlive
@@ -429,7 +429,7 @@ struct HostState {
     HostBufferState* buffers = hostbuffer_new();
     // keeps each registered array alive; GIL-guarded
     std::unordered_map<std::string, HostArray> arrays;
-    std::atomic<int> send_callback_id{0};
+    std::atomic<int> msg_callback_id{0};
     // Host.send* receiver name -> callback ids, in registration order.
     // Guarded by the GIL: Python mutates it, and delivery takes the GIL before
     // reading it. A free-threaded build would need a mutex here. receiver_count
@@ -469,20 +469,57 @@ static HostBufferState* host_buffers_of(Chuck_VM* vm) {
     return st ? st->buffers : nullptr;
 }
 
-// Host.send(string name, float value); runs on the VM thread, at the shred's
-// logical time
-CK_DLL_SFUN(host_send) {
-    Chuck_String* name = GET_NEXT_STRING(ARGS);
-    t_CKFLOAT value = GET_NEXT_FLOAT(ARGS);
-    HostState* st = host_state_of(VM);
+// Host.msg(string name, ...): call the on_msg callback with (name, value);
+// runs on the VM thread, at the shred's logical time. The value is None, a
+// float, a str or a list of floats, one per overload
+template <typename Value>
+static void host_msg_deliver(Chuck_VM* vm, Chuck_String* name, const Value& value) {
+    HostState* st = host_state_of(vm);
     if (!st || !name) return;
-    int id = st->send_callback_id.load(std::memory_order_acquire);
+    int id = st->msg_callback_id.load(std::memory_order_acquire);
     if (id == 0) return;
 
     nb::gil_scoped_acquire acquire;
     nb::callable callback = get_callback(id);
     if (!callback.is_valid()) return;
-    call_from_vm(callback, "Host.send callback", name->str(), value);
+    call_from_vm(callback, "Host.msg callback", name->str(), value);
+}
+
+// copy a ChucK float[] into a vector; whole, unlike Pd and Max, which fit a
+// message
+static std::vector<t_CKFLOAT> float_array_of(Chuck_ArrayFloat* values) {
+    std::vector<t_CKFLOAT> list;
+    if (values) {
+        list.resize(values->size());
+        for (t_CKINT i = 0; i < (t_CKINT)list.size(); i++) {
+            values->get(i, &list[i]);
+        }
+    }
+    return list;
+}
+
+CK_DLL_SFUN(host_msg_bang) {
+    Chuck_String* name = GET_NEXT_STRING(ARGS);
+    // a non-owning handle: no reference count changes before the GIL is held
+    host_msg_deliver(VM, name, nb::handle(Py_None));
+}
+
+CK_DLL_SFUN(host_msg_float) {
+    Chuck_String* name = GET_NEXT_STRING(ARGS);
+    t_CKFLOAT value = GET_NEXT_FLOAT(ARGS);
+    host_msg_deliver(VM, name, value);
+}
+
+CK_DLL_SFUN(host_msg_string) {
+    Chuck_String* name = GET_NEXT_STRING(ARGS);
+    Chuck_String* value = GET_NEXT_STRING(ARGS);
+    host_msg_deliver(VM, name, value ? value->str() : std::string());
+}
+
+CK_DLL_SFUN(host_msg_list) {
+    Chuck_String* name = GET_NEXT_STRING(ARGS);
+    Chuck_ArrayFloat* values = (Chuck_ArrayFloat*)GET_NEXT_OBJECT(ARGS);
+    host_msg_deliver(VM, name, float_array_of(values));
 }
 
 // Host.send*(receiver, value): call every on_receive callback for receiver
@@ -525,27 +562,30 @@ CK_DLL_SFUN(host_send_symbol) {
     host_deliver(VM, receiver, symbol ? symbol->str() : std::string());
 }
 
-// whole lists: unlike Pd and Max, Python has no message size to fit
 CK_DLL_SFUN(host_send_list) {
     Chuck_String* receiver = GET_NEXT_STRING(ARGS);
     Chuck_ArrayFloat* values = (Chuck_ArrayFloat*)GET_NEXT_OBJECT(ARGS);
-    std::vector<t_CKFLOAT> list;
-    if (values) {
-        list.resize(values->size());
-        for (t_CKINT i = 0; i < (t_CKINT)list.size(); i++) {
-            values->get(i, &list[i]);
-        }
-    }
-    host_deliver(VM, receiver, list);
+    host_deliver(VM, receiver, float_array_of(values));
 }
 
 static t_CKBOOL CK_DLL_CALL host_query(Chuck_DL_Query* QUERY) {
     QUERY->begin_class(QUERY, "Host", "Object");
     QUERY->doc_class(QUERY, "messages from ChucK to the host program");
-    QUERY->add_sfun(QUERY, host_send, "void", "send");
+    QUERY->add_sfun(QUERY, host_msg_bang, "void", "msg");
+    QUERY->add_arg(QUERY, "string", "name");
+    QUERY->doc_func(QUERY, "call the host's msg callback with (name, None)");
+    QUERY->add_sfun(QUERY, host_msg_float, "void", "msg");
     QUERY->add_arg(QUERY, "string", "name");
     QUERY->add_arg(QUERY, "float", "value");
-    QUERY->doc_func(QUERY, "pass name and value to the host's send callback");
+    QUERY->doc_func(QUERY, "call the host's msg callback with (name, value)");
+    QUERY->add_sfun(QUERY, host_msg_string, "void", "msg");
+    QUERY->add_arg(QUERY, "string", "name");
+    QUERY->add_arg(QUERY, "string", "value");
+    QUERY->doc_func(QUERY, "call the host's msg callback with (name, value), as a str");
+    QUERY->add_sfun(QUERY, host_msg_list, "void", "msg");
+    QUERY->add_arg(QUERY, "string", "name");
+    QUERY->add_arg(QUERY, "float[]", "values");
+    QUERY->doc_func(QUERY, "call the host's msg callback with (name, values), as a list");
     QUERY->add_sfun(QUERY, host_send_bang, "void", "sendBang");
     QUERY->add_arg(QUERY, "string", "receiver");
     QUERY->doc_func(QUERY, "call each receiver callback with None");
@@ -583,7 +623,7 @@ static void release_instance_state(ChucK* chuck) {
         }
     }
     if (host) {
-        int id = host->send_callback_id.load(std::memory_order_relaxed);
+        int id = host->msg_callback_id.load(std::memory_order_relaxed);
         if (id != 0) remove_callback(id);
         clear_receivers(host.get());
     }
@@ -1099,7 +1139,7 @@ NB_MODULE(_numchuck, m) {
 
                 // the VM outlives this call, so detach rather than free
                 if (HostState* host = host_state_of(&self)) {
-                    int id = host->send_callback_id.exchange(0);
+                    int id = host->msg_callback_id.exchange(0);
                     if (id != 0) remove_callback(id);
                     clear_receivers(host);
                     hostbuffer_clear_all(host->buffers);
@@ -1653,7 +1693,7 @@ NB_MODULE(_numchuck, m) {
             "cycle, so call it from another thread during real-time audio; "
             "returns False when there is nothing to abort")
         // Host classes
-        .def("set_host_send_callback",
+        .def("set_host_msg_callback",
             [](ChucK& self, nb::object callback) {
                 HostState* host = host_state_of(&self);
                 if (!host) {
@@ -1665,13 +1705,13 @@ NB_MODULE(_numchuck, m) {
                 }
                 int id = callback.is_none()
                     ? 0 : store_callback(nb::borrow<nb::callable>(callback));
-                int old = host->send_callback_id.exchange(id);
+                int old = host->msg_callback_id.exchange(id);
                 if (old != 0) remove_callback(old);
             },
             "callback"_a.none(),
-            "Call callback(name, value) for each Host.send(name, value) in "
-            "ChucK. The callback runs on whichever thread drives the VM. "
-            "None clears it")
+            "Call callback(name, value) for each Host.msg(name, ...) in ChucK; "
+            "value is None, a float, a str or a list of floats. The callback "
+            "runs on whichever thread drives the VM. None clears it")
         .def("add_host_receiver",
             [](ChucK& self, const std::string& name, nb::callable callback) {
                 HostState* host = host_state_of(&self);

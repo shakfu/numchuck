@@ -131,8 +131,8 @@ class ChucK:
     def remove_shred_watcher(self) -> bool: ...
 
     # Host classes
-    def set_host_send_callback(
-        self, callback: Callable[[str, float], None] | None
+    def set_host_msg_callback(
+        self, callback: Callable[[str, None | float | str | List[float]], None] | None
     ) -> None: ...
     def add_host_receiver(
         self, name: str, callback: Callable[[None | float | str | List[float]], None]

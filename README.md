@@ -22,6 +22,8 @@ The numchuck library provides interactive control over ChucK, enabling live codi
 
 - **Dynamic Interaction** - Bidirectional communication between ChucK and Python through global variables, event triggers, and callbacks.
 
+- **Host Classes** — `Host`, `HostBuffer` and `HostBufPlay` are bound into every VM. `Host.msg` and `Host.send*` call Python callbacks at the shred's logical time; `HostBuffer` and `HostBufPlay` read, write and play a numpy array in place. chuck-max and pd-chuck bind the same names, so one `.ck` file runs in all three hosts (see [Host Classes](#host-classes-messages-and-shared-buffers)).
+
 ### User Interface
 
 - **Multi-Tab Editor** — Full-screen ChucK editor with syntax highlighting; use F5 to spork and F6 to replace.
@@ -546,6 +548,7 @@ All functions support:
 The `Chuck` class provides a Pythonic interface with properties and simplified methods:
 
 ```python
+import numpy as np
 from numchuck import Chuck
 
 # Create with parameters (auto-initializes)
@@ -573,6 +576,11 @@ val = chuck.get_int("tempo")  # 120
 # Events
 chuck.signal_event("trigger")
 chuck.on_event("response", my_callback)
+
+# Host classes: ChucK calls Python, and both sides share an array
+chuck.on_msg(lambda name, value: print(name, value))   # Host.msg("freq", 440)
+chuck.on_receive("tick", lambda value: print("tick"))  # Host.sendBang("tick")
+chuck.set_buffer("rec", np.zeros(48000, dtype=np.float32))  # HostBuffer b; b.name("rec")
 
 # Access low-level API when needed
 chuck.raw.set_param(...)
@@ -844,6 +852,18 @@ Chuck(
 - **`on_event(name, callback, listen_forever=True) -> int`** - Register event callback, returns callback ID
 - **`stop_listening_for_event(name, callback_id) -> None`** - Stop listening for event
 
+#### Host Classes
+
+Every VM binds `Host`, `HostBuffer` and `HostBufPlay`. Full reference: [docs/api/host.md](docs/api/host.md).
+
+- **`on_msg(callback)`** - Call `callback(name, value)` for each `Host.msg(name, ...)` in ChucK; `value` is `None`, `float`, `str` or `list[float]` by overload. One callback per instance; pass `None` to clear
+- **`on_receive(name, callback) -> int`** - Call `callback(value)` for each `Host.sendBang`/`sendFloat`/`sendSymbol`/`sendList` to `name`, the Python counterpart of `[receive name]`. Several callbacks may share a name. Returns a callback ID
+- **`remove_receiver(name, callback_id) -> bool`** - Remove a callback registered with `on_receive`
+- **`set_buffer(name, array, sample_rate=None)`** - Let `HostBuffer` and `HostBufPlay` use `array` in place. Requires a writable, C-contiguous `float32` array of shape `(frames,)` or `(frames, channels)`; anything that would need a copy raises
+- **`remove_buffer(name) -> bool`** - Detach the array; ChucK then reads 0
+
+Callbacks run on whichever thread drives the VM, at the shred's logical time. During real-time audio that is the audio thread, so keep them short. Exceptions go to `sys.unraisablehook`.
+
 #### Console Output
 
 - **`set_stdout_callback(callback)`** - Capture ChucK stdout (chout)
@@ -945,6 +965,14 @@ from numchuck._numchuck import ChucK
 - **`broadcast_global_event(name: str)`** - Broadcast a global event (wakes all waiting shreds)
 - **`listen_for_global_event(name: str, callback: Callable[[], None], listen_forever: bool = True) -> int`** - Listen for event, returns listener ID
 - **`stop_listening_for_global_event(name: str, callback_id: int)`** - Stop listening using listener ID
+
+#### Host Classes
+
+- **`set_host_msg_callback(callback: Callable[[str, None | float | str | list[float]], None] | None)`** - Callback for `Host.msg`
+- **`add_host_receiver(name: str, callback: Callable[[None | float | str | list[float]], None]) -> int`** - Register a callback for `Host.send*` to `name`, returns callback ID
+- **`remove_host_receiver(name: str, callback_id: int) -> bool`** - Remove a receiver
+- **`set_buffer(name: str, array: np.ndarray, sample_rate: float = 0.0)`** - Register a `float32` array for `HostBuffer`/`HostBufPlay`; 0.0 means the VM's sample rate
+- **`remove_buffer(name: str) -> bool`** - Detach the array
 
 #### Shred Management
 
@@ -1460,6 +1488,67 @@ for note in [60, 64, 67, 72]:  # C major chord
 # Stop listening
 chuck.stop_listening_for_global_event("response", listener_id)
 ```
+
+### Host Classes (Messages and Shared Buffers)
+
+`Host.msg` sends a value to Python without declaring a global, an event and a getter. The callback runs at the shred's logical time.
+
+```python
+from numchuck import Chuck
+
+with Chuck(input_channels=0) as chuck:
+    chuck.on_msg(lambda name, value: print(name, value))
+    chuck.compile('''
+        while (true) {
+            Math.random2f(200, 800) => float f;
+            Host.msg("freq", f);
+            250::ms => now;
+        }
+    ''')
+    chuck.run(chuck.sample_rate)   # one second: prints 4 lines
+```
+
+`Host.sendBang`/`sendFloat`/`sendSymbol`/`sendList` reach the callbacks registered for a name with `on_receive`, as `[send]` reaches `[receive]` in Pd and Max. The callback always takes one argument, so it accepts whatever the `.ck` file sends.
+
+```python
+with Chuck(input_channels=0) as chuck:
+    chuck.on_receive("tick", lambda _: print("tick"))
+    chuck.on_receive("pair", lambda values: print("pair", values))
+    chuck.compile('''
+        Host.sendBang("tick");
+        Host.sendList("pair", [440.0, 0.2]);
+    ''')
+    chuck.run(1)
+```
+
+`HostBuffer` reads and writes a numpy array in place; `HostBufPlay` is a UGen that plays one.
+
+```python
+import numpy as np
+
+with Chuck(input_channels=0) as chuck:
+    buf = np.zeros((48000, 2), dtype=np.float32)
+    chuck.set_buffer("rec", buf)
+    chuck.compile('''
+        HostBuffer b;
+        b.name("rec");
+        for (0 => int i; i < b.frames(); i++) {
+            b.poke(i, 0, Math.sin(2 * pi * 440 * i / b.sampleRate()));
+        }
+    ''')
+    chuck.run(1)
+    # buf[:, 0] now holds a 440 Hz sine
+
+    chuck.compile('''
+        HostBufPlay p => dac;
+        p.name("rec");
+        1 => p.loop;
+        1::day => now;
+    ''')
+    audio = chuck.run(48000)
+```
+
+`set_buffer` accepts only a writable, C-contiguous `float32` array. A `float64` or strided array raises instead of being copied, since ChucK's writes would go to the copy. chuck-max and pd-chuck bind the same class names, so a `.ck` file that uses only these members runs in each host. See [docs/api/host.md](docs/api/host.md) for the full member list and limits.
 
 ### Shred Management & Introspection
 

@@ -30,6 +30,7 @@ raw = wrapper.raw          # the underlying ChucK
 | Construction | keyword arguments, initialized | `set_param()` with constants, then `init()` |
 | Audio buffers | returns a fresh NumPy array | you pass in `input` and `output` arrays |
 | Globals | `set_int` / `get_int`, blocking reads available | `set_global_int` / `get_global_int`, callback-only reads |
+| Host classes | `on_msg` / `on_receive` / `set_buffer` | `set_host_msg_callback` / `add_host_receiver` / `set_buffer`; see [Host classes](host.md) |
 | Cleanup | `close()`, or context manager | destructor |
 
 The buffer difference is the one that bites: `ChucK.run(input, output, frames)`

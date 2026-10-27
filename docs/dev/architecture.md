@@ -9,7 +9,8 @@ numchuck is a Python wrapper for ChucK that uses nanobind to create efficient C+
 ```text
 numchuck/
 ├── src/
-│   ├── _numchuck.cpp             # C++ nanobind extension (VM, audio, taps)
+│   ├── _numchuck.cpp             # C++ nanobind extension (VM, audio, taps, Host classes)
+│   ├── hostbuffer.{h,cpp}        # HostBuffer and HostBufPlay, bound via ChucK::bind()
 │   ├── _web.cpp                  # Mongoose HTTP/WebSocket server binding
 │   ├── constants.h               # Shared C++ constants
 │   ├── CMakeLists.txt            # Extension build configuration

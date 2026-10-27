@@ -71,6 +71,10 @@ The repository vendors ChucK, its chugins, nanobind and mongoose, so no
 - **Real-time audio** through RtAudio, and **offline rendering** to NumPy
 - **Global variables and events** for bidirectional Python/ChucK communication
 - **Global UGen taps** for reading audio mid-graph without racing the audio thread
+- **Host classes** — `Host.msg` and `Host.send*` call Python at the shred's
+  logical time; `HostBuffer` and `HostBufPlay` share a NumPy array with ChucK
+  in place. Same class names as chuck-max and pd-chuck, so one `.ck` file runs
+  in all three. See [Host classes](api/host.md)
 - **40+ bundled chugins**, working out of the box from a wheel
 - **Type stubs** for both extension modules, checked with `mypy --strict`
 
@@ -89,4 +93,4 @@ The repository vendors ChucK, its chugins, nanobind and mongoose, so no
 - [Examples](examples.md) — worked patterns, from synthesis to live coding
 - [Error handling](error_handling.md) — what raises what, and how to respond
 - [API reference](api/chuck.md) — generated from the source
-- [Architecture](architecture.md) — how the layers fit together
+- [Architecture](dev/architecture.md) — how the layers fit together

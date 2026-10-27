@@ -19,10 +19,10 @@ def chuck():
 
 
 def sends(chuck):
-    """Record (name, value, now) for each Host.send."""
+    """Record (name, value, now) for each Host.msg."""
     got = []
     raw = chuck.raw
-    chuck.on_send(lambda name, value: got.append((name, value, raw.now())))
+    chuck.on_msg(lambda name, value: got.append((name, value, raw.now())))
     return got
 
 
@@ -31,38 +31,38 @@ def results(got):
 
 
 # -----------------------------------------------------------------------------
-# Host.send
+# Host.msg
 
 
-class TestHostSend:
+class TestHostMsg:
     def test_reaches_callback_at_logical_time(self, chuck):
         got = sends(chuck)
-        chuck.compile('Host.send("a", 1.5); 100::samp => now; Host.send("b", 2);')
+        chuck.compile('Host.msg("a", 1.5); 100::samp => now; Host.msg("b", 2);')
         chuck.run(200)
         assert got == [("a", 1.5, 0.0), ("b", 2.0, 100.0)]
 
     def test_no_callback_is_a_no_op(self, chuck):
-        chuck.compile('Host.send("a", 1);')
+        chuck.compile('Host.msg("a", 1);')
         chuck.run(10)
 
     def test_none_clears(self, chuck):
         got = sends(chuck)
-        chuck.on_send(None)
-        chuck.compile('Host.send("a", 1);')
+        chuck.on_msg(None)
+        chuck.compile('Host.msg("a", 1);')
         chuck.run(10)
         assert got == []
 
     def test_replacing_callback(self, chuck):
         first = sends(chuck)
         second = sends(chuck)
-        chuck.compile('Host.send("a", 1);')
+        chuck.compile('Host.msg("a", 1);')
         chuck.run(10)
         assert first == []
         assert [g[:2] for g in second] == [("a", 1.0)]
 
     def test_rejects_non_callable(self, chuck):
         with pytest.raises(TypeError):
-            chuck.on_send(42)
+            chuck.on_msg(42)
 
     def test_exception_does_not_stop_the_vm(self, chuck, monkeypatch):
         unraisable = []
@@ -74,8 +74,8 @@ class TestHostSend:
             if name == "boom":
                 raise ValueError("boom")
 
-        chuck.on_send(callback)
-        chuck.compile('Host.send("boom", 0); 1::samp => now; Host.send("after", 0);')
+        chuck.on_msg(callback)
+        chuck.compile('Host.msg("boom", 0); 1::samp => now; Host.msg("after", 0);')
         chuck.run(10)
         assert seen == ["boom", "after"]
         assert len(unraisable) == 1
@@ -85,8 +85,8 @@ class TestHostSend:
         a, b = Chuck(), Chuck()
         try:
             got_a, got_b = sends(a), sends(b)
-            a.compile('Host.send("from_a", 1);')
-            b.compile('Host.send("from_b", 2);')
+            a.compile('Host.msg("from_a", 1);')
+            b.compile('Host.msg("from_b", 2);')
             a.run(10)
             b.run(10)
             assert [g[0] for g in got_a] == ["from_a"]
@@ -98,7 +98,7 @@ class TestHostSend:
     def test_survives_clear(self, chuck):
         got = sends(chuck)
         chuck.clear()
-        chuck.compile('Host.send("a", 1);')
+        chuck.compile('Host.msg("a", 1);')
         chuck.run(10)
         assert [g[0] for g in got] == ["a"]
 
@@ -106,10 +106,42 @@ class TestHostSend:
         c = Chuck()
         callback = lambda name, value: None  # noqa: E731
         before = sys.getrefcount(callback)
-        c.on_send(callback)
+        c.on_msg(callback)
         assert sys.getrefcount(callback) > before
         c.close()
         assert sys.getrefcount(callback) == before
+
+    def test_overloads(self, chuck):
+        got = sends(chuck)
+        chuck.compile("""
+            Host.msg("b"); Host.msg("f", 2.5); Host.msg("s", "kick.wav");
+            Host.msg("l", [1.0, -2.0, 3.5]);
+        """)
+        chuck.run(1)
+        assert [g[:2] for g in got] == [
+            ("b", None), ("f", 2.5), ("s", "kick.wav"), ("l", [1.0, -2.0, 3.5]),
+        ]
+        assert type(got[1][1]) is float
+        assert type(got[2][1]) is str
+        assert type(got[3][1]) is list
+
+    def test_int_literal_resolves_to_float(self, chuck):
+        got = sends(chuck)
+        chuck.compile('Host.msg("i", 1);')
+        chuck.run(1)
+        assert got[0][:2] == ("i", 1.0)
+        assert type(got[0][1]) is float
+
+    def test_list_whole_and_empty(self, chuck):
+        got = sends(chuck)
+        chuck.compile("""
+            float big[100]; for (0 => int i; i < 100; i++) i => big[i];
+            Host.msg("big", big);
+            float empty[0]; Host.msg("empty", empty);
+        """)
+        chuck.run(1)
+        assert got[0][1] == [float(i) for i in range(100)]
+        assert got[1][1] == []
 
 
 # -----------------------------------------------------------------------------
@@ -272,29 +304,29 @@ class TestHostBuffer:
 
     def test_not_ready_without_array(self, chuck):
         r = self.query(chuck, """
-            Host.send("ready", b.ready()); Host.send("frames", b.frames());
-            Host.send("peek", b.peek(0)); b.poke(0, 1.0);
+            Host.msg("ready", b.ready()); Host.msg("frames", b.frames());
+            Host.msg("peek", b.peek(0)); b.poke(0, 1.0);
         """)
         assert r == {"ready": 0, "frames": 0, "peek": 0}
 
     def test_shape_and_rate(self, chuck):
         chuck.set_buffer("buf", np.zeros((5, 3), dtype=np.float32), sample_rate=22050)
         r = self.query(chuck, """
-            Host.send("ready", b.ready()); Host.send("frames", b.frames());
-            Host.send("chans", b.channels()); Host.send("sr", b.sampleRate());
+            Host.msg("ready", b.ready()); Host.msg("frames", b.frames());
+            Host.msg("chans", b.channels()); Host.msg("sr", b.sampleRate());
         """)
         assert r == {"ready": 1, "frames": 5, "chans": 3, "sr": 22050}
 
     def test_1d_is_one_channel_at_vm_rate(self, chuck):
         chuck.set_buffer("buf", np.zeros(4, dtype=np.float32))
-        r = self.query(chuck, 'Host.send("chans", b.channels()); Host.send("sr", b.sampleRate());')
+        r = self.query(chuck, 'Host.msg("chans", b.channels()); Host.msg("sr", b.sampleRate());')
         assert r == {"chans": 1, "sr": SR}
 
     def test_peek_and_poke_in_place(self, chuck):
         buf = np.arange(8, dtype=np.float32).reshape(4, 2)
         chuck.set_buffer("buf", buf)
         r = self.query(chuck, """
-            Host.send("p0", b.peek(1)); Host.send("p21", b.peek(2, 1));
+            Host.msg("p0", b.peek(1)); Host.msg("p21", b.peek(2, 1));
             b.poke(3, -1.0); b.poke(0, 1, -2.0);
         """)
         assert r == {"p0": 2, "p21": 5}
@@ -304,14 +336,14 @@ class TestHostBuffer:
         buf = np.zeros(2, dtype=np.float32)
         chuck.set_buffer("buf", buf)
         buf[1] = 0.25
-        assert self.query(chuck, 'Host.send("p", b.peek(1));') == {"p": 0.25}
+        assert self.query(chuck, 'Host.msg("p", b.peek(1));') == {"p": 0.25}
 
     def test_out_of_range(self, chuck):
         buf = np.arange(4, dtype=np.float32).reshape(2, 2)
         chuck.set_buffer("buf", buf)
         r = self.query(chuck, """
-            Host.send("f", b.peek(2)); Host.send("neg", b.peek(-1));
-            Host.send("c", b.peek(0, 2));
+            Host.msg("f", b.peek(2)); Host.msg("neg", b.peek(-1));
+            Host.msg("c", b.peek(0, 2));
             b.poke(2, 9.0); b.poke(-1, 9.0); b.poke(0, 2, 9.0); b.poke(0, -1, 9.0);
         """)
         assert r == {"f": 0, "neg": 0, "c": 0}
@@ -322,21 +354,21 @@ class TestHostBuffer:
         assert chuck.remove_buffer("buf") is True
         assert chuck.remove_buffer("buf") is False
         assert chuck.remove_buffer("never") is False
-        assert self.query(chuck, 'Host.send("ready", b.ready());') == {"ready": 0}
+        assert self.query(chuck, 'Host.msg("ready", b.ready());') == {"ready": 0}
 
     def test_replace(self, chuck):
         chuck.set_buffer("buf", np.ones(2, dtype=np.float32))
         chuck.set_buffer("buf", np.full(3, 7, dtype=np.float32))
-        r = self.query(chuck, 'Host.send("n", b.frames()); Host.send("p", b.peek(2));')
+        r = self.query(chuck, 'Host.msg("n", b.frames()); Host.msg("p", b.peek(2));')
         assert r == {"n": 3, "p": 7}
 
     def test_registered_after_name(self, chuck):
         got = sends(chuck)
         chuck.compile("""
             HostBuffer b; b.name("late");
-            Host.send("before", b.ready());
+            Host.msg("before", b.ready());
             10::samp => now;
-            Host.send("after", b.peek(0));
+            Host.msg("after", b.peek(0));
         """)
         chuck.run(5)
         chuck.set_buffer("late", np.full(1, 3, dtype=np.float32))
@@ -347,8 +379,8 @@ class TestHostBuffer:
         got = sends(chuck)
         chuck.compile("""
             HostBuffer b;
-            if (b.name() == "") Host.send("empty", 1);
-            if (b.name("x") == "x" && b.name() == "x") Host.send("set", 1);
+            if (b.name() == "") Host.msg("empty", 1);
+            if (b.name("x") == "x" && b.name() == "x") Host.msg("set", 1);
         """)
         chuck.run(10)
         assert results(got) == {"empty": 1, "set": 1}
@@ -356,7 +388,7 @@ class TestHostBuffer:
     def test_slots_persist_across_clear(self, chuck):
         chuck.set_buffer("buf", np.full(1, 4, dtype=np.float32))
         chuck.clear()
-        assert self.query(chuck, 'Host.send("p", b.peek(0));') == {"p": 4}
+        assert self.query(chuck, 'Host.msg("p", b.peek(0));') == {"p": 4}
 
     def test_slot_limit(self, chuck):
         for i in range(64):
@@ -365,7 +397,7 @@ class TestHostBuffer:
         with pytest.raises(RuntimeError, match="64"):
             chuck.set_buffer("one_more", np.zeros(1, dtype=np.float32))
         got = sends(chuck)
-        chuck.compile('HostBuffer b; if (b.name("other") == "") Host.send("refused", 1);')
+        chuck.compile('HostBuffer b; if (b.name("other") == "") Host.msg("refused", 1);')
         chuck.run(10)
         assert results(got) == {"refused": 1}
 
@@ -374,7 +406,7 @@ class TestHostBuffer:
         try:
             a.set_buffer("buf", np.full(1, 1, dtype=np.float32))
             got = sends(b)
-            b.compile('HostBuffer x; x.name("buf"); Host.send("ready", x.ready());')
+            b.compile('HostBuffer x; x.name("buf"); Host.msg("ready", x.ready());')
             b.run(10)
             assert results(got) == {"ready": 0}
         finally:
@@ -425,7 +457,7 @@ class TestHostBuffer:
             c = Chuck()
             c.set_buffer("buf", np.full(1, i, dtype=np.float32))
             got = sends(c)
-            c.compile('HostBuffer b; b.name("buf"); Host.send("p", b.peek(0));')
+            c.compile('HostBuffer b; b.name("buf"); Host.msg("p", b.peek(0));')
             c.run(10)
             assert results(got) == {"p": i}
             del c
@@ -436,7 +468,7 @@ class TestHostBuffer:
             "from numchuck import Chuck\n"
             "c = Chuck()\n"
             "c.set_buffer('b', np.zeros(4, dtype=np.float32))\n"
-            "c.on_send(lambda n, v: None)\n"
+            "c.on_msg(lambda n, v: None)\n"
         )
         result = subprocess.run([sys.executable, "-c", code], timeout=60)
         assert result.returncode == 0
@@ -516,7 +548,7 @@ class TestHostBufPlay:
         out = play(chuck, """
             p.name("ramp");
             HostBuffer b; b.name("ramp"); b.poke(1, 9.0);
-            Host.send("frames", p.frames()); Host.send("ready", p.ready());
+            Host.msg("frames", p.frames()); Host.msg("ready", p.ready());
         """, 2)
         assert out == [0, 9]
         assert results(got) == {"frames": 4, "ready": 1}
@@ -542,12 +574,12 @@ def test_realtime_send_and_buffer_swaps():
         threads.add(threading.get_ident())
         count[0] += 1
 
-    c.on_send(callback)
+    c.on_msg(callback)
     c.on_receive("bang", lambda value: callback("bang", 0))
     c.compile("""
         HostBufPlay p => dac; p.name("noise"); 1 => p.loop; 0.1 => p.gain;
         while (true) {
-            Host.send("tick", now / samp); Host.sendBang("bang"); 10::ms => now;
+            Host.msg("tick", now / samp); Host.sendBang("bang"); 10::ms => now;
         }
     """)
     assert _numchuck.start_audio(c.raw, sample_rate=44100, num_dac_channels=2)
