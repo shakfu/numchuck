@@ -1,0 +1,120 @@
+name: Build abi3 Wheels
+
+# One stable-ABI wheel per platform instead of one wheel per CPython version.
+# pyproject.toml sets wheel.py-api = "cp312" and src/CMakeLists.txt passes
+# STABLE_ABI to nanobind, so a build on CPython 3.12 is tagged cp312-abi3 and
+# installs on every later CPython. Building on 3.13 and 3.14 would produce
+# the same filename, so cibuildwheel skips those builds and only runs the
+# test suite against the existing wheel. That is the point: the one wheel is
+# verified on every interpreter it claims to support.
+#
+# wheels.yml remains the release path; it also builds cp310 and cp311, which
+# predate nanobind's stable-ABI support and need version-specific wheels.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_abi3:
+    name: abi3 wheel on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-14, windows-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Install system dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            libasound2-dev \
+            libsndfile1-dev \
+            bison \
+            flex
+
+      - name: Install system dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install bison flex
+
+      - name: Build and test abi3 wheels
+        uses: pypa/cibuildwheel@v3.3.1
+        env:
+          # cp312 builds the wheel; cp313 and cp314 reuse it and run the tests.
+          CIBW_BUILD: cp312-* cp313-* cp314-*
+          CIBW_SKIP: "*-win32 *-manylinux_i686 *-musllinux_*"
+          CIBW_BEFORE_BUILD_LINUX: >
+            yum install -y alsa-lib-devel libsndfile-devel bison flex ||
+            (apt-get update && apt-get install -y libasound2-dev libsndfile1-dev bison flex)
+          CIBW_ARCHS_MACOS: "x86_64 arm64"
+          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=11.0
+          CIBW_BEFORE_BUILD_WINDOWS: pip install delvewheel
+          # Repair wheels with .chug support (repair tools skip non-standard extensions)
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: python {project}/scripts/repair_wheel.py {wheel} {dest_dir}
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: python {project}/scripts/repair_wheel.py {wheel} {dest_dir} --delocate-archs {delocate_archs}
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: python {project}/scripts/repair_wheel.py {wheel} {dest_dir}
+          CIBW_TEST_REQUIRES: pytest numpy pytest-asyncio
+          # Skip: realtime (no audio device), wavfile (WvOut timing), tui (requires console)
+          CIBW_TEST_COMMAND: pytest {project}/tests -v --tb=short -k "not realtime and not wavfile and not tui"
+          CIBW_TEST_SKIP: "*-manylinux_aarch64"
+
+      # bash on every runner: PowerShell does not expand the glob and the
+      # checker takes literal paths, so under the default Windows shell this
+      # step reports SKIP and checks nothing.
+      - name: Check that every wheel is tagged abi3
+        shell: bash
+        run: |
+          ls -la wheelhouse/
+          for whl in wheelhouse/*.whl; do
+            case "$whl" in
+              *-cp312-abi3-*) ;;
+              *) echo "::error::not an abi3 wheel: $whl"; exit 1 ;;
+            esac
+          done
+
+      - name: Validate wheel RECORD
+        shell: bash
+        run: python scripts/check_wheel_record.py wheelhouse/*.whl
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v7
+        with:
+          name: abi3-wheels-${{ matrix.os }}
+          path: ./wheelhouse/*.whl
+          retention-days: 30
+
+  collect:
+    name: Collect abi3 wheels
+    needs: [build_abi3]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all wheel artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: abi3-wheels-*
+          path: dist
+          merge-multiple: true
+
+      - name: List collected files
+        run: ls -la dist/
+
+      - name: Upload combined artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: abi3-wheels
+          path: dist/*.whl
+          retention-days: 30

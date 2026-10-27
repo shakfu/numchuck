@@ -71,7 +71,11 @@ jobs:
           # Skip: aarch64 Linux (cross-compiled, no native runner)
           CIBW_TEST_SKIP: "*-manylinux_aarch64"
 
+      # bash on every runner: PowerShell does not expand the glob and the
+      # checker takes literal paths, so under the default Windows shell this
+      # step reported SKIP and checked nothing.
       - name: Validate wheel RECORD
+        shell: bash
         run: python scripts/check_wheel_record.py wheelhouse/*.whl
 
       - name: Upload wheels

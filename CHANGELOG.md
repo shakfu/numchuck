@@ -19,6 +19,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ### Added
 
+- **A workflow that builds only the stable-ABI wheels** (`.github/workflows/abi3-wheels.yml`): `wheel.py-api = "cp312"` and nanobind's `STABLE_ABI` already make the CPython 3.12 build a `cp312-abi3` wheel, but the only way to get one was the full release workflow, which also builds cp310 and cp311. The new workflow is dispatched by hand, builds on 3.12 per platform, lets cibuildwheel reuse that wheel for the 3.13 and 3.14 test passes, and fails if any wheel in the wheelhouse is not tagged `cp312-abi3`.
+
 - **Host classes bound into every VM** (`src/hostbuffer.cpp`, `docs/api/host.md`): `Host.msg(name, ...)` calls the Python callback set with `Chuck.on_msg`, at the shred's logical time, with `None`, a `float`, a `str` or a `list[float]` by overload. `HostBuffer` reads and writes, in place, a numpy array registered with `Chuck.set_buffer`; `HostBufPlay` is a UGen that plays one. `Host.sendBang`, `sendFloat`, `sendSymbol` and `sendList` call the callbacks registered for a name with `Chuck.on_receive`, the Python counterpart of `[receive]`. Each callback takes one argument, `None`, `float`, `str` or `list[float]`, so like a `[receive]` it accepts whatever the `.ck` file sends; lists arrive whole, and receivers are per instance rather than process-wide. chuck-max and pd-chuck bind the same names, so one `.ck` file can run in each host. `set_buffer` refuses arrays it would have to copy, since ChucK's writes would then be lost. Design notes: `docs/dev/bind.md`.
 
 ### Changed
@@ -26,6 +28,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 - **Vendored chuck and chugins refreshed** (`thirdparty/chuck/`, `thirdparty/chugins/`, `examples/`): to ccrma/chuck `35977f6` and ccrma/chugins `16d8ab2`. `scripts/patches/0002-otf-thread-join.patch` is removed: upstream 1.5.5.9 now joins the OTF thread before freeing its socket, so the patch no longer applied and `scripts/update.sh` stopped half way. The patch's `ck_accept()` NULL guard goes with it, since the join removes the case it covered.
 
 ### Fixed
+
+- **The Windows wheel job never validated RECORDs** (`.github/workflows/wheels.yml`): the step passed `wheelhouse/*.whl` to `scripts/check_wheel_record.py`, which takes literal paths, and PowerShell does not expand the glob. The step printed `SKIP wheelhouse/*.whl (not found)` and passed. It now runs under bash on every platform.
 
 - **An exception in a VM callback unwound through the VM** (`src/_numchuck.cpp`): event listeners, async getters, the shred watcher, chout/cherr and the global stdout/stderr callbacks let a Python exception propagate into ChucK. Offline it escaped `run()` part way through a shred; during real-time audio it killed the audio callback, and `stop_audio()` then hung. Each is now reported to `sys.unraisablehook` and the VM continues, as `Host.msg` already did. Raising from `run()` instead would leave the VM mid-shred, and the audio thread has no caller to raise to. `tests/test_callback_exceptions.py` covers each callback.
 
